@@ -58,3 +58,4 @@ Code/MDK-ARM/LowerBoard
 *.png
 
 /Code/MDK-ARM/LowerBoard.uvguix.Administrator
+/Code/MDK-ARM/startup_stm32f429xx.lst

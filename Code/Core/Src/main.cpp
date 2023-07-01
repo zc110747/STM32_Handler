@@ -61,6 +61,12 @@ void SystemClock_Config(void);
 
 /* USER CODE END 0 */
 
+void vector_copy_sram(void)
+{
+    memcpy((char *)0x20000000, (char *)0x08000000, 0x200);
+    SCB->VTOR = SRAM_BASE | 0x20000000;  
+}
+
 /**
   * @brief  The application entry point.
   * @retval int
@@ -68,6 +74,8 @@ void SystemClock_Config(void);
 int main(void)
 {
     BaseType_t type;
+    
+    //vector_copy_sram();
     
     HAL_Init();
 
