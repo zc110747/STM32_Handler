@@ -50,3 +50,11 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+Code/MDK-ARM/DebugConfig
+Code/MDK-ARM/LowerBoard
+*.html
+*.zip
+*.png
+
+/Code/MDK-ARM/LowerBoard.uvguix.Administrator
