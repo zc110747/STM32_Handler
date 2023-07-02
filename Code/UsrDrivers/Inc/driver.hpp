@@ -5,6 +5,7 @@ _Pragma("once")
 #include "key.h"
 #include "usart.h"
 #include "adc.h"
+#include "dac.h"
 
 #ifdef __cplusplus
 	extern "C" {

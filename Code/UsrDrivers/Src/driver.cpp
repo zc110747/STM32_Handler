@@ -23,7 +23,6 @@
 #include "tpad.hpp"
 #include "rtc.hpp"
 #include "i2c.hpp"
-#include "dac.hpp"
 #include "sdmmc.hpp"
 #include "spi.hpp"
 
@@ -76,7 +75,7 @@ BaseType_t driver_init(void)
     result &= i2c_driver::get_instance()->init();
     
     //dac
-    result &= dac_driver::get_instance()->init();
+    result &= dac_init();
     
     //sdmmc
     result &= sdmmc_driver::get_instance()->init();

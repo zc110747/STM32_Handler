@@ -3,7 +3,7 @@
 //  All Rights Reserved
 //
 //  Name:
-//      dac.cpp
+//      dac.c
 //
 //  Purpose:
 //      dac init and set_voltage.
@@ -16,28 +16,33 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "dac.hpp"
+#include "dac.h"
 
-BaseType_t dac_driver::init()
+static DAC_HandleTypeDef dac_handle_;
+
+static BaseType_t dac_test();
+static BaseType_t dac_hardware_init();
+    
+BaseType_t dac_init()
 {
     BaseType_t result;
-    
-    result = hardware_init();
-    
+
+    result = dac_hardware_init();
+
     if(result == pdPASS)
     {
-        set_voltage(DAC_DEFAULT_VOL);
-        
-        test();
+        dac_set_voltage(DAC_DEFAULT_VOL);
+
+        dac_test();
     }
     else
     {
         printf("dac_driver hardware_init failed\r\n");
     }
-    return result;
+    return result;  
 }
 
-void dac_driver::set_voltage(uint16_t mv)
+void dac_set_voltage(uint16_t mv)
 {
     float adc_value;
     
@@ -48,10 +53,10 @@ void dac_driver::set_voltage(uint16_t mv)
     
     HAL_DAC_Stop(&dac_handle_, DAC_CHANNEL_1);
     HAL_DAC_SetValue(&dac_handle_, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)adc_value);
-    HAL_DAC_Start(&dac_handle_, DAC_CHANNEL_1);
+    HAL_DAC_Start(&dac_handle_, DAC_CHANNEL_1);    
 }
-
-BaseType_t dac_driver::hardware_init()
+    
+static BaseType_t dac_hardware_init()
 {
     DAC_ChannelConfTypeDef sConfig = {0};
 
@@ -67,7 +72,7 @@ BaseType_t dac_driver::hardware_init()
     return pdPASS;
 }
 
-BaseType_t dac_driver::test()
+static BaseType_t dac_test()
 {
     return pdPASS;
 }

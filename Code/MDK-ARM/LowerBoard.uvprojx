@@ -981,11 +981,6 @@
               <FilePath>..\UsrDrivers\Src\i2c.cpp</FilePath>
             </File>
             <File>
-              <FileName>dac.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\UsrDrivers\Src\dac.cpp</FilePath>
-            </File>
-            <File>
               <FileName>sdmmc.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\UsrDrivers\Src\sdmmc.cpp</FilePath>
@@ -1014,6 +1009,11 @@
               <FileName>adc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\UsrDrivers\Src\adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>dac.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UsrDrivers\Src\dac.c</FilePath>
             </File>
           </Files>
         </Group>

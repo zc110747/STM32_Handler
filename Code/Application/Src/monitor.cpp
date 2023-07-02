@@ -6,7 +6,6 @@
 #include "rtc.hpp"
 #include "rng.hpp"
 #include "i2c_monitor.hpp"
-#include "dac.hpp"
 
 KEY_STATE monitor_manage::key_last_[KEY_NUM];
 KEY_STATE monitor_manage::key_now_[KEY_NUM];
@@ -73,7 +72,7 @@ std::function<void()> key_func_list[] = {
         voltage += 200;
         if(voltage > 3300)
             voltage = 0;
-        dac_driver::get_instance()->set_voltage(voltage);
+        dac_set_voltage(voltage);
     },
     [](){
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Tpad Key Push down, no_push:%d, push:%d!",
