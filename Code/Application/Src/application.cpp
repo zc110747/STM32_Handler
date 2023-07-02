@@ -97,7 +97,6 @@ void application_init(void)
     //PRINT_NOW("application init\r\n");
     PRINT_LOG(LOG_INFO, HAL_GetTick(), "application init success");
                    
-
     //start the rtos schedular.
     vTaskStartScheduler();
 }

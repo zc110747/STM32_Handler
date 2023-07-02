@@ -961,16 +961,6 @@
               <FilePath>..\UsrDrivers\Src\lcd.cpp</FilePath>
             </File>
             <File>
-              <FileName>usart.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\UsrDrivers\Src\usart.cpp</FilePath>
-            </File>
-            <File>
-              <FileName>adc.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\UsrDrivers\Src\adc.cpp</FilePath>
-            </File>
-            <File>
               <FileName>rng.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\UsrDrivers\Src\rng.cpp</FilePath>
@@ -1006,11 +996,6 @@
               <FilePath>..\UsrDrivers\Src\spi.cpp</FilePath>
             </File>
             <File>
-              <FileName>interface.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\UsrDrivers\Src\interface.c</FilePath>
-            </File>
-            <File>
               <FileName>led.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\UsrDrivers\Src\led.c</FilePath>
@@ -1019,6 +1004,16 @@
               <FileName>key.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\UsrDrivers\Src\key.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UsrDrivers\Src\usart.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UsrDrivers\Src\adc.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -3,6 +3,8 @@ _Pragma("once")
 
 #include "led.h"
 #include "key.h"
+#include "usart.h"
+#include "adc.h"
 
 #ifdef __cplusplus
 	extern "C" {

@@ -19,8 +19,6 @@
 #include "driver.hpp"
 #include "sdram.hpp"
 #include "lcd.hpp"
-#include "usart.hpp"
-#include "adc.hpp"
 #include "rng.hpp"
 #include "tpad.hpp"
 #include "rtc.hpp"
@@ -47,7 +45,7 @@ BaseType_t driver_init(void)
     
     //usart init
     //usart first init for logger.
-    result = usart_driver::get_instance()->init();
+    result = usart_init();
     
     //led init
     //all io clock init in this function, so need the first execute.
@@ -60,7 +58,7 @@ BaseType_t driver_init(void)
     result &= lcd_driver::get_instance()->init();
 
     //adc init
-    result &= adc_driver::get_instance()->init();
+    result &= adc_init();
 
     //key init
     result &= key_init();

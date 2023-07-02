@@ -16,30 +16,35 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "usart.hpp"
-#include "logger.hpp"
+#include "usart.h"
 
-BaseType_t usart_driver::init(void)
+static UART_HandleTypeDef huart1;
+static BaseType_t is_usart_init = pdFALSE;
+
+static BaseType_t usart_test(void);
+static BaseType_t usart_hardware_init(void);
+
+BaseType_t usart_init(void)
 {
     BaseType_t result;
     
     //device initialize
-    result  = hardware_init();
+    result  = usart_hardware_init();
     if(result == pdPASS)
     {
-        is_init = true;
+        is_usart_init = pdTRUE;
 
-        test();
+        usart_test();
     }
     
     return result;
 }
 
-BaseType_t usart_driver::usart1_translate(char *ptr, uint16_t size)
+BaseType_t usart1_translate(char *ptr, uint16_t size)
 {
     BaseType_t result = pdPASS;
 
-    if(!is_init)
+    if(!is_usart_init)
     {
         return pdFAIL;
     }
@@ -51,18 +56,18 @@ BaseType_t usart_driver::usart1_translate(char *ptr, uint16_t size)
     return result;
 }
     
-bool usart_driver::test(void)
+static BaseType_t usart_test(void)
 {
 #if UART_TEST == 1
     usart1_translate((char *)"hello world\r\n", strlen("hello world\r\n"));
     
     printf("This is for hello world test:%d\r\n", 1);
 #endif
-    return true;
+    
+    return pdPASS;
 }
 
-
-BaseType_t usart_driver::hardware_init(void)
+static BaseType_t usart_hardware_init(void)
 {
     huart1.Instance = USART1;
     huart1.Init.BaudRate = 115200;
@@ -80,19 +85,35 @@ BaseType_t usart_driver::hardware_init(void)
     HAL_NVIC_EnableIRQ(USART1_IRQn);			
     HAL_NVIC_SetPriority(USART1_IRQn, 1, 1);	
     
-    return pdPASS;
+    return pdPASS;    
 }
 
-extern "C" 
-{   
-    UART_HandleTypeDef *get_uart1()
-    {
-        return usart_driver::get_instance()->get_uart1();
-    }
+extern BaseType_t logger_send_data(uint8_t data);
+void USART1_IRQHandler(void)
+{
+    uint8_t rx_data;
     
-    BaseType_t usart1_translate(char *ptr, uint16_t size)
+    if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_RXNE) != RESET)
     {
-        return usart_driver::get_instance()->usart1_translate(ptr, size); 
+        if(HAL_UART_Receive(&huart1, &rx_data, 1, 100) == HAL_OK)
+        {
+            logger_send_data(rx_data);
+        }
     }
+}
 
+//define fputc used for printf remap.
+FILE __stdout;   
+void _sys_exit(int x) 
+{ 
+    x = x; 
+} 
+int fputc(int ch, FILE *f)
+{ 	
+#if LOGGER_DEFAULT_INTERFACE == LOGGER_INTERFACE_UART
+    usart1_translate((char *)&ch, 1); 
+#else
+    ITM_SendChar(ch);
+#endif
+    return ch;
 }

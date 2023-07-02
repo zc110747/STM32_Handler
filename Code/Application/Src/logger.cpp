@@ -1,7 +1,7 @@
 
 #include "logger.hpp"
 #include "application.hpp"
-#include "usart.hpp"
+#include "usart.h"
 #include "SEGGER_RTT.h"
 
 /// \brief memoryBuffer
@@ -234,7 +234,7 @@ void logger_manage::logger_tx_run(void *parameter)
         {
             if(interface_ == LOGGER_INTERFACE_UART)
             {    
-                usart_driver::get_instance()->usart1_translate(msg.ptr, msg.length); 
+                usart1_translate(msg.ptr, msg.length); 
             }
             else if(interface_ == LOGGER_INTERFACE_SWO)
             {          

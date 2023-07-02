@@ -1,7 +1,6 @@
 
 #include "logger.hpp"
 #include "monitor.hpp"
-#include "adc.hpp"
 #include "lcd.hpp"
 #include "tpad.hpp"
 #include "rtc.hpp"
@@ -66,6 +65,7 @@ std::function<void()> key_func_list[] = {
     [](){
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Key1 Push down!");
         i2c_monitor::get_instance()->write_io(OUTPUT_BEEP, IO_OFF);
+        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "rng:%d ", rng_driver::get_instance()->get_value());
     },
     [](){
         static uint16_t voltage = 0;
@@ -138,16 +138,6 @@ void monitor_manage::timer_loop_motion()
             ptimer->Minutes,
             ptimer->Seconds);
             lcd_driver::get_instance()->lcd_showstring(10, 160, 200, 16, 16, tbuf);
-
-            PRINT_LOG(LOG_DEBUG, xTaskGetTickCount(), "20%02d-%02d-%02d Wek:%02d %02d:%02d:%02d rng:%d ",
-            pdate->Year,
-            pdate->Month,
-            pdate->Date,
-            pdate->WeekDay,
-            ptimer->Hours,
-            ptimer->Minutes,
-            ptimer->Seconds,
-            rng_driver::get_instance()->get_value());
         }
     }
      
@@ -171,7 +161,7 @@ void monitor_manage::adc_monitor()
     {
         temp_loop = 0;
 
-        adc_temp = adc_driver::get_instance()->get_adc_avg(ADC_CHANNEL_TEMPSENSOR);
+        adc_temp = adc_get_avg(ADC_CHANNEL_TEMPSENSOR);
         temperate = (float)adc_temp*(3.3/4096);		//电压值
         temperate = (temperate-0.76)/0.0025 + 25;     //转换为温度值 
 
@@ -179,7 +169,7 @@ void monitor_manage::adc_monitor()
         lcd_driver::get_instance()->lcd_show_extra_num(10+14*8,140,((uint32_t)(temperate*100))%100, 2, 16, 0);		//显示小数部分 
         
         //PB1 - ADC Channel 9
-        adc_vol = adc_driver::get_instance()->get_adc_avg(ADC_CHANNEL_9);
+        adc_vol = adc_get_avg(ADC_CHANNEL_9);
         voltage = (float)adc_vol*(3.3/4096);
         lcd_driver::get_instance()->lcd_show_extra_num(10+23*8,140,(uint32_t)voltage, 2, 16, 0);		//显示整数部分
         lcd_driver::get_instance()->lcd_show_extra_num(10+26*8,140,((uint32_t)(voltage*100))%100, 2, 16, 0);		//显示小数部分 
