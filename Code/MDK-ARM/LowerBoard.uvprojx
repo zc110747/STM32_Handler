@@ -337,9 +337,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>USE_HAL_DRIVER,STM32F429xx</Define>
+              <Define>USE_HAL_DRIVER,STM32F429xx,ARM_MATH_CM4</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;../UsrDrivers/Inc;../FreeRTOS/include;../FreeRTOS/portable/ARM_CM4F;../Application/Inc;..\ff15\source;..\ThreadParts\SEGGER_RTT\RTT;..\ThreadParts\SEGGER_RTT\Config;..\ThreadParts\cm_backtrace</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;../UsrDrivers/Inc;../FreeRTOS/include;../FreeRTOS/portable/ARM_CM4F;../Application/Inc;..\ff15\source;..\ThreadParts\SEGGER_RTT\RTT;..\ThreadParts\SEGGER_RTT\Config;..\ThreadParts\cm_backtrace;..\ThreadParts\DSP_LIB\Include</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1020,6 +1020,11 @@
               <FileType>1</FileType>
               <FilePath>..\UsrDrivers\Src\i2c.c</FilePath>
             </File>
+            <File>
+              <FileName>dfu_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UsrDrivers\Src\dfu_test.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1164,6 +1169,16 @@
               <FileName>cmb_fault.S</FileName>
               <FileType>2</FileType>
               <FilePath>..\ThreadParts\cm_backtrace\fault_handler\keil\cmb_fault.S</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>DSP_Lib</GroupName>
+          <Files>
+            <File>
+              <FileName>arm_cortexM4lf_math.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\ThreadParts\DSP_LIB\arm_cortexM4lf_math.lib</FilePath>
             </File>
           </Files>
         </Group>

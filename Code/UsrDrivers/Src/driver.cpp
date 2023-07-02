@@ -81,6 +81,8 @@ BaseType_t driver_init(void)
     //spi
     result &= spi_driver::get_instance()->init();
     
+    //dfu test
+    dfu_test();
     return result;
 }
 

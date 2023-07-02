@@ -81,7 +81,7 @@ void fatfs_app(void)
 void application_init(void)
 {
     //test fatfs application    
-    fatfs_app();
+    //fatfs_app();
     
     //logger interface init
     logger_manage::get_instance()->init();
