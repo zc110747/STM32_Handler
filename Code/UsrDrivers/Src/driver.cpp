@@ -19,10 +19,8 @@
 #include "driver.hpp"
 #include "sdram.hpp"
 #include "lcd.hpp"
-#include "rng.hpp"
 #include "tpad.hpp"
 #include "rtc.hpp"
-#include "i2c.hpp"
 #include "sdmmc.hpp"
 #include "spi.hpp"
 
@@ -63,7 +61,7 @@ BaseType_t driver_init(void)
     result &= key_init();
 
     //rng
-    result &= rng_driver::get_instance()->init();
+    result &= rng_init();
 
     //tpad 
     result &= tpad_driver::get_instance()->init();
@@ -72,7 +70,7 @@ BaseType_t driver_init(void)
     result &= rtc_driver::get_instance()->init();
     
     //i2c
-    result &= i2c_driver::get_instance()->init();
+    result &= i2c_init();
     
     //dac
     result &= dac_init();

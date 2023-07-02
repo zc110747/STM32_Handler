@@ -3,7 +3,7 @@
 //  All Rights Reserved
 //
 //  Name:
-//     rng.cpp
+//     rng.c
 //
 //  Purpose:
 //     rng driver.
@@ -16,20 +16,21 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "rng.hpp"
+#include "rng.h"
 
-BaseType_t rng_driver::init(void)
+static RNG_HandleTypeDef rng_handler_;
+    
+BaseType_t rng_init()
 {
     rng_handler_.Instance = RNG;
     if (HAL_RNG_Init(&rng_handler_) != HAL_OK)
     {
-        printf("rng init failed\r\n");
         return pdFAIL;
     }
-    return pdPASS;
+    return pdPASS;    
 }
 
-uint32_t rng_driver::get_value(void)
+uint32_t rng_get_value(void)
 {
     uint32_t value = 0;
     

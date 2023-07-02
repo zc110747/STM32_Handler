@@ -6,6 +6,8 @@ _Pragma("once")
 #include "usart.h"
 #include "adc.h"
 #include "dac.h"
+#include "rng.h"
+#include "i2c.h"
 
 #ifdef __cplusplus
 	extern "C" {

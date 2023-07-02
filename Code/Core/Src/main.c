@@ -21,6 +21,7 @@
 #include "main.h"
 #include "driver.hpp"
 #include "application.hpp"
+#include "cm_backtrace.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */

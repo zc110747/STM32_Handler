@@ -3,7 +3,7 @@
 //  All Rights Reserved
 //
 //  Name:
-//     rng.hpp
+//     rng.h
 //
 //  Purpose:
 //     rng driver interface.
@@ -18,21 +18,15 @@
 /////////////////////////////////////////////////////////////////////////////
 _Pragma("once");
 
-#include "includes.hpp"
+#include "interface.h"
 
-class rng_driver
-{
-public:
-    BaseType_t init(void);
-
-    static rng_driver *get_instance(void)
-    {
-        static rng_driver instance;
-        return &instance;
-    }
+#ifdef __cplusplus
+extern "C" {
+#endif
     
-    uint32_t get_value(void);
+BaseType_t rng_init();
+uint32_t rng_get_value(void);
     
-private:
-    RNG_HandleTypeDef rng_handler_;
-};
+#ifdef __cplusplus
+}
+#endif

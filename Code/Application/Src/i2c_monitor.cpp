@@ -1,5 +1,5 @@
 #include "i2c_monitor.hpp"
-#include "i2c.hpp"
+#include "i2c.h"
 #include "logger.hpp"
 
 
@@ -110,7 +110,7 @@ void i2c_monitor::run(void* parameter)
         {
             if(event.id == I2C_EVENT_ID_WRITE)
             {
-                i2c_driver::get_instance()->write_i2c(PCF8574_ADDR, write_data_.data);
+                i2c_write(PCF8574_ADDR, write_data_.data);
             }
             else if(event.id == I2C_EVENT_ID_READ)
             {
@@ -119,7 +119,7 @@ void i2c_monitor::run(void* parameter)
                 //if read, dealy 5ms to wait io on.
                 vTaskDelay(5);
                 
-                if(i2c_driver::get_instance()->read_i2c(PCF8574_ADDR, &io_read) == pdPASS)
+                if(i2c_read(PCF8574_ADDR, &io_read) == pdPASS)
                 {
                     read_data_.data = io_read;
                     PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "i2c read:0x%x!", io_read);
@@ -139,13 +139,8 @@ void i2c_monitor::run(void* parameter)
 
 extern "C"
 {
-    void EXTI15_10_IRQHandler(void)
+    void i2c_monitor_trigger_read(void)
     {
-        if(__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_12) != RESET)
-        {
-            __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_12);
-            
-            i2c_monitor::get_instance()->trigger_isr(I2C_EVENT_ID_READ, nullptr, 0);
-        }
+        i2c_monitor::get_instance()->trigger_isr(I2C_EVENT_ID_READ, nullptr, 0);
     }
 }

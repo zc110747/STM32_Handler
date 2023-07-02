@@ -17,6 +17,7 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 #include "application.hpp"
+#include "includes.hpp"
 #include "logger.hpp"
 #include "led.h"
 #include "schedular.hpp"
@@ -95,7 +96,11 @@ void application_init(void)
     i2c_monitor::get_instance()->init();
     
     //PRINT_NOW("application init\r\n");
-    PRINT_LOG(LOG_INFO, HAL_GetTick(), "application init success");
+    PRINT_LOG(LOG_INFO, HAL_GetTick(), "application init success, dbgmcu_id:0x%x, uid:0x%x, 0x%x, 0x%x", 
+        DBGMCU->IDCODE,
+        HAL_GetUIDw0(),
+        HAL_GetUIDw1(),
+        HAL_GetUIDw2());
                    
     //start the rtos schedular.
     vTaskStartScheduler();

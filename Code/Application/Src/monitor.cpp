@@ -4,7 +4,6 @@
 #include "lcd.hpp"
 #include "tpad.hpp"
 #include "rtc.hpp"
-#include "rng.hpp"
 #include "i2c_monitor.hpp"
 
 KEY_STATE monitor_manage::key_last_[KEY_NUM];
@@ -64,7 +63,7 @@ std::function<void()> key_func_list[] = {
     [](){
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Key1 Push down!");
         i2c_monitor::get_instance()->write_io(OUTPUT_BEEP, IO_OFF);
-        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "rng:%d ", rng_driver::get_instance()->get_value());
+        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "rng:%d ", rng_get_value());
     },
     [](){
         static uint16_t voltage = 0;

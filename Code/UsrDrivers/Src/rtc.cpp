@@ -23,11 +23,11 @@
 #define RTC_DATE_DAY        03
 #define RTC_DATE_WEEK       6
 
-#define RTC_TIME_HOUR       19
-#define RTC_TIME_MINUTE     49
+#define RTC_TIME_HOUR       21
+#define RTC_TIME_MINUTE     55
 #define RTC_TIME_SECOND     00
 
-#define RTC_SET_FLAGS       0x5A5A
+#define RTC_SET_FLAGS       0xA5A5
 #define RTC_FORMAT_MODE     RTC_FORMAT_BIN
 
 BaseType_t rtc_driver::init()
