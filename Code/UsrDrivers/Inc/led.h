@@ -10,8 +10,7 @@
 #define LED1_OFF    { led_set(LED1, LED_STATUS_OFF);}
 
 #ifdef __cplusplus
-    extern "C"
-    {
+    extern "C" {
 #endif
         
 BaseType_t led_init(void);

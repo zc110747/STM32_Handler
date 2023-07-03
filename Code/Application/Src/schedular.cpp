@@ -1,7 +1,6 @@
 
 #include "schedular.hpp"
 #include "logger.hpp"
-#include "spi.hpp"
 #include "driver.hpp"
 
 bool schedular::init(void)

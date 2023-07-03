@@ -3,7 +3,6 @@
 #include "monitor.hpp"
 #include "lcd.hpp"
 #include "tpad.hpp"
-#include "rtc.hpp"
 #include "i2c_monitor.hpp"
 
 KEY_STATE monitor_manage::key_last_[KEY_NUM];
@@ -78,7 +77,7 @@ std::function<void()> key_func_list[] = {
             tpad_driver::get_instance()->get_no_push_value(),
             tpad_driver::get_instance()->get_current_value()
         );
-        rtc_driver::get_instance()->delay_alarm(0, 0, 0, 5);
+        rtc_delay_alarm(0, 0, 0, 5);
     },    
     [](){
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "EXIO Push down!");
@@ -121,9 +120,9 @@ void monitor_manage::timer_loop_motion()
      {
         temp_loop = 0;
         
-        rtc_driver::get_instance()->update();
-        auto ptimer = rtc_driver::get_instance()->get_current_time();
-        auto pdate = rtc_driver::get_instance()->get_current_date();
+        rtc_update();
+        auto ptimer = rtc_get_time();
+        auto pdate = rtc_get_date();
 
         if(last_second != ptimer->Seconds)
         {
@@ -139,11 +138,11 @@ void monitor_manage::timer_loop_motion()
         }
     }
      
-    if(rtc_driver::get_instance()->get_alarm())
+    if(rtc_get_alarm_flag() == pdTRUE)
     {
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "RTC Alarm");
 
-        rtc_driver::get_instance()->set_alarm(false);
+        rtc_set_alarm_flag(pdFALSE);
     }
 }
 

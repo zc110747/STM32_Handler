@@ -1,8 +1,8 @@
 
-#include "dfu_test.h"
-#include "arm_math.h"
+#include "dsp_test.h"
+
  
-void dfu_test(void)
+void dsp_app(void)
 { 
     //float sqrt
     {

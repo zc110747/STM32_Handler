@@ -8,7 +8,9 @@ _Pragma("once")
 #include "dac.h"
 #include "rng.h"
 #include "i2c.h"
-#include "dfu_test.h"
+#include "rtc.h"
+#include "spi.h"
+#include "dsp_test.h"
 
 #ifdef __cplusplus
 	extern "C" {

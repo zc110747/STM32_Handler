@@ -20,11 +20,10 @@
 #include "sdram.hpp"
 #include "lcd.hpp"
 #include "tpad.hpp"
-#include "rtc.hpp"
 #include "sdmmc.hpp"
-#include "spi.hpp"
 
 std::atomic<bool> is_os_on{false};
+void wq_application(void);
 
 BaseType_t driver_init(void)
 {
@@ -67,7 +66,7 @@ BaseType_t driver_init(void)
     result &= tpad_driver::get_instance()->init();
     
     //rtc
-    result &= rtc_driver::get_instance()->init();
+    result &= rtc_init();
     
     //i2c
     result &= i2c_init();
@@ -79,11 +78,32 @@ BaseType_t driver_init(void)
     result &= sdmmc_driver::get_instance()->init();
     
     //spi
-    result &= spi_driver::get_instance()->init();
+    result &= spi_init();
     
     //dfu test
-    dfu_test();
+    dsp_app();
+    
+    //wq test
+    wq_init();
+    wq_application();
+    
     return result;
+}
+
+void wq_application(void)
+{
+    static uint8_t buffer[256];
+    const char *ptr = "spi read write test success!\r\n";
+    
+    //spi-wq erase/write
+//    memcpy(buffer, ptr, strlen(ptr));
+//    wq_erase_sector(0);
+//    wq_write_page(buffer, 0, strlen(ptr));
+    
+    memset(buffer, 0, 256);
+    wq_read(buffer, 0, strlen(ptr));
+    
+    printf("%s", buffer);
 }
 
 void delay_us(uint16_t times)

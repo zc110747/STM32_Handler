@@ -1,6 +1,6 @@
 _Pragma("once")
 
-#include "includes.hpp"
+#include "interface.h"
 
 #define W25X_WriteEnable		0x06 
 #define W25X_WriteDisable		0x04 
@@ -45,26 +45,22 @@ typedef enum
 #define CHIP_ID_Q128    0xEF17
 #define CHIP_ID_Q256    0xEF18
 
-class spi_driver
-{
-public:
-    BaseType_t init();
+#ifdef __cplusplus
+    extern "C" {
+#endif
 
-    static spi_driver* get_instance(){
-        static spi_driver instance_;
-        return &instance_;
-    }  
-public:
-    uint8_t read_write_byte(uint8_t data);
-    uint16_t read_id(void);
-    void chip_type_update();
-
-private:
-    BaseType_t hardware_init(); 
-    BaseType_t test();
-
-
-private:
-    SPI_HandleTypeDef spi_handler_;
-    chip_type type_;
-};
+//spi interface
+BaseType_t spi_init();
+uint8_t spi_rw_byte(uint8_t data);
+        
+//wq interface
+void wq_init(void);
+uint16_t wq_read_id(void);
+void wq_write_enable(void);
+void wq_write_disable(void);
+void wq_read(uint8_t *pbuffer, uint32_t addr, uint16_t num);
+void wq_erase_sector(uint32_t sector);
+uint16_t wq_write_page(uint8_t *pbuffer, uint32_t addr, uint16_t num);        
+#ifdef __cplusplus
+    }
+#endif

@@ -4,6 +4,8 @@
 //
 //  Name:
 //      usart.cpp
+//          USART_TX -------------- PA9
+//          USART_RX -------------- PA10
 //
 //  Purpose:
 //      usart driver interrupt rx and normal tx.

@@ -2,13 +2,14 @@
 _Pragma("once");
 
 #include "interface.h"
+#include "arm_math.h"
 
 #ifdef __cplusplus
     extern "C"
     {
 #endif
         
-void dfu_test(void);
+void dsp_app(void);
         
 #ifdef __cplusplus
     }

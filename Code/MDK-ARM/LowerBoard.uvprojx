@@ -971,19 +971,9 @@
               <FilePath>..\UsrDrivers\Src\tpad.cpp</FilePath>
             </File>
             <File>
-              <FileName>rtc.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\UsrDrivers\Src\rtc.cpp</FilePath>
-            </File>
-            <File>
               <FileName>sdmmc.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\UsrDrivers\Src\sdmmc.cpp</FilePath>
-            </File>
-            <File>
-              <FileName>spi.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\UsrDrivers\Src\spi.cpp</FilePath>
             </File>
             <File>
               <FileName>led.c</FileName>
@@ -1021,9 +1011,19 @@
               <FilePath>..\UsrDrivers\Src\i2c.c</FilePath>
             </File>
             <File>
-              <FileName>dfu_test.c</FileName>
+              <FileName>dsp_test.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\UsrDrivers\Src\dfu_test.c</FilePath>
+              <FilePath>..\UsrDrivers\Src\dsp_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UsrDrivers\Src\rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UsrDrivers\Src\spi.c</FilePath>
             </File>
           </Files>
         </Group>
