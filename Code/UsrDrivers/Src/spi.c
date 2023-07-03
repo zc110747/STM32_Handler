@@ -82,7 +82,6 @@ static BaseType_t spi_hardware_init(void)
   return pdPASS;
 }
 
-
 uint8_t spi_rw_byte(uint8_t data)
 {
     uint8_t rx_data;
@@ -209,7 +208,7 @@ uint8_t wq_read_sr(uint8_t reg)
         command=W25X_ReadStatusReg2;    
         break;
     case 3:
-        command=W25X_ReadStatusReg3;   
+        command=W25X_ReadStatusReg3;
         break;
     default:
         command=W25X_ReadStatusReg1;    

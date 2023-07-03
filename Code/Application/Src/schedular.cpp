@@ -49,6 +49,13 @@ void schedular::run(void* parameter)
     //tell driver os is start.
     set_os_on();
     
+        //PRINT_NOW("application init\r\n");
+    PRINT_LOG(LOG_INFO, HAL_GetTick(), "application init success!");
+    PRINT_LOG(LOG_INFO, HAL_GetTick(), "dbgmcu_id:0x%x", 
+        DBGMCU->IDCODE);
+    PRINT_LOG(LOG_INFO, HAL_GetTick(), "uid:0x%x, 0x%x, 0x%x",
+        HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
+    
     //fault_test_by_unalign();
     
     while(1)

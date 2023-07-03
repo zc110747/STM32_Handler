@@ -1025,6 +1025,11 @@
               <FileType>1</FileType>
               <FilePath>..\UsrDrivers\Src\spi.c</FilePath>
             </File>
+            <File>
+              <FileName>dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UsrDrivers\Src\dma.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

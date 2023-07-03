@@ -10,7 +10,7 @@
 | 定时器中断 | Timer | Complete |
 | 系统定时器 | Systick | Complete |
 | 随机数 | Rng | Complete |
-| rtc实时时钟 | rtc | Complete |
+| rtc实时时钟 | RTC | Complete |
 | 电容触摸按键 | Timer Capture | Complete |
 | ETM | ETM Trace | Complete |
 | RTT | SEGGER RTT | Complete |
@@ -23,17 +23,12 @@
 | DSP测试 | arm_math, fpu | Complete | 
 | RTOS | FreeRTOS | Complete |
 | SPI FLASH | SPI+W25Q256 | Complete |
-| PWM输出 | Timer PWM Output | ToDo |
-| DMA调试 | DMA | ToDo |
+| DMA调试 | DMA | Complete |
+| PWM输出 | Timer PWM Output | to do |
+| CAN通讯 | CAN | to do |
+| FLASH读写测试 | flash | to do |
+| Protocol | decode/encode | to do |
+| IAP实验 | bootloader, app | to do |
+| 汉字 | 字库 | to do |
+| 触摸 | i2c detect | to do |
 
-
-
-```c
-SPI	SPI+W25Q256	To do
-CAN通讯	CAN	To do
-触摸屏	I2C	To do
-FLASH模拟EPPROM	FLASH	To do
-Nand FLASH		To do
-汉字显示	字库	To do
-串口IAP实验	IAP	To do
-```

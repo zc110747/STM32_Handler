@@ -87,6 +87,9 @@ BaseType_t driver_init(void)
     wq_init();
     wq_application();
     
+    //dma 
+    dma_init();
+    
     return result;
 }
 

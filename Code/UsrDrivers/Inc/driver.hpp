@@ -10,6 +10,7 @@ _Pragma("once")
 #include "i2c.h"
 #include "rtc.h"
 #include "spi.h"
+#include "dma.h"
 #include "dsp_test.h"
 
 #ifdef __cplusplus
