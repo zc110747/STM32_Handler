@@ -226,7 +226,9 @@ static void wq_wait_busy(void)
 {
     BaseType_t type = pdPASS;
     
-    while((wq_read_sr(1)&0x01)==0x01);   
+    do
+    {    
+    }while((wq_read_sr(1) & 0x01) == 0x01);   
 }
 
 
