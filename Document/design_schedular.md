@@ -30,5 +30,3 @@
 | Protocol | decode/encode | to do |
 | IAP实验 | bootloader, app | to do |
 | 汉字 | 字库 | to do |
-| 触摸 | i2c detect | to do |
-

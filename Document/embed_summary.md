@@ -183,10 +183,10 @@ RCC是驱动系统运行的基础时钟模块，决定了系统内指令的执�
 对于STM32F4来说，支持内部时钟源LSI(低速内部RC)和HSI(高速内部RC)，其中LSI为32kHz的内部RC振荡器，提供给看门狗工作时钟。高速内部RC则为16MHZ，可以直接提供给系统时钟或通过PLL电路提供给系统时钟。<br />
 另外也支持外部时钟源LSE(低速外部时钟源)和HSE(高速外部时钟源)，其中LSE一般为32.768Khz,可用于代替内部LSI，HSE则为25MHz, 可用于代替内部HSI，具有相同的功能。外部时钟源主要可以使用两种晶振，分为有源晶振和无源晶振。<br />
 
-1. 无源晶振是两个引脚的无极性器件，需要借助时钟电路才能产生震荡信号
-2. 有源晶振是完整的振荡器，当正确接入电压后，会有引脚产生震荡信号
+1. 无源晶振是两个引脚的无极性器件，需要借助时钟电路(一般为电容配合内部激励时钟)才能产生震荡信号
+2. 有源晶振是完整的振荡器，当正确接入电压后，会有引脚输出产生震荡信号
 
-内部时钟源具有不依赖外部晶振器件，调试简单等优点，但是会因为设计误差、温度的影响，相对来说不精确，对于高精度定时，高波特率串口通讯的场景会引入时钟误差，所以产品中一般使用外部晶振作为基础时钟源, 对于嵌入式RCC开发，主要包含时钟使能，倍频和分频使能，然后将系统时钟，外设模块时钟选中使能的时钟源，下面为HAL库提供的时钟启动和配置的代码。<br />
+内部时钟源具有不依赖外部晶振器件，调试简单等优点，但是会因为设计有误差、温度的影响，相对来说不精确，对于高精度定时，高波特率串口通讯的场景会引入时钟误差，所以有这些功能需求的产品中一般使用外部晶振作为基础时钟源。对于嵌入式RCC开发，主要包含时钟使能，倍频和分频使能，然后将系统时钟，外设模块时钟选中使能的时钟源，下面为HAL库提供的时钟启动和配置的代码。<br />
 ```c
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
@@ -260,3 +260,80 @@ __HAL_RCC_GPIOA_FORCE_RESET();
 上述就是RCC提供的用于模块时钟管理接口，对于后续使用的外设，如SPI，I2C， Timer等，都需要进行相应的时钟使能。
 
 ## 3. GPIO模块
+GPIO是芯片与外部连接的输入输出口(IO)，外部的按键输入，点亮控制LED灯，蜂鸣器，连接I2C, SPI, USART和CAN设备，在最底层都依赖于GPIO进行实际信号的输出，对于简单的输入，输出，使用GPIO模块就可以完成输入输出动作，对于复杂的协议应用，需要在GPIO复用到对应的功能后，在使能配置相应的模块，通过更高级的外设模块信号来检测或者控制GPIO的输入输出信号，从而实现具体的协议电平信号，这也是比较简单的信号，如SPI和I2C能够通过软件操作GPIO来进行模拟的原因，下面用STM32F4中GPIO设计接口展示更详细的说明。
+![image](image/1_IO.JPG)
+从上图可以看出，GPIO模块当打开输入功能时，接收到的数据会写入输入数据寄存器，如果使用复用功能，则同时也会通过复用功能输入信号到达片上外设，打开输出功能时，则可通过复位/置位寄存器写入输出数据寄存器(也可直接写入),另外复用功能输出会直接输出到外部I/O中，这与上面说明的功能一致，另外输出部分可以通过控制Vdd的MOS开关，表示I/O为开漏或者推挽模式，另外在GPIO对应的引脚中也包含可开关的上拉和下拉电阻，分别控制I/O初始化的默认输出值，这在输入模式下可以避免启动时的误触发从这张图在结合上章RCC的内容，则将GPIO配置为输出的初始化和控制的代码如下所示。
+```c
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    //使能GPIOB对应的RCC时钟
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+
+    //写入GPIO的默认值，避免初始化后误输出
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;     //推挽输出，P, N MOS都支持控制
+    GPIO_InitStruct.Pull = GPIO_NOPULL;             //无外部上拉/下拉电阻，关闭PULL
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;    //控制I/O的输出速率，有协议或者输出速率的要求时改为更高。
+
+    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+```
+配置为输入则类似，具体代码如下。
+```c
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+     //使能GPIOC对应的RCC时钟
+    __HAL_RCC_GPIOC_CLK_ENABLE();
+    
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;         //输入模式
+    GPIO_InitStruct.Pull = GPIO_PULLUP;             //有外部上拉
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;   
+    
+    GPIO_InitStruct.Pin = GPIO_PIN_13;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+```
+其中Pull和Speed分别对应外部上拉/下拉电阻的控制，Speed则对应I/O允许的最大速率，Mode则比较重要，用来配置I/O的具体功能，具体如下.
+```c
+    GPIO_MODE_INPUT                 //输入模式
+    GPIO_MODE_OUTPUT_PP             //推挽输出
+    GPIO_MODE_OUTPUT_OD             //开漏模式，需要外部上拉才能输出高
+    GPIO_MODE_AF_PP                 //复用为其它外设控制，同时GPIO推挽
+    GPIO_MODE_AF_OD                 //复用为其它外设控制，同时GPIO开漏
+    GPIO_MODE_ANALOG                //模拟模式，主要用于ADC和DAC应用
+    GPIO_MODE_IT_RISING             //输入模式，上升沿触发中断
+    GPIO_MODE_IT_FALLING            //输入模式，下降沿触发中断
+    GPIO_MODE_IT_RISING_FALLING     //输入模式，上升沿，下降沿都触发中断
+    GPIO_MODE_EVT_RISING            //输入模式，上升沿触发事件
+    GPIO_MODE_EVT_FALLING           //输入模式，上升沿触发事件
+    GPIO_MODE_EVT_RISING_FALLING    //输入模式，上升沿，下降沿都触发事件
+```
+对于复用模式，除了将模式配置为复用外，还需要将I/O和对应的外设关联起来，在数据手册上会提供映射的表格，如果使用STM32CubeMX将更为简单，将I/O配置成对应的外设模块对应功能，则代码中会生成对应的复用接口，如下所示。
+```c
+    __HAL_RCC_I2C2_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOH_CLK_ENABLE();
+    /**I2C2 GPIO Configuration
+    PH4     ------> I2C2_SCL
+    PH5     ------> I2C2_SDA
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;      //PH4， PH5复用到I2C2， 使用AF4通道
+    HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
+```
+对于GPIO的操作主要包含读和写，具体如下:
+```c
+    //读取指定端口I/O电平
+    HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13);
+
+    //写入指定端口I/O电平
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+```
+在本章讲述了GPIO的功能，包含初始化，读写，以及如何配合外设模块复用功能实现具体通讯的功能，可以看到通讯外设模块也是基于GPIO实现最终的功能，这除了在开发软件时注意外，也提供了调试硬件接口连通的方法，当两个芯片通过I2C，USART或者SPI连接不通时。<br />
+1.可以先将引脚配置为普通GPIO输入/输出模式，看双方是否能检测到正确的电平，这样就可以快速判断是否为硬件问题。<br />
+2.如果不能检测到，先去排查硬件问题，反之，则查看引脚代码中是否开启的复用功能，且配置是否与芯片的定义一致，一致则再去查上层的模块配置问题，不一致则修改后再调试。<br />
+这里全面讲解了GPIO的功能，下一章则在此基础上讲述外部中断。
+
