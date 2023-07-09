@@ -359,7 +359,7 @@ __HAL_RCC_GPIOA_FORCE_RESET();
     HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);         //配置对应的中断屏蔽寄存器，打开中断
 ```
-可以看到，因为HAL库的集成，Mode即可配置上升/下降沿产生中断，另外为了避免开机误触中断，符合外部检测的要求，也要相应的配置GPIO的外部上拉电阻保证默认电平为高，关于中断和模式的配置选项如下所示.
+&emsp;&emsp;可以看到，因为HAL库的集成，Mode即可配置上升/下降沿产生中断，另外为了避免开机误触中断，符合外部检测的要求，也要相应的配置GPIO的外部上拉电阻保证默认电平为高，关于中断和模式的配置选项如下所示.
 ```c
     GPIO_MODE_IT_RISING             //输入模式，上升沿触发中断
     GPIO_MODE_IT_FALLING            //输入模式，下降沿触发中断
@@ -368,7 +368,7 @@ __HAL_RCC_GPIOA_FORCE_RESET();
     GPIO_MODE_EVT_FALLING           //输入模式，上升沿触发事件
     GPIO_MODE_EVT_RISING_FALLING    //输入模式，上升沿，下降沿都触发事件
 ```
-对于中断的实际执行，当有外部符合的信号触发时，则执行对应的中断函数，对于EXTI15_10_IRQn来说，执行的中断就是EXTI15_10_IRQHandler, 对于共用的中断信号，读取对应的中断的信号，采用如下即可检测和执行中断。
+&emsp;&emsp;对于中断的实际执行，当有外部符合的信号触发时，则执行对应的中断函数，对于EXTI15_10_IRQn来说，执行的中断就是EXTI15_10_IRQHandler, 对于共用的中断信号，读取对应的中断的信号，采用如下即可检测和执行中断。
 ```c
 void EXTI15_10_IRQHandler(void)
 {
@@ -380,7 +380,112 @@ void EXTI15_10_IRQHandler(void)
     }
 }
 ```
-对于事件，可以作为其它模块的触发条件，如ADC支持外部EXTI线-11进行触发。中断可以通过软件调用函数实现各种功能，事件则提供信号用于作为其它外设的触发条件，例如低功耗模式和事件唤醒就是stm32支持的事件之一。
+&emsp;&emsp;对于事件，可以作为其它模块的触发条件，如ADC支持外部EXTI线-11进行触发。中断可以通过软件调用函数实现各种功能，事件则提供信号用于作为其它外设的触发条件，例如低功耗模式和事件唤醒就是stm32支持的事件之一。
 
-## **5.低功耗和硬件唤醒**
-   
+## **5.RTC时钟管理**
+&emsp;&emsp;实时时钟(RTC)是一个独立的BTC定时器/计数器。RTC提供日历时钟，可编程的闹钟中断，以及具有中断功能的周期性可编程唤醒标志。RTC中包含秒，分钟，小时，星期，日期，月份和年份，且可以自动补偿月份和天数。RTC支持使用外部时钟LSE，HSE的一定分频数或者LSI作为时钟的输入。对于RTC的工作，需要提供最终的1Hz的时钟，由一个7位的异步预分频器(fdiv_a)和一个15位的同步预分频器(fdiv_s)分频获得最后的时钟，为了降低功耗，建议异步分频器的值选择尽可能大, 转换公式如下所示。<br />
+```c
+fclk = (fbase)/((fdiv_a + 1) * (fdiv_s + 1);
+```
+&emsp;&emsp;当选用LSE(时钟为32768Hz)时，拆分成128*256, 则fdiv_a值为127，fdiv_s值为255.对于RTC的寄存器，上电复位后，所有RTC寄存器均受到写保护，需要通过写入PWR_CR的DBP位才能使能RTC寄存器的写访问, RTC时钟包含最基础的掉电计时，闹钟以及唤醒功能，可以有独立的电池供电，从而实现在系统掉电后能够正常计时，关于RTC的供电设计一般如下所示.<br />
+![image](image/3_RTC.JPG)<br />
+&emsp;&emsp;一般选用外部3.3V和电池通过BAT54c二极管进行切换供电，这是因为使用的纽扣电池电压一般为3V,当系统有供电时，电压高于电池电压，所有使用外部供电，当系统断电时，此时电池端有电，电压就切换到3V，RTC模块仍然能保证正常工作，这种模式可以避免带电工作时仍然使用电池供电，延长工作时间。RTC时钟支持通过I/O输出，用于校准，校准配置到对应的校准寄存器内，这一般在高精度定时器计时时需要，不过对于此场景，如果能够连接外网，可以使用NTP服务器进行时钟校准，如果不能连接，可以直接使用外部RTC模块实现更高的定时，也更简单易操作，且能保证可靠性。RTC同时支持一组20个4字节的备份寄存器，上电和复位数据不丢失，我们可以用这个寄存器来确认RTC是否被配置过，从而避免重复修改初始时间，导致时间恢复默认值从而不准确。<br />
+&emsp;&emsp;结合上面说明，RTC的配置如下所示，至于读取时钟，则需要先读取时间，再读取日期，这是因为设计上为了确保这 3个值来自同 一时刻点，读取 RTC_SSR 或 RTC_TR 时会锁定高阶日历影子寄存器中的值，直到读取RTC_DR，也就是SSR和TR读取后，DR才更新。<br />
+```c
+    //允许RTC寄存器修改
+    HAL_PWR_EnableBkUpAccess();
+
+    rtc_handler_.Instance = RTC;
+    rtc_handler_.Init.HourFormat = RTC_HOURFORMAT_24;   //设置计时模式
+    rtc_handler_.Init.AsynchPrediv = 127;               //设置异步和同步分频，保证时钟为1Hz.
+    rtc_handler_.Init.SynchPrediv = 255;
+    rtc_handler_.Init.OutPut = RTC_OUTPUT_DISABLE;      //不需要输出内部时钟用于校准，否则使用RTC_AF1进行输出
+    rtc_handler_.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+    rtc_handler_.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+    if (HAL_RTC_Init(&rtc_handler_) != HAL_OK)
+        return pdFAIL;
+
+    if(HAL_RTCEx_BKUPRead(&rtc_handler_, RTC_BKP_DR0) != RTC_SET_FLAGS)
+    {
+        //写入当前的时:分:秒
+        time_.Hours = hour;
+        time_.Minutes = min;
+        time_.Seconds = sec;
+        time_.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+        time_.StoreOperation = RTC_STOREOPERATION_RESET;
+        HAL_RTC_SetTime(&rtc_handler_, &time_, RTC_FORMAT_MODE);
+
+        //写入当前的年:月:日
+        date_.Year = year;
+        date_.Month = month;
+        date_.Date = date;
+        date_.WeekDay = week;
+        HAL_RTC_SetDate(&rtc_handler_, &date_, RTC_FORMAT_MODE);
+
+        HAL_RTCEx_BKUPWrite(&rtc_handler_, RTC_BKP_DR0, RTC_SET_FLAGS);
+    }
+
+    //获取RTC时钟
+    HAL_RTC_GetTime(&rtc_handler_, &time_, RTC_FORMAT_MODE);
+    
+    //获取RTC日期
+    HAL_RTC_GetDate(&rtc_handler_, &date_, RTC_FORMAT_MODE);
+```
+&emsp;&emsp;对于RTC内部，寄存器使用BCD格式来保存上述信息，这里面讲解下BCD码和二进制的转换，二进制数字12转换成BCD就是(1<<4 | 2),高位为12/10，低位为12%10， 下面展示时间的转换.<br />
+```C
+  RTC_FORMAT_BIN模式对应时间 17:23:00
+  RTC_FORMAT_BCD模式对应 
+  时 (17/10)<<4 | (17%10) = 0x17
+  分 (23/10)<<4 | (23%10) = 0x23
+  秒 (00/10)<<4 | (00%10) = 0x00
+```
+&emsp;&emsp;另外RTC也支持闹钟功能，且可以用于唤醒休眠的内核，关于闹钟功能，除支持时分秒和星期的配置，另外也可以配置不比较，下面配置选择所有位有效，配置的代码如下.<br />
+```c
+    //设置定时的时分秒
+    rtc_arm_handler_.AlarmTime.Hours= hour;  
+    rtc_arm_handler_.AlarmTime.Minutes = min; 
+    rtc_arm_handler_.AlarmTime.Seconds = sec; 
+    rtc_arm_handler_.AlarmTime.SubSeconds = 0;
+    rtc_arm_handler_.AlarmTime.TimeFormat = RTC_HOURFORMAT_24;
+    
+    //设置不参与比较位和星期，选择对应的RTC闹钟，支持A和B两种
+    rtc_arm_handler_.AlarmMask = RTC_ALARMMASK_NONE;
+    rtc_arm_handler_.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_NONE;
+    rtc_arm_handler_.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_WEEKDAY;
+    rtc_arm_handler_.AlarmDateWeekDay = week; 
+    rtc_arm_handler_.Alarm = RTC_ALARM_A;     
+    
+    HAL_RTC_SetAlarm_IT(&rtc_handler_, &rtc_arm_handler_, RTC_FORMAT_MODE);
+    
+    //设置RTC优先级并使能
+    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, 0x01, 0x02);
+    HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
+```
+&emsp;&emsp;对于RTC时间到达后，触发的中断如下所示。
+```c
+    void RTC_Alarm_IRQHandler(void)
+    {
+        RTC_HandleTypeDef *prtc_handler = &rtc_handler_;
+
+        //判断定时器A触发
+        if(__HAL_RTC_ALARM_GET_IT(prtc_handler, RTC_IT_ALRA))
+        {
+            if((uint32_t)(prtc_handler->Instance->CR & RTC_IT_ALRA) != (uint32_t)RESET)
+            {
+                is_alarm = pdTRUE;
+                    
+                /* Clear the Alarm interrupt pending bit */
+                __HAL_RTC_ALARM_CLEAR_FLAG(prtc_handler,RTC_FLAG_ALRAF);
+            }
+        }
+
+        /* Clear the EXTI's line Flag for RTC Alarm */
+        __HAL_RTC_ALARM_EXTI_CLEAR_FLAG();
+
+        /* Change RTC state */
+        prtc_handler->State = HAL_RTC_STATE_READY; 
+    }
+```
+&emsp;&emsp;如此便是RTC时钟和闹钟功能的大致说明，当然这不包含全部的功能，如RTC如何精确校准，如何使用RTC来唤醒休眠的芯片，这部分更深入的应用只有使用到才需要进一步去了解，这里就不在赘述。
+
+    

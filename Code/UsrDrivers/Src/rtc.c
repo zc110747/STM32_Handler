@@ -72,7 +72,7 @@ RTC_DateTypeDef *rtc_get_date(void)
 
 void rtc_set_alarm(uint8_t week, uint8_t hour, uint8_t min, uint8_t sec)
 {
-    rtc_arm_handler_.AlarmTime.Hours= hour;  
+    rtc_arm_handler_.AlarmTime.Hours = hour;  
     rtc_arm_handler_.AlarmTime.Minutes = min; 
     rtc_arm_handler_.AlarmTime.Seconds = sec; 
     rtc_arm_handler_.AlarmTime.SubSeconds = 0;
@@ -181,7 +181,7 @@ static BaseType_t rtc_hardware_init(void)
     rtc_handler_.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
     rtc_handler_.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
     if (HAL_RTC_Init(&rtc_handler_) != HAL_OK)
-    return pdFAIL;
+        return pdFAIL;
 
     if(HAL_RTCEx_BKUPRead(&rtc_handler_, RTC_BKP_DR0) != RTC_SET_FLAGS)
     {
