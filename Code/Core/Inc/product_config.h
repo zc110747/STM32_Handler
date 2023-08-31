@@ -20,6 +20,11 @@
 #define _PRODUCT_CONFIG_H
 
 ///driver test define
+#define NO_TEST                         0
+#define USART_TEST                      1
+
+#define RUN_TEST_MODE                   USART_TEST
+
 #define LED_TEST                        0
 #define SDRAM_TEST                      0
 #define LCD_TEST                        1
@@ -39,5 +44,6 @@
 
 #define TRACE_HARDWARE_VERSION          "V1.0.0"
 #define TRACE_SOFTWARE_VERSION          "V0.1.0"
+
 
 #endif

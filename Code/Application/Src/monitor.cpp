@@ -159,17 +159,17 @@ void monitor_manage::adc_monitor()
         temp_loop = 0;
 
         adc_temp = adc_get_avg(ADC_CHANNEL_TEMPSENSOR);
-        temperate = (float)adc_temp*(3.3/4096);		//µçÑ¹Öµ
-        temperate = (temperate-0.76)/0.0025 + 25;     //×ª»»ÎªÎÂ¶ÈÖµ 
+        temperate = (float)adc_temp*(3.3/4096);		//ï¿½ï¿½Ñ¹Öµ
+        temperate = (temperate-0.76)/0.0025 + 25;     //×ªï¿½ï¿½Îªï¿½Â¶ï¿½Öµ 
 
-        lcd_driver::get_instance()->lcd_show_extra_num(10+11*8,140,(uint32_t)temperate, 2, 16, 0);		//ÏÔÊ¾ÕûÊý²¿·Ö
-        lcd_driver::get_instance()->lcd_show_extra_num(10+14*8,140,((uint32_t)(temperate*100))%100, 2, 16, 0);		//ÏÔÊ¾Ð¡Êý²¿·Ö 
+        lcd_driver::get_instance()->lcd_show_extra_num(10+11*8,140,(uint32_t)temperate, 2, 16, 0);		//ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        lcd_driver::get_instance()->lcd_show_extra_num(10+14*8,140,((uint32_t)(temperate*100))%100, 2, 16, 0);		//ï¿½ï¿½Ê¾Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 
         
         //PB1 - ADC Channel 9
         adc_vol = adc_get_avg(ADC_CHANNEL_9);
         voltage = (float)adc_vol*(3.3/4096);
-        lcd_driver::get_instance()->lcd_show_extra_num(10+23*8,140,(uint32_t)voltage, 2, 16, 0);		//ÏÔÊ¾ÕûÊý²¿·Ö
-        lcd_driver::get_instance()->lcd_show_extra_num(10+26*8,140,((uint32_t)(voltage*100))%100, 2, 16, 0);		//ÏÔÊ¾Ð¡Êý²¿·Ö 
+        lcd_driver::get_instance()->lcd_show_extra_num(10+23*8,140,(uint32_t)voltage, 2, 16, 0);		//ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+        lcd_driver::get_instance()->lcd_show_extra_num(10+26*8,140,((uint32_t)(voltage*100))%100, 2, 16, 0);		//ï¿½ï¿½Ê¾Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 
     }
 }
     

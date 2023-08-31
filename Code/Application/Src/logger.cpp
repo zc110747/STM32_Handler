@@ -234,7 +234,7 @@ void logger_manage::logger_tx_run(void *parameter)
         {
             if(interface_ == LOGGER_INTERFACE_UART)
             {    
-                usart1_translate(msg.ptr, msg.length); 
+                //usart_translate(msg.ptr, msg.length); 
             }
             else if(interface_ == LOGGER_INTERFACE_SWO)
             {          

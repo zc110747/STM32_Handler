@@ -20,6 +20,12 @@ _Pragma("once");
 
 #include "interface.h"
 
+#define USART_MODE_POLL             0
+#define USART_MODE_INTERRUPT        1
+#define USART_MODE_DMA              2
+
+#define USART_RUN_MODE              USART_MODE_INTERRUPT
+
 #define USART_TRANSLATE_DELAY_TIME  (200)
 
 #ifdef __cplusplus
@@ -27,7 +33,7 @@ extern "C" {
 #endif
 
 BaseType_t usart_init(void);
-BaseType_t usart1_translate(char *ptr, uint16_t size);
+void usart_translate(char *ptr, uint16_t size);
 
 #ifdef __cplusplus
 }

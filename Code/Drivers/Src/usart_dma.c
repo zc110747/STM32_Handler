@@ -20,6 +20,7 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "usart.h"
 
+#if USART_RUN_MODE == USART_MODE_DMA
 static UART_HandleTypeDef huart1;
 static BaseType_t is_usart_init = pdFALSE;
 
@@ -119,3 +120,4 @@ int fputc(int ch, FILE *f)
 #endif
     return ch;
 }
+#endif
