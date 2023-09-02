@@ -24,7 +24,7 @@ _Pragma("once");
 #define USART_MODE_INTERRUPT        1
 #define USART_MODE_DMA              2
 
-#define USART_RUN_MODE              USART_MODE_INTERRUPT
+#define USART_RUN_MODE              USART_MODE_DMA
 
 #define USART_TRANSLATE_DELAY_TIME  (200)
 

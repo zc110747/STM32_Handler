@@ -21,57 +21,33 @@
 #include "usart.h"
 
 #if USART_RUN_MODE == USART_MODE_DMA
-static UART_HandleTypeDef huart1;
-static BaseType_t is_usart_init = pdFALSE;
 
-static BaseType_t usart_test(void);
-static BaseType_t usart_hardware_init(void);
+//global define
+#define DMA_BUFFER_SIZE  256
+
+typedef struct
+{
+  uint8_t rx_size;
+  uint8_t is_rx_dma;
+}RX_INFO;
+
+//global parameter
+static UART_HandleTypeDef huart1;
+static DMA_HandleTypeDef hdma_usart1_rx;
+static DMA_HandleTypeDef hdma_usart1_tx;
+static uint8_t is_usart_init = 0;
+
+static RX_INFO gRxInfo = {0};
+static uint8_t dma_rx_buffer[DMA_BUFFER_SIZE];
+static uint8_t dma_tx_buffer[DMA_BUFFER_SIZE];
+
+//global function
+static void usart_run_test(void);
 
 BaseType_t usart_init(void)
 {
-    BaseType_t result;
-    
-    //device initialize
-    result  = usart_hardware_init();
-    if(result == pdPASS)
-    {
-        is_usart_init = pdTRUE;
+    __HAL_RCC_DMA2_CLK_ENABLE();
 
-        usart_test();
-    }
-    
-    return result;
-}
-
-BaseType_t usart1_translate(char *ptr, uint16_t size)
-{
-    BaseType_t result = pdPASS;
-
-    if(!is_usart_init)
-    {
-        return pdFAIL;
-    }
-
-    if(HAL_UART_Transmit(&huart1, (uint8_t *)ptr, size, USART_TRANSLATE_DELAY_TIME) != HAL_OK)
-    {
-        result = pdFAIL;
-    }
-    return result;
-}
-    
-static BaseType_t usart_test(void)
-{
-#if UART_TEST == 1
-    usart1_translate((char *)"hello world\r\n", strlen("hello world\r\n"));
-    
-    printf("This is for hello world test:%d\r\n", 1);
-#endif
-    
-    return pdPASS;
-}
-
-static BaseType_t usart_hardware_init(void)
-{
     huart1.Instance = USART1;
     huart1.Init.BaudRate = 115200;
     huart1.Init.WordLength = UART_WORDLENGTH_8B;
@@ -83,25 +59,123 @@ static BaseType_t usart_hardware_init(void)
     if (HAL_UART_Init(&huart1) != HAL_OK)
         return pdFAIL;
     
-    //start usart1 interrupt.
-    __HAL_UART_ENABLE_IT(&huart1, UART_IT_RXNE);
+    //enable uart idle interrupt
+    __HAL_UART_ENABLE_IT(&huart1, UART_IT_IDLE);
     HAL_NVIC_EnableIRQ(USART1_IRQn);			
-    HAL_NVIC_SetPriority(USART1_IRQn, 1, 1);	
+    HAL_NVIC_SetPriority(USART1_IRQn, 0, 1);	
     
-    return pdPASS;    
+    ATOMIC_SET_BIT(huart1.Instance->CR3, USART_CR3_DMAT);
+    ATOMIC_SET_BIT(huart1.Instance->CR3, USART_CR3_DMAR);
+           
+    //update dma communication
+    hdma_usart1_rx.Instance = DMA2_Stream2;
+    hdma_usart1_rx.Init.Channel = DMA_CHANNEL_4;
+    hdma_usart1_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+    hdma_usart1_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_usart1_rx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_usart1_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_usart1_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_usart1_rx.Init.Mode = DMA_NORMAL;
+    hdma_usart1_rx.Init.Priority = DMA_PRIORITY_MEDIUM;
+    hdma_usart1_rx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+    hdma_usart1_rx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+    hdma_usart1_rx.Init.MemBurst = DMA_MBURST_SINGLE;
+    hdma_usart1_rx.Init.PeriphBurst = DMA_PBURST_SINGLE;
+    if (HAL_DMA_Init(&hdma_usart1_rx) != HAL_OK)
+    {
+      return pdFAIL;
+    }
+    __HAL_LINKDMA(&huart1, hdmarx, hdma_usart1_rx);
+    
+    //使能DMA设置
+    HAL_DMA_Start(&hdma_usart1_rx, (uint32_t)&huart1.Instance->DR, (uint32_t)dma_rx_buffer, DMA_BUFFER_SIZE);
+    
+    hdma_usart1_tx.Instance = DMA2_Stream7;
+    hdma_usart1_tx.Init.Channel = DMA_CHANNEL_4;
+    hdma_usart1_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+    hdma_usart1_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+    hdma_usart1_tx.Init.MemInc = DMA_MINC_ENABLE;
+    hdma_usart1_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+    hdma_usart1_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+    hdma_usart1_tx.Init.Mode = DMA_NORMAL;
+    hdma_usart1_tx.Init.Priority = DMA_PRIORITY_LOW;
+    hdma_usart1_tx.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
+    hdma_usart1_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+    hdma_usart1_tx.Init.MemBurst = DMA_MBURST_SINGLE;
+    hdma_usart1_tx.Init.PeriphBurst = DMA_PBURST_SINGLE;
+    if (HAL_DMA_Init(&hdma_usart1_tx) != HAL_OK)
+    {
+      return pdFAIL;
+    }
+    __HAL_LINKDMA(&huart1, hdmatx, hdma_usart1_tx);
+    
+    //enable uart idle interrupt
+    __HAL_DMA_ENABLE_IT(&hdma_usart1_tx, DMA_IT_TC);
+    HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);			
+    HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 0, 1);	
+    
+    is_usart_init = 1;
+    
+#if RUN_TEST_MODE == USART_TEST
+  usart_translate("usart test for polling!\r\n", strlen("usart test for polling!\r\n"));
+  
+  usart_run_test();
+#endif
+    
+    return pdPASS; 
 }
 
-extern BaseType_t logger_send_data(uint8_t data);
+static void usart_run_test(void)
+{
+  char data[DMA_BUFFER_SIZE];
+  
+  while(1)
+  {
+    if(gRxInfo.is_rx_dma == 1)
+    {
+        memcpy(data, dma_rx_buffer, gRxInfo.rx_size);
+        gRxInfo.is_rx_dma = 0;
+        
+        HAL_DMA_Start(&hdma_usart1_rx, (uint32_t)&huart1.Instance->DR, (uint32_t)dma_rx_buffer, DMA_BUFFER_SIZE);
+        usart_translate(data, gRxInfo.rx_size);
+    }
+  }
+}
+
+void usart_translate(char *ptr, uint16_t size)
+{
+  memcpy((char *)dma_tx_buffer, ptr, size);
+  
+  HAL_DMA_Start(&hdma_usart1_tx, (uint32_t)dma_tx_buffer, (uint32_t)&huart1.Instance->DR, size);
+} 
+
+void DMA2_Stream7_IRQHandler(void)
+{
+    if(__HAL_DMA_GET_FLAG(&hdma_usart1_tx, DMA_FLAG_TCIF3_7) != RESET)
+    {
+        //clear all flags
+        __HAL_DMA_CLEAR_FLAG(&hdma_usart1_tx, DMA_FLAG_TCIF3_7);
+        __HAL_DMA_CLEAR_FLAG(&hdma_usart1_tx, DMA_FLAG_TEIF3_7);
+        
+        //close the dma tx for next  
+        HAL_DMA_Abort(&hdma_usart1_tx);
+        __HAL_DMA_ENABLE_IT(&hdma_usart1_tx, DMA_IT_TC);
+    }
+}
+
+//usart中断接收处理
 void USART1_IRQHandler(void)
 {
-    uint8_t rx_data;
+    uint8_t data;
     
-    if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_RXNE) != RESET)
+    if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_IDLE) != RESET)
     {
-        if(HAL_UART_Receive(&huart1, &rx_data, 1, 100) == HAL_OK)
-        {
-            logger_send_data(rx_data);
-        }
+      __HAL_UART_CLEAR_PEFLAG(&huart1);
+      
+      HAL_DMA_Abort(&hdma_usart1_rx);
+      
+      gRxInfo.is_rx_dma = 1;
+      gRxInfo.rx_size = DMA_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(&hdma_usart1_rx);
     }
 }
 
@@ -114,7 +188,7 @@ void _sys_exit(int x)
 int fputc(int ch, FILE *f)
 { 	
 #if LOGGER_DEFAULT_INTERFACE == LOGGER_INTERFACE_UART
-    usart1_translate((char *)&ch, 1); 
+    //usart_translate((char *)&ch, 1); 
 #else
     ITM_SendChar(ch);
 #endif

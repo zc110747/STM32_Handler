@@ -82,7 +82,7 @@ int main(void)
 
     SystemClock_Config();
     
-    cm_backtrace_init("LowerBoard", TRACE_HARDWARE_VERSION, TRACE_SOFTWARE_VERSION);
+    //cm_backtrace_init("LowerBoard", TRACE_HARDWARE_VERSION, TRACE_SOFTWARE_VERSION);
     
     type = driver_init();
     if(type == pdPASS)
