@@ -20,6 +20,11 @@ _Pragma("once")
 
 #include "interface.h"
 
+#define DMA_MODE_POLL             0
+#define DMA_MODE_DMA              1
+
+#define DMA_RUN_MODE              DMA_MODE_DMA
+
 //reference voltage, uint:mv
 #define DAC_REFERENCE_VOL   3300
 

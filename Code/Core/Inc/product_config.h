@@ -22,8 +22,9 @@
 ///driver test define
 #define NO_TEST                         0
 #define USART_TEST                      1
+#define DAC_TEST                        2
 
-#define RUN_TEST_MODE                   USART_TEST
+#define RUN_TEST_MODE                   DAC_TEST
 
 #define LED_TEST                        0
 #define SDRAM_TEST                      0

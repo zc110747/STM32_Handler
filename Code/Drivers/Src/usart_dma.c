@@ -87,7 +87,7 @@ BaseType_t usart_init(void)
     }
     __HAL_LINKDMA(&huart1, hdmarx, hdma_usart1_rx);
     
-    //Ê¹ÄÜDMAÉèÖÃ
+    //enable dma rx
     HAL_DMA_Start(&hdma_usart1_rx, (uint32_t)&huart1.Instance->DR, (uint32_t)dma_rx_buffer, DMA_BUFFER_SIZE);
     
     hdma_usart1_tx.Instance = DMA2_Stream7;

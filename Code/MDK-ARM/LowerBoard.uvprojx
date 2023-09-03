@@ -810,11 +810,6 @@
               <FilePath>..\Drivers\Src\adc.c</FilePath>
             </File>
             <File>
-              <FileName>dac.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\Src\dac.c</FilePath>
-            </File>
-            <File>
               <FileName>dma.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\dma.c</FilePath>
@@ -878,6 +873,16 @@
               <FileName>tpad.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\Drivers\Src\tpad.cpp</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Driver/dac</GroupName>
+          <Files>
+            <File>
+              <FileName>dac.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\dac.c</FilePath>
             </File>
           </Files>
         </Group>
