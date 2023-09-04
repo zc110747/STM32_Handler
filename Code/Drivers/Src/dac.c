@@ -21,7 +21,7 @@
 //global parameter
 static DAC_HandleTypeDef hdac;
 static DMA_HandleTypeDef hdma_dac1;
-static TIM_HandleTypeDef htim2;
+static TIM_HandleTypeDef htim;
 
 //global function
 static void dac_run_test(void);
@@ -67,6 +67,18 @@ uint16_t vol_cycle[] = {
     0,    25,   100,  223,  391,
     599,  844, 1118, 1415, 1727,
 };
+uint16_t vol_convert_cycle[40];
+
+void set_convert_vol(float percent)
+{
+    uint8_t i;
+    
+    for(i=0; i<40; i++)
+    {
+        vol_convert_cycle[i] = percent*vol_cycle[i];
+    }
+}
+
 BaseType_t dac_init()
 {
     DAC_ChannelConfTypeDef sConfig = {0};
@@ -75,13 +87,13 @@ BaseType_t dac_init()
     TIM_MasterConfigTypeDef sMasterConfig = {0};
 
     __HAL_RCC_DMA1_CLK_ENABLE();
-    __HAL_RCC_TIM2_CLK_ENABLE();
+    __HAL_RCC_TIM4_CLK_ENABLE();
        
     hdac.Instance = DAC;
     if(HAL_DAC_Init(&hdac) != HAL_OK)
         return pdFAIL;
 
-    sConfig.DAC_Trigger = DAC_TRIGGER_T2_TRGO;
+    sConfig.DAC_Trigger = DAC_TRIGGER_T4_TRGO;
     sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_DISABLE;
     if(HAL_DAC_ConfigChannel(&hdac, &sConfig, DAC_CHANNEL_1) != HAL_OK)
         return pdFAIL;
@@ -109,31 +121,34 @@ BaseType_t dac_init()
     //initialize timer
     //clock APB1 90M
     //
-    htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 89; //1M
-    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim2.Init.Period = 1;
-    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV2;
-    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-    if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+    htim.Instance = TIM4;
+    htim.Init.Prescaler = 89; //1M
+    htim.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim.Init.Period = 1;
+    htim.Init.ClockDivision = TIM_CLOCKDIVISION_DIV2;
+    htim.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    if (HAL_TIM_Base_Init(&htim) != HAL_OK)
     {
       return pdFAIL;
     }
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+    if (HAL_TIM_ConfigClockSource(&htim, &sClockSourceConfig) != HAL_OK)
     {
       return pdFAIL;
     }
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim, &sMasterConfig) != HAL_OK)
     {
       return pdFAIL;
     }
   
+    set_convert_vol(1.0);
+    
     //enable dac and dma send
+    HAL_TIM_Base_Start(&htim);
     SET_BIT(hdac.Instance->CR, DAC_CR_DMAEN1);
-    HAL_DMA_Start(&hdma_dac1, (uint32_t)vol_cycle, (uint32_t)&hdac.Instance->DHR12R1, 40);
+    HAL_DMA_Start(&hdma_dac1, (uint32_t)vol_convert_cycle, (uint32_t)&hdac.Instance->DHR12R1, 40);
     __HAL_DAC_ENABLE(&hdac, DAC_CHANNEL_1);
     
     //HAL_DAC_Start_DMA(&hdac ,DAC_CHANNEL_1,(uint32_t *)vol_cycle, 12, DAC_ALIGN_12B_R);

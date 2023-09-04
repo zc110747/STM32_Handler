@@ -24,7 +24,7 @@
 #define USART_TEST                      1
 #define DAC_TEST                        2
 
-#define RUN_TEST_MODE                   DAC_TEST
+#define RUN_TEST_MODE                   NO_TEST
 
 #define LED_TEST                        0
 #define SDRAM_TEST                      0
@@ -41,7 +41,7 @@
 #define LOGGER_INTERFACE_RTT            2
 #define LOGGER_INTERFACE_NET            3
 
-#define LOGGER_DEFAULT_INTERFACE        LOGGER_INTERFACE_SWO
+#define LOGGER_DEFAULT_INTERFACE        LOGGER_INTERFACE_UART
 
 #define TRACE_HARDWARE_VERSION          "V1.0.0"
 #define TRACE_SOFTWARE_VERSION          "V0.1.0"

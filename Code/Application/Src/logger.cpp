@@ -1,8 +1,8 @@
 
 #include "logger.hpp"
 #include "application.hpp"
-#include "usart.h"
 #include "SEGGER_RTT.h"
+#include "driver.hpp"
 
 /// \brief memoryBuffer
 /// - memory buffer cache
@@ -94,6 +94,7 @@ int logger_manage::print_log(LOG_LEVEL level, uint32_t time, const char* fmt, ..
     
     if(mutex_take(is_thread_work, ( TickType_t )10) == pdTRUE )
     {
+        auto ptimer = rtc_get_time();
         pstart = get_memory_buffer_pointer(LOGGER_MAX_BUFFER_SIZE);
         len = LOGGER_MAX_BUFFER_SIZE;
         bufferlen = len - 1;
@@ -101,7 +102,11 @@ int logger_manage::print_log(LOG_LEVEL level, uint32_t time, const char* fmt, ..
         logger_message_.length = 0;
         logger_message_.ptr = pstart;
 
-        len = snprintf(pbuf, bufferlen, "LogLevel:%d time:%u info:",level, time);
+        len = snprintf(pbuf, bufferlen, "%02d:%02d:%02d level:%d info:",
+            ptimer->Hours,
+            ptimer->Minutes,
+            ptimer->Seconds,
+            level);
         if((len<=0) || (len>=bufferlen))
         {
             mutex_give(is_thread_work);
@@ -234,7 +239,7 @@ void logger_manage::logger_tx_run(void *parameter)
         {
             if(interface_ == LOGGER_INTERFACE_UART)
             {    
-                //usart_translate(msg.ptr, msg.length); 
+                usart_translate(msg.ptr, msg.length); 
             }
             else if(interface_ == LOGGER_INTERFACE_SWO)
             {          

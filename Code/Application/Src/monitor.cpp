@@ -65,12 +65,12 @@ std::function<void()> key_func_list[] = {
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "rng:%d ", rng_get_value());
     },
     [](){
-        static uint16_t voltage = 0;
+        static float precent = 1;
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Key2 Push down!");
-        voltage += 200;
-        if(voltage > 3300)
-            voltage = 0;
-        dac_set_voltage(voltage);
+        set_convert_vol(precent);
+        precent -= 0.1;
+        if(precent < 0.5)
+            precent = 1;
     },
     [](){
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Tpad Key Push down, no_push:%d, push:%d!",

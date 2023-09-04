@@ -37,6 +37,7 @@ extern "C" {
 
 BaseType_t dac_init();    
 void dac_set_voltage(uint16_t mv);
+void set_convert_vol(float percent);
     
 #ifdef __cplusplus
 }

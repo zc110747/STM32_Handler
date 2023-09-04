@@ -19,15 +19,15 @@
 #include "rtc.h"
 
 #define RTC_DATE_YEAR       23
-#define RTC_DATE_MONTH      07
-#define RTC_DATE_DAY        03
+#define RTC_DATE_MONTH      9
+#define RTC_DATE_DAY        4
 #define RTC_DATE_WEEK       1
 
-#define RTC_TIME_HOUR       12
-#define RTC_TIME_MINUTE     49
-#define RTC_TIME_SECOND     00
+#define RTC_TIME_HOUR       21
+#define RTC_TIME_MINUTE     6
+#define RTC_TIME_SECOND     0
 
-#define RTC_SET_FLAGS       0x5A5A
+#define RTC_SET_FLAGS       0x5B5B
 #define RTC_FORMAT_MODE     RTC_FORMAT_BIN
 
 static RTC_TimeTypeDef time_ = {0};
