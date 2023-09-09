@@ -26,11 +26,35 @@ static TIM_HandleTypeDef htim;
 //global function
 static void dac_run_test(void);
 
+void dac_set_voltage(uint16_t mv)
+{
+    float adc_value;
+    
+    if(mv > DAC_REFERENCE_VOL)
+        mv = DAC_REFERENCE_VOL;
+    
+    adc_value = (float)mv/DAC_REFERENCE_VOL * DAC_MAX_VALUE;
+    
+    HAL_DAC_Stop(&hdac, DAC_CHANNEL_1);
+    HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)adc_value);
+    HAL_DAC_Start(&hdac, DAC_CHANNEL_1);    
+}
+
+
 #if DMA_RUN_MODE == DMA_MODE_POLL
 BaseType_t dac_init()
 {
     DAC_ChannelConfTypeDef sConfig = {0};
-
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    
+    __HAL_RCC_DAC_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    
     hdac.Instance = DAC;
     if(HAL_DAC_Init(&hdac) != HAL_OK)
         return pdFAIL;
@@ -39,7 +63,9 @@ BaseType_t dac_init()
     sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
     if(HAL_DAC_ConfigChannel(&hdac, &sConfig, DAC_CHANNEL_1) != HAL_OK)
         return pdFAIL;
-        
+     
+    dac_set_voltage(2000);   
+    
 #if RUN_TEST_MODE == DAC_TEST
     dac_run_test();
 #endif    
@@ -54,6 +80,14 @@ static void dac_run_test(void)
     {
     
     }
+}
+
+void set_convert_vol(float percent)
+{
+    uint32_t adc_vol;
+    
+    adc_vol = DAC_MAX_VALUE*percent;
+    dac_set_voltage(adc_vol);
 }
 #else
 
@@ -81,6 +115,7 @@ void set_convert_vol(float percent)
 
 BaseType_t dac_init()
 {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
     DAC_ChannelConfTypeDef sConfig = {0};
     TIM_ClockConfigTypeDef sClockSourceConfig = {0};
     TIM_SlaveConfigTypeDef sSlaveConfig = {0};
@@ -88,7 +123,14 @@ BaseType_t dac_init()
 
     __HAL_RCC_DMA1_CLK_ENABLE();
     __HAL_RCC_TIM4_CLK_ENABLE();
-       
+    __HAL_RCC_DAC_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
     hdac.Instance = DAC;
     if(HAL_DAC_Init(&hdac) != HAL_OK)
         return pdFAIL;
@@ -120,7 +162,6 @@ BaseType_t dac_init()
     
     //initialize timer
     //clock APB1 90M
-    //
     htim.Instance = TIM4;
     htim.Init.Prescaler = 89; //1M
     htim.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -166,19 +207,4 @@ static void dac_run_test(void)
     }
 }
 #endif
-
-void dac_set_voltage(uint16_t mv)
-{
-    float adc_value;
-    
-    if(mv > DAC_REFERENCE_VOL)
-        mv = DAC_REFERENCE_VOL;
-    
-    adc_value = (float)mv/DAC_REFERENCE_VOL * DAC_MAX_VALUE;
-    
-    HAL_DAC_Stop(&hdac, DAC_CHANNEL_1);
-    HAL_DAC_SetValue(&hdac, DAC_CHANNEL_1, DAC_ALIGN_12B_R, (uint32_t)adc_value);
-    HAL_DAC_Start(&hdac, DAC_CHANNEL_1);    
-}
-
 

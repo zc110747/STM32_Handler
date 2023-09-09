@@ -840,11 +840,6 @@
               <FilePath>..\Drivers\Src\lcd.cpp</FilePath>
             </File>
             <File>
-              <FileName>led.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\Src\led.c</FilePath>
-            </File>
-            <File>
               <FileName>rng.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\rng.c</FilePath>
@@ -870,9 +865,14 @@
               <FilePath>..\Drivers\Src\spi.c</FilePath>
             </File>
             <File>
-              <FileName>tpad.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\Drivers\Src\tpad.cpp</FilePath>
+              <FileName>interface.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\interface.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_led.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -883,6 +883,21 @@
               <FileName>dac.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\dac.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Driver/timer</GroupName>
+          <Files>
+            <File>
+              <FileName>drv_pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_tpad.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_tpad.c</FilePath>
             </File>
           </Files>
         </Group>

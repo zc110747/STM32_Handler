@@ -19,10 +19,8 @@
 #include "driver.hpp"
 #include "sdram.hpp"
 #include "lcd.hpp"
-#include "tpad.hpp"
 #include "sdmmc.hpp"
 
-std::atomic<bool> is_os_on{false};
 void wq_application(void);
 
 BaseType_t driver_init(void)
@@ -45,7 +43,7 @@ BaseType_t driver_init(void)
     
     //led init
     //all io clock init in this function, so need the first execute.
-    result &= led_init();
+    result &= led_driver_init();
 
     //sdram init
     result &= sdram_driver::get_instance()->init();
@@ -63,7 +61,8 @@ BaseType_t driver_init(void)
     result &= rng_init();
 
     //tpad 
-    result &= tpad_driver::get_instance()->init();
+    result &= tpad_driver_init();
+    result &= pwm_driver_init();
     
     //rtc
     result &= rtc_init();
@@ -79,6 +78,8 @@ BaseType_t driver_init(void)
     
     //spi
     result &= spi_init();
+    
+
     
     //dfu test
     dsp_app();
@@ -107,35 +108,6 @@ void wq_application(void)
     wq_read(buffer, 0, strlen(ptr));
     
     printf("%s", buffer);
-}
-
-void delay_us(uint16_t times)
-{
-    uint16_t i, j;
-    for(i=0; i<times; i++)
-    {
-        for(j=0; j<5; j++)
-        {
-            __NOP();
-        }
-    }
-}
-
-void set_os_on()
-{
-    is_os_on = true;
-}
-
-void delay_ms(uint16_t ms)
-{
-    if(is_os_on)
-    {
-        vTaskDelay(ms);
-    }
-    else
-    {
-        HAL_Delay(ms);
-    }
 }
 
 HAL_StatusTypeDef read_disk(uint8_t *buf, uint32_t startBlocks, uint32_t NumberOfBlocks)

@@ -20,16 +20,16 @@ _Pragma("once")
 
 #include "interface.h"
 
-#define DMA_MODE_POLL             0
-#define DMA_MODE_DMA              1
+#define DMA_MODE_POLL               0
+#define DMA_MODE_DMA                1
 
-#define DMA_RUN_MODE              DMA_MODE_DMA
+#define DMA_RUN_MODE                DMA_MODE_DMA
 
 //reference voltage, uint:mv
-#define DAC_REFERENCE_VOL   3300
+#define DAC_REFERENCE_VOL           3300
 
 //dac max output value
-#define DAC_MAX_VALUE       4096
+#define DAC_MAX_VALUE               4095
 
 #ifdef __cplusplus
 extern "C" {

@@ -19,7 +19,6 @@
 #include "application.hpp"
 #include "includes.hpp"
 #include "logger.hpp"
-#include "led.h"
 #include "schedular.hpp"
 #include "monitor.hpp"
 #include "i2c_monitor.hpp"

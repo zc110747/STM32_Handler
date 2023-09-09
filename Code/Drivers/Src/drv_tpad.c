@@ -3,11 +3,12 @@
 //  All Rights Reserved
 //
 //  Name:
-//     tpad.cpp
+//      tpad.cpp
 //
 //  Purpose:
-//     tpad key driver.
-//
+//      use timer capture for tpad.
+//      Input: PA5
+//      Module: TIM2
 // Author:
 //      @zc
 //
@@ -16,19 +17,11 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "tpad.hpp"
-#include "driver.hpp"
+#include "drv_tpad.h"
 
-/*
-APB2 Timer Clock 90Mhz
-Timer Ticks for one Count is 45MHZ
-*/
+//global define 
 #define TPAD_ARR_MAX_VAL                    0XFFFFFFFF
 #define TPAD_TIMER_PRESCALER                1               //clock div 2
-
-/*
-capture number must in the range, otherwise is hardware problem
-*/
 #define TPAD_TIMES_CAPTURE_LOW              50
 #define TPAD_TIMES_CAPTURE_HIGH             2500
 #define TPAD_INIT_CHECK_TIMES               10
@@ -38,23 +31,55 @@ capture number must in the range, otherwise is hardware problem
 #define TPAD_IS_VALID_CAPTURE(value) \
    (((value)>=TPAD_TIMES_CAPTURE_LOW) && ((value)<=(TPAD_TIMES_CAPTURE_HIGH)))
 
-BaseType_t tpad_driver::init(void)
+//global parameter
+static TIM_HandleTypeDef htim2_tpad = {0};
+static uint16_t no_push_value_ = 0;
+static uint16_t current_value_ = 0;
+/*
+APB2 Timer Clock 90Mhz
+Timer Ticks for one Count is 45MHZ
+*/
+
+//function
+static void tpad_reset(void);
+static BaseType_t tpad_hardware_init(void);
+static uint16_t tpad_get_value(void);
+static uint16_t tpad_get_max_value(void);
+
+int comp(const void *a,const void* b)
+{
+    return *(uint16_t*)b - *(uint16_t*)a;
+}
+
+uint16_t avg(uint16_t *buf, uint8_t size)
+{
+   uint8_t index;
+   uint16_t sum = 0;
+   
+   for(index=0; index<size; index++)
+   {
+     sum += buf[index];
+   }
+   return sum/size;
+}
+
+BaseType_t tpad_driver_init(void)
 {
     uint16_t buf[10];
     BaseType_t result;
     
-    result = hardware_init();
+    result = tpad_hardware_init();
 
     if(result == pdPASS)
     {
         /*read the capture value for no push, sort, used middle*/
         for(int i=0; i<TPAD_INIT_CHECK_TIMES;i++)
         {				 
-            buf[i] = get_value();
+            buf[i] = tpad_get_value();
             delay_ms(5);	    
         }
-        std::sort(buf, buf+TPAD_INIT_CHECK_TIMES);
-        no_push_value_ = std::accumulate(buf+2, buf+8, 0)/6;
+        qsort(buf, TPAD_INIT_CHECK_TIMES, sizeof(uint16_t), comp);
+        no_push_value_ = avg(buf, TPAD_INIT_CHECK_TIMES-2);
         printf("tpad no_push_value_:%d\r\n", no_push_value_);    
     }
     else
@@ -64,10 +89,43 @@ BaseType_t tpad_driver::init(void)
     return result;
 }
 
-uint8_t tpad_driver::scan_key()
+uint16_t tpad_get_no_push_val(void)
+{
+    return no_push_value_;
+}
+
+uint16_t tpad_current_val(void)
+{
+    return current_value_;
+}
+
+static BaseType_t tpad_hardware_init(void)
+{
+    TIM_IC_InitTypeDef TIM2_CH1Config;  
+
+    __HAL_RCC_TIM2_CLK_ENABLE();
+
+    htim2_tpad.Instance = TIM2;                       
+    htim2_tpad.Init.Prescaler = TPAD_TIMER_PRESCALER;       
+    htim2_tpad.Init.CounterMode = TIM_COUNTERMODE_UP;    
+    htim2_tpad.Init.Period = TPAD_ARR_MAX_VAL;                   
+    htim2_tpad.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    HAL_TIM_IC_Init(&htim2_tpad);
+
+    TIM2_CH1Config.ICPolarity=TIM_ICPOLARITY_RISING;   
+    TIM2_CH1Config.ICSelection=TIM_ICSELECTION_DIRECTTI;
+    TIM2_CH1Config.ICPrescaler=TIM_ICPSC_DIV1;         
+    TIM2_CH1Config.ICFilter=0;                        
+    HAL_TIM_IC_ConfigChannel(&htim2_tpad, &TIM2_CH1Config, TIM_CHANNEL_1);
+    HAL_TIM_IC_Start(&htim2_tpad, TIM_CHANNEL_1);    
+    
+    return pdPASS;
+}
+
+uint8_t tpad_scan_key(void)
 {
     /*get the max value when read capture.*/
-    current_value_ = get_max_value(); 
+    current_value_ = tpad_get_max_value(); 
 
     //check wheather is valid key push value.
     if(TPAD_IS_VALID_PUSH_KEY(current_value_, no_push_value_))					 
@@ -76,7 +134,7 @@ uint8_t tpad_driver::scan_key()
     return 0;
 }	
 
-void tpad_driver::reset()
+static void tpad_reset(void)
 {
     GPIO_InitTypeDef GPIO_Initure;
 	
@@ -91,8 +149,8 @@ void tpad_driver::reset()
     //delay to wait capture run to zero
     delay_ms(3);	
 
-    __HAL_TIM_CLEAR_FLAG(&timer_handler_, TIM_FLAG_CC1|TIM_FLAG_UPDATE);   
-    __HAL_TIM_SET_COUNTER(&timer_handler_, 0); 
+    __HAL_TIM_CLEAR_FLAG(&htim2_tpad, TIM_FLAG_CC1|TIM_FLAG_UPDATE);   
+    __HAL_TIM_SET_COUNTER(&htim2_tpad, 0); 
     
     GPIO_Initure.Mode = GPIO_MODE_AF_PP;      
     GPIO_Initure.Pull = GPIO_NOPULL;         
@@ -100,23 +158,23 @@ void tpad_driver::reset()
     HAL_GPIO_Init(GPIOA, &GPIO_Initure); 
 }
 
-uint16_t tpad_driver::get_value(void)
+static uint16_t tpad_get_value(void)
 {
     /*reset the pin for next capture.*/
-    reset();
+    tpad_reset();
     
-    while(__HAL_TIM_GET_FLAG(&timer_handler_, TIM_FLAG_CC1) == RESET) 
+    while(__HAL_TIM_GET_FLAG(&htim2_tpad, TIM_FLAG_CC1) == RESET) 
     {
         //not more than TPAD_TIMES_CAPTURE_HIGH
-        if(__HAL_TIM_GET_COUNTER(&timer_handler_) > TPAD_TIMES_CAPTURE_HIGH) 
+        if(__HAL_TIM_GET_COUNTER(&htim2_tpad) > TPAD_TIMES_CAPTURE_HIGH) 
         {
-            return __HAL_TIM_GET_COUNTER(&timer_handler_);
+            return __HAL_TIM_GET_COUNTER(&htim2_tpad);
         }
     };
-    return HAL_TIM_ReadCapturedValue(&timer_handler_,TIM_CHANNEL_1);
+    return HAL_TIM_ReadCapturedValue(&htim2_tpad,TIM_CHANNEL_1);
 }
 
-uint16_t tpad_driver::get_max_value()
+static uint16_t tpad_get_max_value(void)
 {
     uint16_t temp; 
     uint16_t res = 0; 
@@ -126,7 +184,7 @@ uint16_t tpad_driver::get_max_value()
     while(times--)
     {
         //get the capture value, store the max in res.
-        temp = get_value();
+        temp = tpad_get_value();
         if(temp > res)
         {
             res = temp;
@@ -143,34 +201,5 @@ uint16_t tpad_driver::get_max_value()
         return res;
     else 
         return 0;
-}
-
-bool tpad_driver::test()
-{
-    return true;
-}
-
-//APB1 Timer clocks 90Mhz
-BaseType_t tpad_driver::hardware_init()
-{
-    TIM_IC_InitTypeDef TIM2_CH1Config;  
-
-    __HAL_RCC_TIM2_CLK_ENABLE();
-
-    timer_handler_.Instance = TIM2;                       
-    timer_handler_.Init.Prescaler = TPAD_TIMER_PRESCALER;       
-    timer_handler_.Init.CounterMode = TIM_COUNTERMODE_UP;    
-    timer_handler_.Init.Period = TPAD_ARR_MAX_VAL;                   
-    timer_handler_.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    HAL_TIM_IC_Init(&timer_handler_);
-
-    TIM2_CH1Config.ICPolarity=TIM_ICPOLARITY_RISING;   
-    TIM2_CH1Config.ICSelection=TIM_ICSELECTION_DIRECTTI;
-    TIM2_CH1Config.ICPrescaler=TIM_ICPSC_DIV1;         
-    TIM2_CH1Config.ICFilter=0;                        
-    HAL_TIM_IC_ConfigChannel(&timer_handler_, &TIM2_CH1Config, TIM_CHANNEL_1);
-    HAL_TIM_IC_Start(&timer_handler_, TIM_CHANNEL_1);    
-    
-    return pdPASS;
 }
   

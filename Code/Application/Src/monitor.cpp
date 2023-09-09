@@ -2,7 +2,7 @@
 #include "logger.hpp"
 #include "monitor.hpp"
 #include "lcd.hpp"
-#include "tpad.hpp"
+#include "driver.hpp"
 #include "i2c_monitor.hpp"
 
 KEY_STATE monitor_manage::key_last_[KEY_NUM];
@@ -68,14 +68,15 @@ std::function<void()> key_func_list[] = {
         static float precent = 1;
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Key2 Push down!");
         set_convert_vol(precent);
+        pwm_set_percent(precent);
         precent -= 0.1;
         if(precent < 0.5)
             precent = 1;
     },
     [](){
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Tpad Key Push down, no_push:%d, push:%d!",
-            tpad_driver::get_instance()->get_no_push_value(),
-            tpad_driver::get_instance()->get_current_value()
+            tpad_get_no_push_val(),
+            tpad_current_val()
         );
         rtc_delay_alarm(0, 0, 0, 5);
     },    
@@ -89,7 +90,7 @@ void monitor_manage::key_motion()
     key_now_[0] = monitor_manage::get_instance()->anti_shake(&tick[0], key_now_[0], key_get_value(0));
     key_now_[1] = monitor_manage::get_instance()->anti_shake(&tick[1], key_now_[1], key_get_value(1));
     key_now_[2] = monitor_manage::get_instance()->anti_shake(&tick[2], key_now_[2], key_get_value(2));
-    key_now_[3] = monitor_manage::get_instance()->anti_shake(&tick[3], key_now_[3], tpad_driver::get_instance()->scan_key()==1?KEY_ON:KEY_OFF);
+    key_now_[3] = monitor_manage::get_instance()->anti_shake(&tick[3], key_now_[3], tpad_scan_key()==1?KEY_ON:KEY_OFF);
     key_now_[4] = monitor_manage::get_instance()->anti_shake(&tick[4], key_now_[4], i2c_monitor::get_instance()->get_read_io()->u.exio==0?KEY_ON:KEY_OFF);
     
     for(int index=0; index<KEY_NUM; index++)
@@ -159,17 +160,16 @@ void monitor_manage::adc_monitor()
         temp_loop = 0;
 
         adc_temp = adc_get_avg(ADC_CHANNEL_TEMPSENSOR);
-        temperate = (float)adc_temp*(3.3/4096);		//��ѹֵ
-        temperate = (temperate-0.76)/0.0025 + 25;     //ת��Ϊ�¶�ֵ 
+        temperate = (float)adc_temp*(3.3/4096);	
+        temperate = (temperate-0.76)/0.0025 + 25; 
 
-        lcd_driver::get_instance()->lcd_show_extra_num(10+11*8,140,(uint32_t)temperate, 2, 16, 0);		//��ʾ��������
-        lcd_driver::get_instance()->lcd_show_extra_num(10+14*8,140,((uint32_t)(temperate*100))%100, 2, 16, 0);		//��ʾС������ 
+        lcd_driver::get_instance()->lcd_show_extra_num(10+11*8,140,(uint32_t)temperate, 2, 16, 0);		
+        lcd_driver::get_instance()->lcd_show_extra_num(10+14*8,140,((uint32_t)(temperate*100))%100, 2, 16, 0);		
         
-        //PB1 - ADC Channel 9
-        adc_vol = adc_get_avg(ADC_CHANNEL_9);
+        adc_vol = adc_get_avg(ADC_CHANNEL_6);
         voltage = (float)adc_vol*(3.3/4096);
-        lcd_driver::get_instance()->lcd_show_extra_num(10+23*8,140,(uint32_t)voltage, 2, 16, 0);		//��ʾ��������
-        lcd_driver::get_instance()->lcd_show_extra_num(10+26*8,140,((uint32_t)(voltage*100))%100, 2, 16, 0);		//��ʾС������ 
+        lcd_driver::get_instance()->lcd_show_extra_num(10+23*8,140,(uint32_t)voltage, 2, 16, 0);	
+        lcd_driver::get_instance()->lcd_show_extra_num(10+26*8,140,((uint32_t)(voltage*100))%100, 2, 16, 0);
     }
 }
     

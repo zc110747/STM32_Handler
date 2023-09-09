@@ -41,7 +41,7 @@ uint16_t adc_get_value(uint32_t channel)
     
     sConfig.Channel = channel;
     sConfig.Rank = 1;
-    sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+    sConfig.SamplingTime = ADC_SAMPLETIME_15CYCLES;
     sConfig.Offset = 0;
     HAL_ADC_ConfigChannel(&adc1_hander_, &sConfig);
     
@@ -69,6 +69,18 @@ uint16_t adc_get_avg(uint32_t channel)
 
 static BaseType_t adc_hardware_init(void)
 {
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    
+    __HAL_RCC_ADC1_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+//    
+//    //Enable Hardware analog pin
+    //PA6 - ADC1 CHANNEL6
+    GPIO_InitStruct.Pin = GPIO_PIN_6;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    
     adc1_hander_.Instance=ADC1;
     adc1_hander_.Init.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV4;   
     adc1_hander_.Init.Resolution=ADC_RESOLUTION_12B;          

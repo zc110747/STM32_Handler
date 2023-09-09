@@ -13,7 +13,7 @@
     extern "C" {
 #endif
         
-BaseType_t led_init(void);
+BaseType_t led_driver_init(void);
 void led_set(led_device dev, led_status status);
         
 #ifdef __cplusplus
