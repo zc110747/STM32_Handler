@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//     rng.h
+//     drv_wdg.h
 //
 //  Purpose:
-//     rng driver interface.
+//     watchdog application.
 //
 // Author:
 //      @zc
@@ -23,10 +23,10 @@ _Pragma("once");
 #ifdef __cplusplus
 extern "C" {
 #endif
-    
-BaseType_t rng_init();
-uint32_t rng_get_value(void);
+
+void iwdg_reload(void);
+BaseType_t wdg_driver_init(void);    
     
 #ifdef __cplusplus
 }
-#endif
+#endif 

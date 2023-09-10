@@ -35,7 +35,7 @@ typedef struct
 static UART_HandleTypeDef huart1;
 static DMA_HandleTypeDef hdma_usart1_rx;
 static DMA_HandleTypeDef hdma_usart1_tx;
-static uint8_t is_usart_init = 0;
+static uint8_t is_usart_driver_init = 0;
 
 static RX_INFO gRxInfo = {0};
 static uint8_t dma_rx_buffer[DMA_BUFFER_SIZE];
@@ -44,7 +44,7 @@ static uint8_t dma_tx_buffer[DMA_BUFFER_SIZE];
 //global function
 static void usart_run_test(void);
 
-BaseType_t usart_init(void)
+BaseType_t usart_driver_init(void)
 {
     __HAL_RCC_DMA2_CLK_ENABLE();
 
@@ -114,7 +114,7 @@ BaseType_t usart_init(void)
     HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);			
     HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 0, 1);	
     
-    is_usart_init = 1;
+    is_usart_driver_init = 1;
     
 #if RUN_TEST_MODE == USART_TEST
   usart_translate("usart test for polling!\r\n", strlen("usart test for polling!\r\n"));

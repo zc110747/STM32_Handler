@@ -12,8 +12,6 @@ public:
         return &instance_;
     }
     bool init(void);
-    void wwdg_init(void);
-    void wwdg_reload(void);
     
 private:
     static void run(void* parameter);

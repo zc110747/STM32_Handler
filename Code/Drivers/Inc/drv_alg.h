@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//      usart.h
+//     rng.h
 //
 //  Purpose:
-//      usart driver interface process.
+//     rng driver interface.
 //
 // Author:
 //      @zc
@@ -20,21 +20,14 @@ _Pragma("once");
 
 #include "interface.h"
 
-#define USART_MODE_POLL             0
-#define USART_MODE_INTERRUPT        1
-#define USART_MODE_DMA              2
-
-#define USART_RUN_MODE              USART_MODE_INTERRUPT
-
-#define USART_TRANSLATE_DELAY_TIME  (200)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-BaseType_t usart_driver_init(void);
-void usart_translate(char *ptr, uint16_t size);
-
+    
+BaseType_t alg_driver_init(void);
+uint32_t rng_get_value(void);
+uint32_t crc_get_value(uint32_t *pbuffer, uint32_t size);
+    
 #ifdef __cplusplus
 }
 #endif

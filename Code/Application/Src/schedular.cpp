@@ -49,7 +49,7 @@ void schedular::run(void* parameter)
     //tell driver os is start.
     set_os_on();
     
-        //PRINT_NOW("application init\r\n");
+    //PRINT_NOW("application init\r\n");
     PRINT_LOG(LOG_INFO, HAL_GetTick(), "application init success!");
     PRINT_LOG(LOG_INFO, HAL_GetTick(), "dbgmcu_id:0x%x", 
         DBGMCU->IDCODE);
@@ -65,25 +65,6 @@ void schedular::run(void* parameter)
         vTaskDelay(100);
         LED0_OFF;
         vTaskDelay(100);
-        
-        schedular::get_instance()->wwdg_reload();   
+
     }    
-}
-
-void schedular::wwdg_reload(void)
-{
-    HAL_IWDG_Refresh(&hiwdg);
-}
-
-//wwdg clock used LSI = 32khz
-//times = 4065* 1/(32khz/32) = 4s
-void schedular::wwdg_init(void)
-{
-    hiwdg.Instance = IWDG;
-    hiwdg.Init.Prescaler = IWDG_PRESCALER_32;
-    hiwdg.Init.Reload = 4095;
-    if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
-    {
-        Error_Handler();
-    }
 }

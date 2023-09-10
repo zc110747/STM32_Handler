@@ -25,7 +25,7 @@ void wq_application(void);
 
 BaseType_t driver_init(void)
 {
-    BaseType_t result;
+    BaseType_t result = pdPASS;
     
     /* GPIO Ports Clock Enable */
     __HAL_RCC_GPIOF_CLK_ENABLE();
@@ -39,7 +39,7 @@ BaseType_t driver_init(void)
     
     //usart init
     //usart first init for logger.
-    result = usart_init();
+    result = usart_driver_init();
     
     //led init
     //all io clock init in this function, so need the first execute.
@@ -58,14 +58,14 @@ BaseType_t driver_init(void)
     result &= key_init();
 
     //rng
-    result &= rng_init();
+    result &= alg_driver_init();
 
     //tpad 
     result &= tpad_driver_init();
     result &= pwm_driver_init();
     
     //rtc
-    result &= rtc_init();
+    result &= rtc_driver_init();
     
     //i2c
     result &= i2c_init();
@@ -79,8 +79,6 @@ BaseType_t driver_init(void)
     //spi
     result &= spi_init();
     
-
-    
     //dfu test
     dsp_app();
     
@@ -90,6 +88,9 @@ BaseType_t driver_init(void)
     
     //dma 
     dma_init();
+
+    result &= wdg_driver_init();
+    iwdg_reload();
     
     return result;
 }

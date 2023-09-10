@@ -19,6 +19,9 @@
 #ifndef _PRODUCT_CONFIG_H
 #define _PRODUCT_CONFIG_H
 
+#define IWDG_MODULE_ON                  1
+#define WWDG_MODULE_ON                  0
+
 ///driver test define
 #define NO_TEST                         0
 #define USART_TEST                      1

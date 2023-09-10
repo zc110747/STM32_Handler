@@ -28,7 +28,7 @@
 
 //global parameter
 static UART_HandleTypeDef huart1;
-static uint8_t is_usart_init = 0;
+static uint8_t is_usart_driver_init = 0;
 
 static volatile CircularBuffer rx_circular;
 static uint8_t  rx_cache[CIRCULAR_BUFFER_SIZE];
@@ -52,7 +52,7 @@ void UART_SendData(UART_HandleTypeDef* huart, uint16_t Data)
     huart->Instance->DR = Data&0x1FF;
 }
 
-BaseType_t usart_init(void)
+BaseType_t usart_driver_init(void)
 {
   huart1.Instance = USART1;
   huart1.Init.BaudRate = 115200;
@@ -74,7 +74,7 @@ BaseType_t usart_init(void)
   CircularBufferInit(&rx_circular, CIRCULAR_BUFFER_SIZE, rx_cache);
   CircularBufferInit(&tx_circular, CIRCULAR_BUFFER_SIZE, tx_cache);
   
-  is_usart_init = 1;
+  is_usart_driver_init = 1;
   
 #if RUN_TEST_MODE == USART_TEST
   usart_translate("usart test for polling!\r\n", strlen("usart test for polling!\r\n"));
@@ -171,7 +171,7 @@ void _sys_exit(int x)
 } 
 int fputc(int ch, FILE *f)
 { 	
-  if(is_usart_init == 1)
+  if(is_usart_driver_init == 1)
   {
     usart_translate((char *)&ch, 1); 
   }

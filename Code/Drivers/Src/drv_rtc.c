@@ -16,7 +16,7 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "rtc.h"
+#include "drv_rtc.h"
 
 #define RTC_DATE_YEAR       23
 #define RTC_DATE_MONTH      9
@@ -40,7 +40,7 @@ static BaseType_t rtc_hardware_init(void);
 static HAL_StatusTypeDef rtc_set_time(uint8_t hour, uint8_t min, uint8_t sec);
 static HAL_StatusTypeDef rtc_set_date(uint8_t year, uint8_t month, uint8_t date, uint8_t week);
 
-BaseType_t rtc_init(void)
+BaseType_t rtc_driver_init(void)
 {
     BaseType_t result;
 

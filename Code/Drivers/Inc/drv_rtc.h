@@ -24,7 +24,7 @@ _Pragma("once")
     extern "C" {
 #endif
 
-BaseType_t rtc_init(void);
+BaseType_t rtc_driver_init(void);
 BaseType_t rtc_update(void);
         
 RTC_TimeTypeDef *rtc_get_time(void);

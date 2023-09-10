@@ -614,6 +614,16 @@
               <FileType>1</FileType>
               <FilePath>..\Library\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_rtc_ex.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f4xx_hal_crc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Library\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_crc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f4xx_hal_wwdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Library\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_wwdg.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -840,16 +850,6 @@
               <FilePath>..\Drivers\Src\lcd.cpp</FilePath>
             </File>
             <File>
-              <FileName>rng.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\Src\rng.c</FilePath>
-            </File>
-            <File>
-              <FileName>rtc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\Src\rtc.c</FilePath>
-            </File>
-            <File>
               <FileName>sdmmc.cpp</FileName>
               <FileType>8</FileType>
               <FilePath>..\Drivers\Src\sdmmc.cpp</FilePath>
@@ -874,15 +874,25 @@
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\drv_led.c</FilePath>
             </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>Driver/dac</GroupName>
-          <Files>
             <File>
-              <FileName>dac.c</FileName>
+              <FileName>drv_dac.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Drivers\Src\dac.c</FilePath>
+              <FilePath>..\Drivers\Src\drv_dac.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_alg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_alg.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_rtc.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_wdg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_wdg.c</FilePath>
             </File>
           </Files>
         </Group>

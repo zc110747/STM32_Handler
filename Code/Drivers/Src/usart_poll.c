@@ -24,7 +24,7 @@
 
 //global parameter
 static UART_HandleTypeDef huart1;
-static uint8_t is_usart_init = 0;
+static uint8_t is_usart_driver_init = 0;
 
 //global function
 static void usart_run_test(void);
@@ -63,7 +63,7 @@ static void usart_run_test(void)
   }
 }
 
-BaseType_t usart_init(void)
+BaseType_t usart_driver_init(void)
 {
   huart1.Instance = USART1;
   huart1.Init.BaudRate = 115200;
@@ -76,7 +76,7 @@ BaseType_t usart_init(void)
   if (HAL_UART_Init(&huart1) != HAL_OK)
       return pdFAIL;
 
-  is_usart_init = 1;
+  is_usart_driver_init = 1;
   
 #if RUN_TEST_MODE == USART_TEST
   usart_translate("usart test for polling!\r\n", strlen("usart test for polling!\r\n"));
@@ -106,7 +106,7 @@ void _sys_exit(int x)
 } 
 int fputc(int ch, FILE *f)
 { 	
-  if(is_usart_init == 1)
+  if(is_usart_driver_init == 1)
   {
     usart_translate((char *)&ch, 1); 
   }

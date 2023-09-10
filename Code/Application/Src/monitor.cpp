@@ -54,15 +54,21 @@ bool monitor_manage::is_time_escape(uint32_t ticks , uint32_t time)
     return false;
 }
 
+uint32_t buffer[] = {
+    0x1234, 0x02341515, 0x12321321, 0x23458686 
+};
 std::function<void()> key_func_list[] = {
     [](){
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Key0 Push down!");
         i2c_monitor::get_instance()->write_io(OUTPUT_BEEP, IO_ON);
     },
     [](){
+        uint32_t crc_value;
+       
+        crc_value = crc_get_value(buffer, 4);       
         PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Key1 Push down!");
         i2c_monitor::get_instance()->write_io(OUTPUT_BEEP, IO_OFF);
-        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "rng:%d ", rng_get_value());
+        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "rng:%d crc:0x%x", rng_get_value(), crc_value);
     },
     [](){
         static float precent = 1;
@@ -183,6 +189,8 @@ void monitor_manage::run(void* parameter)
         timer_loop_motion();
         
         adc_monitor();
+        
+        iwdg_reload();
         
         vTaskDelay(20);
     }

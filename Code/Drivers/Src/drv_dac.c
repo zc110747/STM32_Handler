@@ -16,7 +16,7 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "dac.h"
+#include "drv_dac.h"
 
 //global parameter
 static DAC_HandleTypeDef hdac;

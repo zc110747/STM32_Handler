@@ -5,17 +5,18 @@ _Pragma("once")
 #include "key.h"
 #include "usart.h"
 #include "adc.h"
-#include "dac.h"
-#include "rng.h"
 #include "i2c.h"
-#include "rtc.h"
 #include "spi.h"
 #include "dma.h"
 #include "dsp_test.h"
 
+#include "drv_rtc.h"
 #include "drv_led.h"
 #include "drv_pwm.h"
 #include "drv_tpad.h"
+#include "drv_dac.h"
+#include "drv_alg.h"
+#include "drv_wdg.h"
 
 #ifdef __cplusplus
 	extern "C" {
