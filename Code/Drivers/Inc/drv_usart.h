@@ -16,7 +16,8 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-_Pragma("once");
+#ifndef _DRV_USART_H
+#define _DRV_USART_H
 
 #include "interface.h"
 
@@ -34,7 +35,9 @@ extern "C" {
 
 BaseType_t usart_driver_init(void);
 void usart_translate(char *ptr, uint16_t size);
-
+void usart_receive(char *ptr, uint16_t size);
+    
 #ifdef __cplusplus
 }
+#endif
 #endif

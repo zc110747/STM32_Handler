@@ -1,12 +1,35 @@
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//      template.c
+//
+//  Purpose:
+//      ?¡ê?¨¦?¦Ì?¡Â
+//
+// Author:
+//      @zc
+//
+//  Assumptions:
+//	
+//  Revision History:
+//
+////////////////////////////////////////////////////////////////////////////
+#ifndef _APPLICATION_H
+#define _APPLICATION_H
 
-#pragma once
+#include "interface.h"
 
 #ifdef __cplusplus
     extern "C" {
 #endif
-        
-   void application_init(void);
+     
+BaseType_t logger_init(void);        
+BaseType_t application_init(void);
         
 #ifdef __cplusplus
     }
+#endif
+    
 #endif

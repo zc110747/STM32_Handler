@@ -49,8 +49,7 @@ static BaseType_t iwdg_init(void)
         return pdFAIL;
     }
 #endif
-
-  return pdPASS;
+    return pdPASS;
 }
 
 void iwdg_reload(void)

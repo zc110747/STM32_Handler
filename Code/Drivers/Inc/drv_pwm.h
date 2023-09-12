@@ -21,6 +21,11 @@
 
 #include "interface.h"
 
+#define PWM_RUN_NORMAL      0
+#define PWM_RUN_DMA         1
+
+#define PWM_RUN_MODE        PWM_RUN_DMA
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -31,5 +36,4 @@ void pwm_set_percent(float percent);
 #ifdef __cplusplus
 }
 #endif
-
 #endif

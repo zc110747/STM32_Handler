@@ -1,22 +1,13 @@
 
 #include "schedular.hpp"
-#include "logger.hpp"
 #include "driver.hpp"
 
 bool schedular::init(void)
 {
     BaseType_t xReturned;
     
-    /* Create the task, storing the handle. */
-    xReturned = xTaskCreate(
-                    run,       /* Function that implements the task. */
-                    "schedular",          /* Text name for the task. */
-                    SCHEDULAR_TASK_STACK,                    /* Stack size in words, not bytes. */
-                    ( void * ) NULL,    /* Parameter passed into the task. */
-                    SCHEDULAR_TASK_PROITY,/* Priority at which the task is created. */
-                    &task_handle_ );      /* Used to pass out the created task's handle. */
-    
-   //wwdg_init();    
+    xReturned = xTaskCreate(run, "schedular", SCHEDULAR_TASK_STACK, (void *)NULL,  
+                    SCHEDULAR_TASK_PROITY, &task_handle_ );
                     
    if(xReturned == pdPASS)
        return true;
@@ -50,10 +41,10 @@ void schedular::run(void* parameter)
     set_os_on();
     
     //PRINT_NOW("application init\r\n");
-    PRINT_LOG(LOG_INFO, HAL_GetTick(), "application init success!");
-    PRINT_LOG(LOG_INFO, HAL_GetTick(), "dbgmcu_id:0x%x", 
+    PRINT_LOG(LOG_INFO, "application init success!");
+    PRINT_LOG(LOG_INFO, "dbgmcu_id:0x%x", 
         DBGMCU->IDCODE);
-    PRINT_LOG(LOG_INFO, HAL_GetTick(), "uid:0x%x, 0x%x, 0x%x",
+    PRINT_LOG(LOG_INFO, "uid:0x%x, 0x%x, 0x%x",
         HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
     
     //fault_test_by_unalign();
@@ -61,10 +52,6 @@ void schedular::run(void* parameter)
     while(1)
     {
         //PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "LED Task Run!");
-        LED0_ON;
         vTaskDelay(100);
-        LED0_OFF;
-        vTaskDelay(100);
-
     }    
 }

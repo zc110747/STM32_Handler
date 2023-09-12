@@ -12,7 +12,7 @@ void dsp_app(void)
         in = 3.15;   
         if(arm_sqrt_f32(in, &out) == ARM_MATH_SUCCESS)
         {
-            printf("dfu sqrt:%f, %f\r\n", in, out);
+            PRINT_LOG(LOG_INFO, "dfu sqrt:%f, %f", in, out);
         }
     }   
     
@@ -23,6 +23,6 @@ void dsp_app(void)
         angle = PI/4;
         outSin = arm_sin_f32(angle);
         outCos = arm_cos_f32(angle);
-        printf("dfu sin:%f, cons:%f\r\n", outSin, outCos);
+        PRINT_LOG(LOG_INFO, "dfu sin:%f, cons:%f", outSin, outCos);
     }
 }

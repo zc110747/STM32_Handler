@@ -18,7 +18,7 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "usart.h"
+#include "drv_usart.h"
 
 #if USART_RUN_MODE == USART_MODE_POLL
 

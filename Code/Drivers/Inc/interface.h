@@ -4,6 +4,8 @@
 #define _INTERFACE_H
 
 #include "main.h"
+#include "application.hpp"
+#include "logger.h"
 
 typedef enum
 {
@@ -20,7 +22,7 @@ typedef enum
 #ifdef __cplusplus
 extern "C" {
 #endif
-void set_os_on();
+void set_os_on(void);
 
 //if us, use loop delay, if max than 1000, use delay ms.
 void delay_us(uint16_t us);

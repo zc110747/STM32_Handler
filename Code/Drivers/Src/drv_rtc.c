@@ -30,8 +30,7 @@
 #define RTC_SET_FLAGS       0x5B5B
 #define RTC_FORMAT_MODE     RTC_FORMAT_BIN
 
-static RTC_TimeTypeDef time_ = {0};
-static RTC_DateTypeDef date_ = {0};
+static RTC_INFO rtc_info_;
 static RTC_HandleTypeDef rtc_handler_;
 static RTC_AlarmTypeDef rtc_arm_handler_;
 static BaseType_t is_alarm = pdFALSE;
@@ -51,6 +50,7 @@ BaseType_t rtc_driver_init(void)
 
     if(result == pdPASS)
     {
+        rtc_update();
         rtc_delay_alarm(0, 0, 0, 5);
     }
     else
@@ -60,14 +60,9 @@ BaseType_t rtc_driver_init(void)
     return result;   
 }
 
-RTC_TimeTypeDef *rtc_get_time(void)
+RTC_INFO rtc_get_info(void)
 {
-    return &time_;
-}
-
-RTC_DateTypeDef *rtc_get_date(void)
-{
-    return &date_;
+    return rtc_info_;
 }
 
 void rtc_set_alarm(uint8_t week, uint8_t hour, uint8_t min, uint8_t sec)
@@ -96,31 +91,29 @@ void rtc_delay_alarm(uint8_t day, uint8_t hour, uint8_t min, uint8_t sec)
     uint8_t alarm_hour = 0;
     uint8_t alarm_min = 0;
     uint8_t alarm_sec = 0;
-    
-    rtc_update();
 
-    alarm_sec += time_.Seconds + sec;
+    alarm_sec += rtc_info_.time.Seconds + sec;
     if(alarm_sec >= 60)
     {
         alarm_sec -= 60;
         alarm_min++;
     }
     
-    alarm_min += time_.Minutes + min;
+    alarm_min += rtc_info_.time.Minutes + min;
     if(alarm_min >= 60)
     {
         alarm_min -= 60;
         alarm_hour++;
     }
     
-    alarm_hour += time_.Hours + hour;
+    alarm_hour += rtc_info_.time.Hours + hour;
     if(alarm_hour >= 24)
     {
         alarm_hour -= 24;
         alarm_week++;
     }
     
-    alarm_week += date_.WeekDay + day;
+    alarm_week += rtc_info_.date.WeekDay + day;
     if(alarm_week > 7)
     {
         alarm_week -= 7;
@@ -129,12 +122,21 @@ void rtc_delay_alarm(uint8_t day, uint8_t hour, uint8_t min, uint8_t sec)
     rtc_set_alarm(alarm_week, alarm_hour, alarm_min, alarm_sec);
 }
 
-BaseType_t rtc_update(void)
+RTC_INFO rtc_update(void)
 {
-    HAL_RTC_GetTime(&rtc_handler_, &time_, RTC_FORMAT_MODE);
-    HAL_RTC_GetDate(&rtc_handler_, &date_, RTC_FORMAT_MODE);
+    RTC_TimeTypeDef time;
+    RTC_DateTypeDef date;
     
-    return pdPASS;
+    HAL_RTC_GetTime(&rtc_handler_, &time, RTC_FORMAT_MODE);
+    HAL_RTC_GetDate(&rtc_handler_, &date, RTC_FORMAT_MODE);
+    
+    //must entery critical to avoid read not matching
+    portENTER_CRITICAL();
+    rtc_info_.time = time;
+    rtc_info_.date = date;
+    portEXIT_CRITICAL();
+    
+    return rtc_info_;
 }
 
 void RTC_Alarm_IRQHandler(void)
@@ -196,21 +198,21 @@ static BaseType_t rtc_hardware_init(void)
 
 static HAL_StatusTypeDef rtc_set_time(uint8_t hour, uint8_t min, uint8_t sec)
 {
-    time_.Hours = hour;
-    time_.Minutes = min;
-    time_.Seconds = sec;
-    time_.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-    time_.StoreOperation = RTC_STOREOPERATION_RESET;
+    rtc_info_.time.Hours = hour;
+    rtc_info_.time.Minutes = min;
+    rtc_info_.time.Seconds = sec;
+    rtc_info_.time.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    rtc_info_.time.StoreOperation = RTC_STOREOPERATION_RESET;
     
-    return HAL_RTC_SetTime(&rtc_handler_, &time_, RTC_FORMAT_MODE);
+    return HAL_RTC_SetTime(&rtc_handler_, &rtc_info_.time, RTC_FORMAT_MODE);
 }
 
 static HAL_StatusTypeDef rtc_set_date(uint8_t year, uint8_t month, uint8_t date, uint8_t week)
 {
-    date_.Year = year;
-    date_.Month = month;
-    date_.Date = date;
-    date_.WeekDay = week;
+    rtc_info_.date.Year = year;
+    rtc_info_.date.Month = month;
+    rtc_info_.date.Date = date;
+    rtc_info_.date.WeekDay = week;
     
-    return HAL_RTC_SetDate(&rtc_handler_, &date_, RTC_FORMAT_MODE);
+    return HAL_RTC_SetDate(&rtc_handler_, &rtc_info_.date, RTC_FORMAT_MODE);
 }
