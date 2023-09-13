@@ -31,7 +31,7 @@ static BaseType_t spi_test(void);
 static void wq_wait_busy(void);
 
 //spi hardware
-BaseType_t spi_init()
+BaseType_t spi_init(void)
 {
     BaseType_t result;
     

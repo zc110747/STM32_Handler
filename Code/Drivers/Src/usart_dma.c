@@ -3,9 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//      usart.cpp
-//          USART_TX -------------- PA9
-//          USART_RX -------------- PA10
+//      usart_dma.cpp
+//      USART_TX -------------- PA9
+//      USART_RX -------------- PA10
+//          
 //
 //  Purpose:
 //      usart driver interrupt rx and normal tx.
@@ -18,7 +19,7 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "usart.h"
+#include "drv_usart.h"
 
 #if USART_RUN_MODE == USART_MODE_DMA
 
@@ -38,8 +39,8 @@ static DMA_HandleTypeDef hdma_usart1_tx;
 static uint8_t is_usart_driver_init = 0;
 
 static RX_INFO gRxInfo = {0};
-static uint8_t dma_rx_buffer[DMA_BUFFER_SIZE];
-static uint8_t dma_tx_buffer[DMA_BUFFER_SIZE];
+static char dma_rx_buffer[DMA_BUFFER_SIZE];
+static char dma_tx_buffer[DMA_BUFFER_SIZE];
 
 //global function
 static void usart_run_test(void);
@@ -87,9 +88,6 @@ BaseType_t usart_driver_init(void)
     }
     __HAL_LINKDMA(&huart1, hdmarx, hdma_usart1_rx);
     
-    //enable dma rx
-    HAL_DMA_Start(&hdma_usart1_rx, (uint32_t)&huart1.Instance->DR, (uint32_t)dma_rx_buffer, DMA_BUFFER_SIZE);
-    
     hdma_usart1_tx.Instance = DMA2_Stream7;
     hdma_usart1_tx.Init.Channel = DMA_CHANNEL_4;
     hdma_usart1_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
@@ -114,6 +112,9 @@ BaseType_t usart_driver_init(void)
     HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);			
     HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 0, 1);	
     
+    //enable dma rx
+    usart_receive(dma_rx_buffer, DMA_BUFFER_SIZE);
+    
     is_usart_driver_init = 1;
     
 #if RUN_TEST_MODE == USART_TEST
@@ -125,6 +126,32 @@ BaseType_t usart_driver_init(void)
     return pdPASS; 
 }
 
+void usart_translate(char *ptr, uint16_t size)
+{
+    memcpy((char *)dma_tx_buffer, ptr, size);
+
+    //clear the flag related to translate
+    __HAL_DMA_CLEAR_FLAG(&hdma_usart1_tx, DMA_FLAG_TCIF3_7);
+    __HAL_DMA_CLEAR_FLAG(&hdma_usart1_tx, DMA_FLAG_TCIF3_7);
+    __HAL_UART_CLEAR_FLAG(&huart1, UART_FLAG_TC);
+
+    //enable dma tc interrupt
+    __HAL_DMA_ENABLE_IT(&hdma_usart1_tx, DMA_IT_TC);
+
+    //start dma translate
+    HAL_DMA_Start(&hdma_usart1_tx, (uint32_t)dma_tx_buffer, (uint32_t)&huart1.Instance->DR, size);
+}
+
+void usart_receive(char *ptr, uint16_t size)
+{
+    //clear dma rx flag
+    __HAL_DMA_CLEAR_FLAG(&hdma_usart1_tx, DMA_FLAG_TCIF2_6);
+    __HAL_DMA_CLEAR_FLAG(&hdma_usart1_tx, DMA_FLAG_TCIF2_6);
+
+    //启动等待下次接收
+    HAL_DMA_Start(&hdma_usart1_rx, (uint32_t)&huart1.Instance->DR, (uint32_t)ptr, DMA_BUFFER_SIZE);
+}
+
 static void usart_run_test(void)
 {
   char data[DMA_BUFFER_SIZE];
@@ -134,32 +161,25 @@ static void usart_run_test(void)
     if(gRxInfo.is_rx_dma == 1)
     {
         memcpy(data, dma_rx_buffer, gRxInfo.rx_size);
+        memset(dma_rx_buffer, 0, DMA_BUFFER_SIZE);
         gRxInfo.is_rx_dma = 0;
         
-        HAL_DMA_Start(&hdma_usart1_rx, (uint32_t)&huart1.Instance->DR, (uint32_t)dma_rx_buffer, DMA_BUFFER_SIZE);
+        //启动下次数据接收
+        usart_receive(dma_rx_buffer, DMA_BUFFER_SIZE);
+        
+        //发送接收到的数据
         usart_translate(data, gRxInfo.rx_size);
     }
   }
 }
 
-void usart_translate(char *ptr, uint16_t size)
-{
-  memcpy((char *)dma_tx_buffer, ptr, size);
-  
-  HAL_DMA_Start(&hdma_usart1_tx, (uint32_t)dma_tx_buffer, (uint32_t)&huart1.Instance->DR, size);
-} 
-
 void DMA2_Stream7_IRQHandler(void)
 {
     if(__HAL_DMA_GET_FLAG(&hdma_usart1_tx, DMA_FLAG_TCIF3_7) != RESET)
-    {
-        //clear all flags
-        __HAL_DMA_CLEAR_FLAG(&hdma_usart1_tx, DMA_FLAG_TCIF3_7);
-        __HAL_DMA_CLEAR_FLAG(&hdma_usart1_tx, DMA_FLAG_TEIF3_7);
-        
-        //close the dma tx for next  
-        HAL_DMA_Abort(&hdma_usart1_tx);
-        __HAL_DMA_ENABLE_IT(&hdma_usart1_tx, DMA_IT_TC);
+    {      
+        //close the dma and all flags, also interrupt
+        //need enable next
+        HAL_DMA_Abort(&hdma_usart1_tx);   
     }
 }
 

@@ -36,5 +36,4 @@ void pwm_set_percent(float percent);
 #ifdef __cplusplus
 }
 #endif
-
 #endif

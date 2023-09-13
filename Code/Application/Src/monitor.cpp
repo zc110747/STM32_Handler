@@ -1,5 +1,4 @@
 
-#include "logger.hpp"
 #include "monitor.hpp"
 #include "lcd.hpp"
 #include "driver.hpp"
@@ -59,20 +58,20 @@ uint32_t buffer[] = {
 };
 std::function<void()> key_func_list[] = {
     [](){
-        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Key0 Push down!");
+        PRINT_LOG(LOG_INFO, "Key0 Push down!");
         i2c_monitor::get_instance()->write_io(OUTPUT_BEEP, IO_ON);
     },
     [](){
         uint32_t crc_value;
        
         crc_value = crc_get_value(buffer, 4);       
-        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Key1 Push down!");
+        PRINT_LOG(LOG_INFO, "Key1 Push down!");
         i2c_monitor::get_instance()->write_io(OUTPUT_BEEP, IO_OFF);
-        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "rng:%d crc:0x%x", rng_get_value(), crc_value);
+        PRINT_LOG(LOG_INFO, "rng:%d crc:0x%x", rng_get_value(), crc_value);
     },
     [](){
         static float precent = 1;
-        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Key2 Push down!");
+        PRINT_LOG(LOG_INFO, "Key2 Push down!");
         set_convert_vol(precent);
         pwm_set_percent(precent);
         precent -= 0.1;
@@ -80,14 +79,14 @@ std::function<void()> key_func_list[] = {
             precent = 1;
     },
     [](){
-        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "Tpad Key Push down, no_push:%d, push:%d!",
+        PRINT_LOG(LOG_INFO, "Tpad Key Push down, no_push:%d, push:%d!",
             tpad_get_no_push_val(),
             tpad_current_val()
         );
         rtc_delay_alarm(0, 0, 0, 5);
     },    
     [](){
-        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "EXIO Push down!");
+        PRINT_LOG(LOG_INFO, "EXIO Push down!");
     },    
 };
 
@@ -127,27 +126,24 @@ void monitor_manage::timer_loop_motion()
      {
         temp_loop = 0;
         
-        rtc_update();
-        auto ptimer = rtc_get_time();
-        auto pdate = rtc_get_date();
-
-        if(last_second != ptimer->Seconds)
+        auto rtc_info = rtc_update();
+        if(last_second != rtc_info.time.Seconds)
         {
-            last_second = ptimer->Seconds;
+            last_second = rtc_info.time.Seconds;
             sprintf(tbuf, "Timer: %02d-%02d-%02d %02d:%02d:%02d",
-            pdate->Year,
-            pdate->Month,
-            pdate->Date,
-            ptimer->Hours,
-            ptimer->Minutes,
-            ptimer->Seconds);
+                rtc_info.date.Year,
+                rtc_info.date.Month,
+                rtc_info.date.Date,
+                rtc_info.time.Hours,
+                rtc_info.time.Minutes,
+                rtc_info.time.Seconds);
             lcd_driver::get_instance()->lcd_showstring(10, 160, 200, 16, 16, tbuf);
         }
     }
      
     if(rtc_get_alarm_flag() == pdTRUE)
     {
-        PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "RTC Alarm");
+        PRINT_LOG(LOG_INFO, "RTC Alarm");
 
         rtc_set_alarm_flag(pdFALSE);
     }
@@ -183,11 +179,11 @@ void monitor_manage::run(void* parameter)
 {
     while(1)
     {
-        //key motion loop
-        key_motion();
-        
         timer_loop_motion();
         
+        //key motion loop
+        key_motion();
+         
         adc_monitor();
         
         iwdg_reload();

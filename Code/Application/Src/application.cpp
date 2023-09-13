@@ -18,7 +18,6 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "application.hpp"
 #include "includes.hpp"
-#include "logger.hpp"
 #include "schedular.hpp"
 #include "monitor.hpp"
 #include "i2c_monitor.hpp"
@@ -51,7 +50,7 @@ void fatfs_app(void)
                 res = f_open(&fil, "1:hello.txt", FA_READ | FA_WRITE);
                 if(res != FR_OK)
                 {
-                   PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "f_mount open failed!") 
+                   PRINT_LOG(LOG_INFO, "f_mount open failed!") 
                 }
                 else
                 {
@@ -59,7 +58,7 @@ void fatfs_app(void)
                     if(bw != 0)
                     {
                         work[bw] = 0;
-                        PRINT_LOG(LOG_INFO, xTaskGetTickCount(),"%s", work); 
+                        PRINT_LOG(LOG_INFO, "%s", work); 
                     }
                     f_close(&fil);
                 }
@@ -67,34 +66,33 @@ void fatfs_app(void)
             }
             else
             {
-               PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "f_mount failed:%d", res); 
+               PRINT_LOG(LOG_INFO, "f_mount failed:%d", res); 
             }
         }
         else
         {
-            PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "f_mkfs failed:%d", res); 
+            PRINT_LOG(LOG_INFO, "f_mkfs failed:%d", res); 
         }
     }
 }
 
-void application_init(void)
+BaseType_t application_init(void)
 {
+    BaseType_t xReturn;
+    
     //test fatfs application    
     //fatfs_app();
-    
-    //logger interface init
-    logger_manage::get_instance()->init();
-    
+     
     //schedular task init
-    schedular::get_instance()->init();
+    xReturn = schedular::get_instance()->init();
 
     //motion_manage task init
-    monitor_manage::get_instance()->init();
+    xReturn &= monitor_manage::get_instance()->init();
         
     //i2c motion key and output
-    i2c_monitor::get_instance()->init();
-                   
-    //start the rtos schedular.
-    vTaskStartScheduler();
+    xReturn &= i2c_monitor::get_instance()->init();
+    
+    return xReturn;
 }
+
 

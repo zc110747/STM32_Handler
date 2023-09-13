@@ -16,7 +16,8 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-_Pragma("once")
+#ifndef __DRV_DAC_H
+#define __DRV_DAC_H
 
 #include "interface.h"
 
@@ -35,10 +36,11 @@ _Pragma("once")
 extern "C" {
 #endif
 
-BaseType_t dac_init();    
+BaseType_t dac_init(void);    
 void dac_set_voltage(uint16_t mv);
 void set_convert_vol(float percent);
     
 #ifdef __cplusplus
 }
 #endif   
+#endif

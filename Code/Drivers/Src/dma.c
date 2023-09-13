@@ -27,7 +27,7 @@ static DMA_HandleTypeDef hdma_memtomem_dma2_stream0;
 static BaseType_t dma_hardware_init(void);
 static BaseType_t dma_test(void);
 
-BaseType_t dma_init()
+BaseType_t dma_init(void)
 {
     BaseType_t type = pdFAIL;
     
@@ -38,7 +38,6 @@ BaseType_t dma_init()
     }
     return type;
 }
-
 
 BaseType_t dma_translate(uint32_t SrcAddress, uint32_t DstAddress, uint32_t DataLength)
 {
@@ -86,7 +85,7 @@ static BaseType_t dma_test(void)
     
     if(memcmp((char *)DMA_SRC_ADDRESS, dma_dst, DMA_DST_SIZE) == 0)
     {
-        printf("dma memory to memory test success!\r\n");
+        PRINT_LOG(LOG_INFO, "dma memory to memory test success!");
         type = pdPASS;
     }
     

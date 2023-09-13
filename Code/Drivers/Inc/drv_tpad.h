@@ -16,7 +16,8 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-_Pragma("once")
+#ifndef DRV_TPAD_H
+#define DRV_TPAD_H
 
 #include "interface.h"
 
@@ -31,4 +32,5 @@ uint16_t tpad_current_val(void);
 
 #ifdef __cplusplus
 }
+#endif
 #endif

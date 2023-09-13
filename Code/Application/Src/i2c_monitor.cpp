@@ -1,7 +1,5 @@
 #include "i2c_monitor.hpp"
 #include "i2c.h"
-#include "logger.hpp"
-
 
 TaskHandle_t i2c_monitor::task_handle_{nullptr};
 QueueHandle_t i2c_monitor::queue_{nullptr};
@@ -122,11 +120,11 @@ void i2c_monitor::run(void* parameter)
                 if(i2c_read(PCF8574_ADDR, &io_read) == pdPASS)
                 {
                     read_data_.data = io_read;
-                    PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "i2c read:0x%x!", io_read);
+                    PRINT_LOG(LOG_INFO, "i2c read:0x%x!", io_read);
                 }
                 else
                 {
-                   PRINT_LOG(LOG_ERROR, xTaskGetTickCount(), "i2c read failed!");
+                   PRINT_LOG(LOG_ERROR, "i2c read failed!");
                 }
             }
             else

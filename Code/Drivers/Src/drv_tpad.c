@@ -80,11 +80,11 @@ BaseType_t tpad_driver_init(void)
         }
         qsort(buf, TPAD_INIT_CHECK_TIMES, sizeof(uint16_t), comp);
         no_push_value_ = avg(buf, TPAD_INIT_CHECK_TIMES-2);
-        printf("tpad no_push_value_:%d\r\n", no_push_value_);    
+        PRINT_LOG(LOG_INFO, "tpad no_push_value_:%d", no_push_value_);    
     }
     else
     {
-        printf("tpad_driver hardware_init failed\r\n");
+        PRINT_LOG(LOG_INFO, "tpad_driver hardware_init failed");
     }
     return result;
 }

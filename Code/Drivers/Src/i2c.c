@@ -38,7 +38,7 @@ BaseType_t i2c_init(void)
     }
     else
     {
-        printf("i2c_driver hardware_init failed\r\n");
+        PRINT_LOG(LOG_INFO, "i2c_driver hardware_init failed\r\n");
     }
     return result;    
 }

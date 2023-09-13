@@ -16,7 +16,8 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-_Pragma("once")
+#ifndef _DRV_DMA_H
+#define _DRV_DMA_H
 
 #include "interface.h"
 
@@ -24,8 +25,9 @@ _Pragma("once")
 extern "C" {
 #endif
 
-BaseType_t dma_init();    
+BaseType_t dma_init(void);    
     
 #ifdef __cplusplus
 }
 #endif 
+#endif
