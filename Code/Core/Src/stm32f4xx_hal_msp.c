@@ -77,57 +77,6 @@ void HAL_MspInit(void)
 }
 
 /**
-* @brief DAC MSP Initialization
-* This function configures the hardware resources used in this example
-* @param hdac: DAC handle pointer
-* @retval None
-*/
-void HAL_DAC_MspInit(DAC_HandleTypeDef* hdac)
-{
-
-  if(hdac->Instance==DAC)
-  {
-  /* USER CODE BEGIN DAC_MspInit 0 */
-
-  /* USER CODE END DAC_MspInit 0 */
-    /* Peripheral clock enable */
-
-  /* USER CODE BEGIN DAC_MspInit 1 */
-
-  /* USER CODE END DAC_MspInit 1 */
-  }
-
-}
-
-/**
-* @brief DAC MSP De-Initialization
-* This function freeze the hardware resources used in this example
-* @param hdac: DAC handle pointer
-* @retval None
-*/
-void HAL_DAC_MspDeInit(DAC_HandleTypeDef* hdac)
-{
-  if(hdac->Instance==DAC)
-  {
-  /* USER CODE BEGIN DAC_MspDeInit 0 */
-
-  /* USER CODE END DAC_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_DAC_CLK_DISABLE();
-
-    /**DAC GPIO Configuration
-    PA4     ------> DAC_OUT1
-    */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4);
-
-  /* USER CODE BEGIN DAC_MspDeInit 1 */
-
-  /* USER CODE END DAC_MspDeInit 1 */
-  }
-
-}
-
-/**
 * @brief I2C MSP Initialization
 * This function configures the hardware resources used in this example
 * @param hi2c: I2C handle pointer
@@ -135,34 +84,18 @@ void HAL_DAC_MspDeInit(DAC_HandleTypeDef* hdac)
 */
 void HAL_I2C_MspInit(I2C_HandleTypeDef* hi2c)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
   if(hi2c->Instance==I2C2)
   {
   /* USER CODE BEGIN I2C2_MspInit 0 */
 
   /* USER CODE END I2C2_MspInit 0 */
-    __HAL_RCC_I2C2_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOH_CLK_ENABLE();
+
     /**I2C2 GPIO Configuration
     PH4     ------> I2C2_SCL
     PH5     ------> I2C2_SDA
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
-    HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
-      
-    /*Configure GPIO pin : PB12 */
-    GPIO_InitStruct.Pin = GPIO_PIN_12;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn); 
            
     /* Peripheral clock enable */
 

@@ -109,6 +109,7 @@ void i2c_monitor::run(void* parameter)
             if(event.id == I2C_EVENT_ID_WRITE)
             {
                 i2c_write(PCF8574_ADDR, write_data_.data);
+                PRINT_LOG(LOG_INFO, "i2c write:0x%x!", write_data_.data);
             }
             else if(event.id == I2C_EVENT_ID_READ)
             {

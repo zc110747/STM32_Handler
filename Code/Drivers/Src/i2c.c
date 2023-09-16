@@ -21,31 +21,56 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "i2c.h"
 
-static I2C_HandleTypeDef i2c2_handler_;
-
-static BaseType_t i2c_hardware_init(void);
-static BaseType_t i2c_test(void);
+static I2C_HandleTypeDef hi2c2;
 
 BaseType_t i2c_init(void)
 {
-    BaseType_t result;
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    result = i2c_hardware_init();
-    
-    if(result == pdPASS)
-    {
-        i2c_test();
-    }
-    else
-    {
-        PRINT_LOG(LOG_INFO, "i2c_driver hardware_init failed\r\n");
-    }
-    return result;    
+    __HAL_RCC_I2C2_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOH_CLK_ENABLE();
+
+    GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF4_I2C2;
+    HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
+
+    /*Configure GPIO pin : PB12 */
+    GPIO_InitStruct.Pin = GPIO_PIN_12;
+    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn); 
+
+    hi2c2.Instance = I2C2;
+    hi2c2.Init.ClockSpeed = 100000;
+    hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
+    hi2c2.Init.OwnAddress1 = 0;
+    hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    hi2c2.Init.OwnAddress2 = 0;
+    hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+    if (HAL_I2C_Init(&hi2c2) != HAL_OK)
+        return pdFAIL;
+
+    if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
+        return pdFAIL;
+
+    if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK)
+        return pdFAIL;
+
+    return pdPASS;  
 }
 
 BaseType_t i2c_write(uint8_t addr, uint8_t data)
 {
-    if(HAL_I2C_Master_Transmit(&i2c2_handler_, addr | 0x00, &data, 1, PCF8574_I2C_TIMEOUT) != HAL_OK)
+    if(HAL_I2C_Master_Transmit(&hi2c2, addr | 0x00, &data, 1, PCF8574_I2C_TIMEOUT) != HAL_OK)
         return pdFAIL;
 
     return pdPASS;    
@@ -53,7 +78,7 @@ BaseType_t i2c_write(uint8_t addr, uint8_t data)
 
 BaseType_t i2c_read(uint8_t addr,uint8_t *pdata)
 {
-    if(HAL_I2C_Master_Receive(&i2c2_handler_, addr | 0x01, pdata, 1, PCF8574_I2C_TIMEOUT) != HAL_OK)
+    if(HAL_I2C_Master_Receive(&hi2c2, addr | 0x01, pdata, 1, PCF8574_I2C_TIMEOUT) != HAL_OK)
         return pdFAIL;
     
     return pdPASS;
@@ -69,36 +94,4 @@ void EXTI15_10_IRQHandler(void)
         
         i2c_monitor_trigger_read();
     }
-}
-    
-static BaseType_t i2c_hardware_init()
-{
-    i2c2_handler_.Instance = I2C2;
-    i2c2_handler_.Init.ClockSpeed = 100000;
-    i2c2_handler_.Init.DutyCycle = I2C_DUTYCYCLE_2;
-    i2c2_handler_.Init.OwnAddress1 = 0;
-    i2c2_handler_.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-    i2c2_handler_.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    i2c2_handler_.Init.OwnAddress2 = 0;
-    i2c2_handler_.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-    i2c2_handler_.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-    if (HAL_I2C_Init(&i2c2_handler_) != HAL_OK)
-        return pdFAIL;
-
-    /** Configure Analogue filter
-    */
-    if (HAL_I2CEx_ConfigAnalogFilter(&i2c2_handler_, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
-        return pdFAIL;
-
-    /** Configure Digital filter
-    */
-    if (HAL_I2CEx_ConfigDigitalFilter(&i2c2_handler_, 0) != HAL_OK)
-        return pdFAIL;
-    
-    return pdPASS;
-}
-
-static BaseType_t i2c_test()
-{
-   return pdPASS;
 }
