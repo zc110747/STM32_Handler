@@ -3,7 +3,7 @@
 //  All Rights Reserved
 //
 //  Name:
-//      adc.hpp
+//      drv_adc.hpp
 //
 //  Purpose:
 //     adc driver normal get.
@@ -16,20 +16,27 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#pragma once
+#ifndef _DRV_ADC_H
+#define _DRV_ADC_H
 
 #include "interface.h"
 
-#define ADC_AVG_TIMES   5
+#define ADC_RUN_NORMAL              0
+#define ADC_RUN_DMA                 1
+
+#define ADC_RUN_MODE                ADC_RUN_DMA
+
+#define ADC_AVG_TIMES               5
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-BaseType_t adc_init(void);
-uint16_t adc_get_value(uint32_t channel);
+BaseType_t adc_driver_init(void);
 uint16_t adc_get_avg(uint32_t channel);
     
 #ifdef __cplusplus
 }
+#endif
+
 #endif

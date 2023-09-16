@@ -47,7 +47,7 @@ BaseType_t driver_init(void)
     result &= lcd_driver::get_instance()->init();
 
     //adc init
-    result &= adc_init();
+    result &= adc_driver_init();
 
     //key init
     result &= key_init();

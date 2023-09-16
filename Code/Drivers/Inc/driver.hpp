@@ -20,7 +20,6 @@
 #define __DRIVER_H
 
 #include "key.h"
-#include "adc.h"
 #include "i2c.h"
 #include "spi.h"
 #include "dma.h"
@@ -34,6 +33,7 @@
 #include "drv_dac.h"
 #include "drv_alg.h"
 #include "drv_wdg.h"
+#include "drv_adc.h"
 
 #include "SEGGER_RTT.h"
 

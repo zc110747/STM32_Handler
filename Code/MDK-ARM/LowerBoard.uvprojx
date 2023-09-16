@@ -313,10 +313,10 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>2</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
-            <OneElfS>0</OneElfS>
+            <OneElfS>1</OneElfS>
             <Strict>0</Strict>
             <EnumInt>0</EnumInt>
             <PlainCh>0</PlainCh>
@@ -820,11 +820,6 @@
           <GroupName>Drivers</GroupName>
           <Files>
             <File>
-              <FileName>adc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\Src\adc.c</FilePath>
-            </File>
-            <File>
               <FileName>dma.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\dma.c</FilePath>
@@ -923,6 +918,21 @@
               <FileName>template.txt</FileName>
               <FileType>5</FileType>
               <FilePath>..\Core\Src\template.txt</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Driver/adc</GroupName>
+          <Files>
+            <File>
+              <FileName>drv_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_adc_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_adc_dma.c</FilePath>
             </File>
           </Files>
         </Group>
