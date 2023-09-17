@@ -2,24 +2,27 @@
 
 #include "includes.hpp"
 #include "driver.hpp"
+#include "timer_manage.hpp"
 
-#define i2c_monitor_MAX_QUEUE    32
+#define i2c_monitor_MAX_QUEUE       32
 
-#define I2C_EVENT_ID_WRITE      0
-#define I2C_EVENT_ID_READ       1
+#define I2C_EVENT_ID_WRITE          0
+#define I2C_EVENT_ID_READ           1
+#define I2C_EVENT_ID_DELAY_READ     2
 
+#define OUTPUT_BEEP                 0
+#define INPUT_AP_INT                1
+#define OUTPUT_DCMI_PWDN            2
+#define OUTPUT_USB_PWR              3
+#define INPUT_EXIO                  4
+#define INPUT_D_INT                 5
+#define OUTPUT_RS485_SEL            6
+#define OUTPUT_ETH_RESET            7
 
-#define OUTPUT_BEEP             0
-#define INPUT_AP_INT            1
-#define OUTPUT_DCMI_PWDN        2
-#define OUTPUT_USB_PWR          3
-#define INPUT_EXIO              4
-#define INPUT_D_INT             5
-#define OUTPUT_RS485_SEL        6
-#define OUTPUT_ETH_RESET        7
+#define IO_OFF                      0
+#define IO_ON                       1
 
-#define IO_OFF                  0
-#define IO_ON                   1
+#define I2C_READ_DELAY_MS           pdMS_TO_TICKS(500)
 
 typedef union
 {
@@ -44,6 +47,13 @@ typedef struct
     uint8_t data;
 }i2c_event;
 
+
+class I2cTriggerFunc: public TimeTriggerFunction<uint32_t>
+{
+public:
+	void operator() (void);
+};
+
 class i2c_monitor
 {
 public:  
@@ -59,6 +69,9 @@ public:
     BaseType_t trigger(uint8_t event, uint8_t *pdata, uint8_t size);
     BaseType_t trigger_isr(uint8_t event, uint8_t *pdata, uint8_t size);
 
+	void registerTimeTrigger(void);
+	void removeTimeTrigger(void);
+    
 public:
     static io_ex_info *get_write_io() {
         return &write_data_;
@@ -71,6 +84,7 @@ public:
 private:
     static void run(void* parameter);
     
+    
 private:
     static TaskHandle_t task_handle_;
     
@@ -79,4 +93,6 @@ private:
     static io_ex_info read_data_;
 
     static  io_ex_info write_data_;
+    
+    I2cTriggerFunc TriggerFunc;
 };

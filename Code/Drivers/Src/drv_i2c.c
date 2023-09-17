@@ -3,7 +3,7 @@
 //  All Rights Reserved
 //
 //  Name:
-//      i2c.c
+//      drv_i2c.c
 //      hardware: 
 //          I2C2_SCL ------------ PH4
 //          I2C2_SDA ------------ PH5
@@ -19,7 +19,7 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "i2c.h"
+#include "drv_i2c.h"
 
 static I2C_HandleTypeDef hi2c2;
 
@@ -84,7 +84,7 @@ BaseType_t i2c_read(uint8_t addr,uint8_t *pdata)
     return pdPASS;
 }
 
-extern void i2c_monitor_trigger_read(void);
+extern void i2c_isr_trigger(void);
 
 void EXTI15_10_IRQHandler(void)
 {
@@ -92,6 +92,8 @@ void EXTI15_10_IRQHandler(void)
     {
         __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_12);
         
-        i2c_monitor_trigger_read();
+        i2c_isr_trigger();
+        
+        HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); 
     }
 }

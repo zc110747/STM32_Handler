@@ -719,6 +719,11 @@
               <FileType>8</FileType>
               <FilePath>..\Application\Src\monitor.cpp</FilePath>
             </File>
+            <File>
+              <FileName>timer_manage.cpp</FileName>
+              <FileType>8</FileType>
+              <FilePath>..\Application\Src\timer_manage.cpp</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -835,11 +840,6 @@
               <FilePath>..\Drivers\Src\dsp_test.c</FilePath>
             </File>
             <File>
-              <FileName>i2c.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\Src\i2c.c</FilePath>
-            </File>
-            <File>
               <FileName>key.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\key.c</FilePath>
@@ -893,6 +893,11 @@
               <FileName>drv_wdg.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\drv_wdg.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_i2c.c</FilePath>
             </File>
           </Files>
         </Group>

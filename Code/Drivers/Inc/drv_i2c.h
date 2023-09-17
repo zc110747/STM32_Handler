@@ -3,7 +3,7 @@
 //  All Rights Reserved
 //
 //  Name:
-//     i2c.cpp
+//     drv_i2c.h
 //
 //  Purpose:
 //     i2c driver.
@@ -16,7 +16,8 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-_Pragma("once")
+#ifndef _DRV_I2C_H
+#define _DRV_I2C_H
 
 #include "interface.h"
 
@@ -33,4 +34,6 @@ BaseType_t i2c_read(uint8_t addr,uint8_t *pdata);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

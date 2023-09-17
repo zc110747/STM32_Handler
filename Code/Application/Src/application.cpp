@@ -22,6 +22,7 @@
 #include "monitor.hpp"
 #include "i2c_monitor.hpp"
 #include "ff.h"
+#include "timer_manage.hpp"
 
 BYTE work[FF_MAX_SS];
 
@@ -83,6 +84,9 @@ BaseType_t application_init(void)
     //test fatfs application    
     //fatfs_app();
      
+    //timer manage.
+    xReturn &= SysTimeManage::get_instance()->init();
+    
     //schedular task init
     xReturn = schedular::get_instance()->init();
 
