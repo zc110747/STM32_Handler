@@ -69,7 +69,7 @@ BaseType_t driver_init(void)
     result &= sdmmc_driver::get_instance()->init();
     
     //spi
-    result &= spi_init();
+    result &= spi_driver_init();
     
     //dfu test
     dsp_app();

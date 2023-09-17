@@ -860,11 +860,6 @@
               <FilePath>..\Drivers\Src\sdram.cpp</FilePath>
             </File>
             <File>
-              <FileName>spi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\Src\spi.c</FilePath>
-            </File>
-            <File>
               <FileName>interface.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\interface.c</FilePath>
@@ -898,6 +893,11 @@
               <FileName>drv_i2c.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\drv_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_spi.c</FilePath>
             </File>
           </Files>
         </Group>
