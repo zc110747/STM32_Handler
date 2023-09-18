@@ -270,7 +270,7 @@ static void low_level_init(struct netif *netif)
                 "ethernetif_input",
                 INTERFACE_THREAD_STACK_SIZE,
                 netif,
-                osPriorityRealtime);
+                LWIP_TASK_PROITY);
                 
 /* USER CODE END OS_THREAD_DEF_CREATE_CMSIS_RTOS_V1 */
 

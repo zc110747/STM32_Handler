@@ -58,6 +58,8 @@
 #define MONITOR_TASK_STACK           512
 #define I2C_MONITOR_TASK_STACK       512
 
+#define LWIP_TASK_PROITY            (tskIDLE_PRIORITY+8)
+
 #define START_TASK_PROITY           (tskIDLE_PRIORITY+5)
 #define LOGGER_RX_TASK_PROITY       (tskIDLE_PRIORITY+2)
 #define LOGGER_TX_TASK_PROITY       (tskIDLE_PRIORITY+2)
