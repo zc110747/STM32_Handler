@@ -1,11 +1,29 @@
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//     i2c_monitor.cpp
+//
+//  Purpose:
+//     i2c montion driver.
+//
+// Author:
+//      @zc
+//
+//  Assumptions:
+//
+//  Revision History:
+//
+/////////////////////////////////////////////////////////////////////////////
+#include "driver.hpp"
 #include "i2c_monitor.hpp"
-#include "i2c.h"
 
 TaskHandle_t i2c_monitor::task_handle_{nullptr};
 QueueHandle_t i2c_monitor::queue_{nullptr};
 io_ex_info i2c_monitor::read_data_{0x00};
-io_ex_info i2c_monitor::write_data_{0xff};
-    
+io_ex_info i2c_monitor::write_data_{0xff};   
+ 
 BaseType_t i2c_monitor::init()
 {
     BaseType_t xReturn;
@@ -23,7 +41,7 @@ BaseType_t i2c_monitor::init()
     {
         xReturn = pdFAIL;
     }
-                    
+    
     return xReturn;
 }
 
@@ -106,16 +124,18 @@ void i2c_monitor::run(void* parameter)
     {
         if(xQueueReceive(queue_, &event, portMAX_DELAY) == pdPASS)
         {
+            //write the output data
             if(event.id == I2C_EVENT_ID_WRITE)
             {
                 i2c_write(PCF8574_ADDR, write_data_.data);
+                PRINT_LOG(LOG_INFO, "i2c write:0x%x!", write_data_.data);
             }
             else if(event.id == I2C_EVENT_ID_READ)
             {
                 uint8_t io_read;
                 
-                //if read, dealy 5ms to wait io on.
-                vTaskDelay(5);
+                __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_12);
+                HAL_NVIC_EnableIRQ(EXTI15_10_IRQn); 
                 
                 if(i2c_read(PCF8574_ADDR, &io_read) == pdPASS)
                 {
@@ -127,18 +147,40 @@ void i2c_monitor::run(void* parameter)
                    PRINT_LOG(LOG_ERROR, "i2c read failed!");
                 }
             }
-            else
+            else if(event.id == I2C_EVENT_ID_DELAY_READ)
             {
-                //do nothing
+               i2c_monitor::get_instance()->registerTimeTrigger();
+               PRINT_LOG(LOG_ERROR, "i2c trigger delay read!");
             }
         }
     }
 }
 
+void i2c_monitor::registerTimeTrigger(void)
+{
+    removeTimeTrigger();
+    
+    SysTimeManage::get_instance()->registerEventTrigger(EVENT_I2C_TIMER_TIGGER, 
+                                                       I2C_READ_DELAY_MS/SOFT_LOOP_TIMER_PERIOD, 
+                                                       &TriggerFunc, 
+                                                       NULL, 
+                                                       1);
+}
+
+void i2c_monitor::removeTimeTrigger(void)
+{
+   SysTimeManage::get_instance()->removeEventTrigger(EVENT_I2C_TIMER_TIGGER);
+}
+    
+void I2cTriggerFunc::operator() (void)
+{
+    i2c_monitor::get_instance()->trigger(I2C_EVENT_ID_READ, nullptr, 0);
+}
+
 extern "C"
 {
-    void i2c_monitor_trigger_read(void)
+    void i2c_isr_trigger(void)
     {
-        i2c_monitor::get_instance()->trigger_isr(I2C_EVENT_ID_READ, nullptr, 0);
+        i2c_monitor::get_instance()->trigger_isr(I2C_EVENT_ID_DELAY_READ, nullptr, 0);
     }
 }

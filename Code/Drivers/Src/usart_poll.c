@@ -65,24 +65,37 @@ static void usart_run_test(void)
 
 BaseType_t usart_driver_init(void)
 {
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    __HAL_RCC_USART1_CLK_ENABLE();
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_DMA2_CLK_ENABLE();
+
+    GPIO_InitStruct.Pin = GPIO_PIN_9|GPIO_PIN_10;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    
+    huart1.Instance = USART1;
+    huart1.Init.BaudRate = 115200;
+    huart1.Init.WordLength = UART_WORDLENGTH_8B;
+    huart1.Init.StopBits = UART_STOPBITS_1;
+    huart1.Init.Parity = UART_PARITY_NONE;
+    huart1.Init.Mode = UART_MODE_TX_RX;
+    huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+    if (HAL_UART_Init(&huart1) != HAL_OK)
       return pdFAIL;
 
-  is_usart_driver_init = 1;
+    is_usart_driver_init = 1;
   
-#if RUN_TEST_MODE == USART_TEST
-  usart_translate("usart test for polling!\r\n", strlen("usart test for polling!\r\n"));
-  usart_run_test();
-#endif
-  return pdPASS; 
+    #if RUN_TEST_MODE == USART_TEST
+    usart_translate("usart test for polling!\r\n", strlen("usart test for polling!\r\n"));
+    usart_run_test();
+    #endif
+    return pdPASS; 
 }
 
 void usart_translate(char *ptr, uint16_t size)

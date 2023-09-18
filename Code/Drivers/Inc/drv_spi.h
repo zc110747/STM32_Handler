@@ -50,7 +50,7 @@ typedef enum
 #endif
 
 //spi interface
-BaseType_t spi_init(void);
+BaseType_t spi_driver_init(void);
 uint8_t spi_rw_byte(uint8_t data);
         
 //wq interface

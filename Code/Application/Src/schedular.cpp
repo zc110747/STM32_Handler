@@ -52,6 +52,9 @@ void schedular::run(void* parameter)
     while(1)
     {
         //PRINT_LOG(LOG_INFO, xTaskGetTickCount(), "LED Task Run!");
-        vTaskDelay(100);
+        LED0_ON;        
+        vTaskDelay(200);       
+        LED0_OFF;       
+        vTaskDelay(200);               
     }    
 }

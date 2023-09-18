@@ -152,7 +152,7 @@ void monitor_manage::timer_loop_motion()
 void monitor_manage::adc_monitor()
 {
     static uint8_t temp_loop = 0;
-    uint32_t adc_temp = 0, adc_vol;
+    static uint32_t adc_temp = 0, adc_vol;
     double temperate;
     double voltage;
 

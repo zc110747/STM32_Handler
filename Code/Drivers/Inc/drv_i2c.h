@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//      adc.hpp
+//     drv_i2c.h
 //
 //  Purpose:
-//     adc driver normal get.
+//     i2c driver.
 //
 // Author:
 //      @zc
@@ -16,20 +16,24 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#pragma once
+#ifndef _DRV_I2C_H
+#define _DRV_I2C_H
 
 #include "interface.h"
 
-#define ADC_AVG_TIMES   5
+#define PCF8574_ADDR 	        0x40
+#define PCF8574_I2C_TIMEOUT     100
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-BaseType_t adc_init(void);
-uint16_t adc_get_value(uint32_t channel);
-uint16_t adc_get_avg(uint32_t channel);
-    
+BaseType_t i2c_init(void);
+BaseType_t i2c_write(uint8_t addr, uint8_t data);
+BaseType_t i2c_read(uint8_t addr,uint8_t *pdata);
+
 #ifdef __cplusplus
 }
+#endif
+
 #endif
