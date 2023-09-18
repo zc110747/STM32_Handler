@@ -72,6 +72,7 @@
 /*----- Value in opt.h for TCPIP_MBOX_SIZE: 0 -----*/
 #define TCPIP_MBOX_SIZE                 32
 #define MEMP_NUM_TCP_SEG                32
+#define MEMP_NUM_TCPIP_MSG_INPKT        32
 /*----- Value in opt.h for SLIPIF_THREAD_STACKSIZE: 0 -----*/
 #define SLIPIF_THREAD_STACKSIZE 1024
 /*----- Value in opt.h for SLIPIF_THREAD_PRIO: 1 -----*/
