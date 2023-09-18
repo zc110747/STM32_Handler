@@ -175,6 +175,18 @@ BaseType_t rtc_get_alarm_flag(void)
 
 static BaseType_t rtc_hardware_init(void)
 {
+    RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+    
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RTC;
+    PeriphClkInitStruct.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+    {
+        return pdFAIL;
+    }
+
+    /* Peripheral clock enable */
+    __HAL_RCC_RTC_ENABLE();
+      
     rtc_handler_.Instance = RTC;
     rtc_handler_.Init.HourFormat = RTC_HOURFORMAT_24;
     rtc_handler_.Init.AsynchPrediv = 127;
@@ -192,7 +204,9 @@ static BaseType_t rtc_hardware_init(void)
 
         HAL_RTCEx_BKUPWrite(&rtc_handler_, RTC_BKP_DR0, RTC_SET_FLAGS);
     }
-
+    
+    PRINT_LOG(LOG_INFO, "RTC driver init success!");
+    
     return pdPASS;   
 }
 

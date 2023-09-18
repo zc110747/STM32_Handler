@@ -23,7 +23,7 @@
 
 static I2C_HandleTypeDef hi2c2;
 
-BaseType_t i2c_init(void)
+BaseType_t i2c_driver_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 

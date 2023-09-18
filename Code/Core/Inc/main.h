@@ -50,6 +50,17 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+#define OUTPUT_BEEP                 0
+#define INPUT_AP_INT                1
+#define OUTPUT_DCMI_PWDN            2
+#define OUTPUT_USB_PWR              3
+#define INPUT_EXIO                  4
+#define INPUT_D_INT                 5
+#define OUTPUT_RS485_SEL            6
+#define OUTPUT_ETH_RESET            7
+
+#define IO_OFF                      0
+#define IO_ON                       1
 
 /* USER CODE END ET */
 
