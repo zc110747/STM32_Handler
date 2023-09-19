@@ -21,6 +21,11 @@
 
 #include "interface.h"
 
+#define I2C_USE_HARDWARE    0
+#define I2C_USE_SOFTWARE    1
+
+#define I2C_RUN_MODE        I2C_USE_SOFTWARE   
+
 #define PCF8574_ADDR 	        0x40
 #define PCF8574_I2C_TIMEOUT     100
 

@@ -99,7 +99,7 @@ again:
     /* We try again to fetch a message from the mbox. */
     goto again;
   }
-
+  
   UNLOCK_TCPIP_CORE();
   res = sys_arch_mbox_fetch(mbox, msg, sleeptime);
   LOCK_TCPIP_CORE();
