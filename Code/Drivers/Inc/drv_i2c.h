@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-BaseType_t i2c_init(void);
+BaseType_t i2c_driver_init(void);
 BaseType_t i2c_write(uint8_t addr, uint8_t data);
 BaseType_t i2c_read(uint8_t addr,uint8_t *pdata);
 

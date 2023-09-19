@@ -19,7 +19,6 @@
 #include "driver.hpp"
 #include "sdram.hpp"
 #include "lcd.hpp"
-#include "sdmmc.hpp"
 
 void wq_application(void);
 
@@ -50,7 +49,7 @@ BaseType_t driver_init(void)
     result &= adc_driver_init();
 
     //key init
-    result &= key_init();
+    result &= key_driver_init();
 
     //rng
     result &= alg_driver_init();
@@ -60,16 +59,19 @@ BaseType_t driver_init(void)
     result &= pwm_driver_init();
     
     //i2c
-    result &= i2c_init();
+    result &= i2c_driver_init();
     
     //dac
-    result &= dac_init();
+    result &= dac_driver_init();
     
-    //sdmmc
-    result &= sdmmc_driver::get_instance()->init();
+    //sdcard init
+    result &= sdcard_driver_init();
     
     //spi
     result &= spi_driver_init();
+    
+    //dma 
+    result &= dma_driver_init();
     
     //dfu test
     dsp_app();
@@ -78,8 +80,6 @@ BaseType_t driver_init(void)
     wq_init();
     wq_application();
     
-    //dma 
-    dma_init();
 
     result &= wdg_driver_init();
     iwdg_reload();
@@ -101,14 +101,4 @@ void wq_application(void)
     wq_read(buffer, 0, strlen(ptr));
     
     PRINT_LOG(LOG_INFO, "%s", buffer);
-}
-
-HAL_StatusTypeDef read_disk(uint8_t *buf, uint32_t startBlocks, uint32_t NumberOfBlocks)
-{
-    return sdmmc_driver::get_instance()->read_disk(buf, startBlocks, NumberOfBlocks);
-}
-
-HAL_StatusTypeDef write_disk(const uint8_t *buf, uint32_t startBlocks, uint32_t NumberOfBlocks)
-{
-    return sdmmc_driver::get_instance()->write_disk(buf, startBlocks, NumberOfBlocks);
 }

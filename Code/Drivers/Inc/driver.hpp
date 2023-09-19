@@ -19,8 +19,8 @@
 #ifndef __DRIVER_H
 #define __DRIVER_H
 
-#include "key.h"
-#include "dma.h"
+
+
 #include "dsp_test.h"
 
 #include "drv_usart.h"
@@ -34,6 +34,9 @@
 #include "drv_adc.h"
 #include "drv_i2c.h"
 #include "drv_spi.h"
+#include "drv_dma.h"
+#include "drv_key.h"
+#include "drv_sdcard.h"
 
 #include "SEGGER_RTT.h"
 
@@ -41,9 +44,7 @@
 	extern "C" {
 #endif
 
-BaseType_t driver_init(void);		
-HAL_StatusTypeDef read_disk(uint8_t *buf, uint32_t startBlocks, uint32_t NumberOfBlocks);
-HAL_StatusTypeDef write_disk(const uint8_t *buf, uint32_t startBlocks, uint32_t NumberOfBlocks);
+BaseType_t driver_init(void);
         
 #ifdef __cplusplus
 	}

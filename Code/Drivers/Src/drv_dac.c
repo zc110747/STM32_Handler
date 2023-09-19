@@ -42,7 +42,7 @@ void dac_set_voltage(uint16_t mv)
 
 
 #if DMA_RUN_MODE == DMA_MODE_POLL
-BaseType_t dac_init()
+BaseType_t dac_driver_init()
 {
     DAC_ChannelConfTypeDef sConfig = {0};
     GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -113,7 +113,7 @@ void set_convert_vol(float percent)
     }
 }
 
-BaseType_t dac_init()
+BaseType_t dac_driver_init()
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     DAC_ChannelConfTypeDef sConfig = {0};

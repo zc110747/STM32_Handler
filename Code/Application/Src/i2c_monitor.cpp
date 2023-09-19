@@ -183,4 +183,9 @@ extern "C"
     {
         i2c_monitor::get_instance()->trigger_isr(I2C_EVENT_ID_DELAY_READ, nullptr, 0);
     }
+    
+    void i2c_write_io(uint8_t pin, uint8_t status)
+    {
+        i2c_monitor::get_instance()->write_io(pin, status);
+    }
 }
