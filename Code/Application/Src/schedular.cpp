@@ -1,7 +1,6 @@
 
 #include "schedular.hpp"
 #include "driver.hpp"
-#include "lwip.h"
 
 bool schedular::init(void)
 {
@@ -47,8 +46,6 @@ void schedular::run(void* parameter)
         DBGMCU->IDCODE);
     PRINT_LOG(LOG_INFO, "uid:0x%x, 0x%x, 0x%x",
         HAL_GetUIDw0(), HAL_GetUIDw1(), HAL_GetUIDw2());
-    
-    MX_LWIP_Init();
     
     //fault_test_by_unalign();
     

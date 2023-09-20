@@ -18,6 +18,7 @@
 #include "driver.hpp"
 #include "application.hpp"
 #include "cm_backtrace.h"
+#include "lwip.h"
 
 ////local define
 

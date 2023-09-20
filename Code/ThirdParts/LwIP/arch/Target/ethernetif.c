@@ -571,7 +571,7 @@ void pbuf_free_custom(struct pbuf *p)
 */
 u32_t sys_now(void)
 {
-  return HAL_GetTick();
+  return xTaskGetTickCount();
 }
 
 /* USER CODE END 6 */

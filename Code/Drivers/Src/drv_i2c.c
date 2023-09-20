@@ -21,6 +21,7 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "drv_i2c.h"
 
+#if I2C_RUN_MODE == I2C_USE_HARDWARE
 static I2C_HandleTypeDef hi2c2;
 
 BaseType_t i2c_driver_init(void)
@@ -83,6 +84,7 @@ BaseType_t i2c_read(uint8_t addr,uint8_t *pdata)
     
     return pdPASS;
 }
+#endif
 
 extern void i2c_isr_trigger(void);
 
@@ -97,3 +99,4 @@ void EXTI15_10_IRQHandler(void)
         HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); 
     }
 }
+
