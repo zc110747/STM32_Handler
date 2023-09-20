@@ -2,6 +2,11 @@ _Pragma("once")
 
 #include "interface.h"
 
+#define SPI_USE_HARDWARE        0
+#define SPI_USE_SOFTWARE        1
+
+#define SPI_RUN_MODE            SPI_USE_SOFTWARE   
+
 #define W25X_WriteEnable		0x06 
 #define W25X_WriteDisable		0x04 
 #define W25X_ReadStatusReg1		0x05 
@@ -54,7 +59,7 @@ BaseType_t spi_driver_init(void);
 uint8_t spi_rw_byte(uint8_t data);
         
 //wq interface
-void wq_init(void);
+BaseType_t spi_wq_driver_init(void);
 uint16_t wq_read_id(void);
 void wq_write_enable(void);
 void wq_write_disable(void);

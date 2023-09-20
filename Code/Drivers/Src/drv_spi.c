@@ -3,7 +3,7 @@
 //  All Rights Reserved
 //
 //  Name:
-//      spi.cpp
+//      drv_spi.c
 //
 //  Purpose:
 //      spi driver for flash.
@@ -17,6 +17,7 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 #include "drv_spi.h"
+#include "drv_soft_spi.h"
 
 #define SPI_RW_TIMEOUT  100
 
@@ -28,7 +29,7 @@ SPI_HandleTypeDef hspi5;
 //wq interface
 static void wq_wait_busy(void);
 
-//spi hardware
+#if SPI_RUN_MODE == SPI_USE_HARDWARE
 BaseType_t spi_driver_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -73,17 +74,83 @@ BaseType_t spi_driver_init(void)
 
 uint8_t spi_rw_byte(uint8_t data)
 {
-    uint8_t rx_data;
+    uint8_t rx_data = 0xff;
     
     HAL_SPI_TransmitReceive(&hspi5, &data, &rx_data, 1, SPI_RW_TIMEOUT); 
     
     return rx_data;
 }
+#else
+BaseType_t spi_driver_init(void)
+{
+    SOFT_SPI_INFO spi_info = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+       
+    __HAL_RCC_GPIOF_CLK_ENABLE();  
+    
+    spi_info.mode = SPI_MODE_CPOL_H_CPHA_2;
+    spi_info.sck_pin = GPIO_PIN_7;
+    spi_info.sck_port = GPIOF;
+    spi_info.miso_pin = GPIO_PIN_8;
+    spi_info.miso_port = GPIOF;
+    spi_info.mosi_pin = GPIO_PIN_9;
+    spi_info.mosi_port = GPIOF;
+    
+    if(spi_soft_init(SOFT_SPI5, &spi_info) != SPI_OK)
+    {
+        return pdFAIL;
+    }
+    
+    //cs pin
+    HAL_GPIO_WritePin(GPIOF, GPIO_PIN_6, GPIO_PIN_SET);
+    
+    GPIO_InitStruct.Pin = GPIO_PIN_6;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+    
+    return pdPASS;
+}
+
+uint8_t spi_rw_byte(uint8_t data)
+{
+    uint8_t rdata = 0xff;
+    
+    spi_soft_rw_byte(SOFT_SPI5, &data, &rdata, 1);
+    
+    return rdata;
+}
+
+uint8_t spi_multi_w_byte(uint8_t *data, uint8_t size)
+{
+    if(spi_soft_rw_byte(SOFT_SPI5, data, NULL, size) == SPI_OK)
+    {
+        return 0;
+    }
+    return 1;
+}
+
+#endif
 
 //wq interface
-void wq_init(void)
+BaseType_t spi_wq_driver_init(void)
 {
-    spi_id = wq_read_id();
+    BaseType_t result;
+    
+    //spi
+    result = spi_driver_init();
+    
+    if(result == pdPASS)
+    {
+        spi_id = wq_read_id();
+        PRINT_LOG(LOG_INFO, "spi wq init success, id:0x%x!", spi_id);
+    }
+    else
+    {
+        PRINT_LOG(LOG_ERROR, "spi wq init failed!", spi_id); 
+    }
+    return result;
 }
 
 uint16_t wq_read_id(void)
