@@ -147,7 +147,6 @@ void bq24780s_memory_example(void)
     SOFT_I2C_INFO I2C_Info = {0};
     
     //clock need enable before sd disable irq
-    wdata[0] = 0x08;oftware i2c Init
     __HAL_RCC_GPIOB_CLK_ENABLE(); 
 
     I2C_Info.scl_pin = GPIO_PIN_8;
@@ -157,7 +156,8 @@ void bq24780s_memory_example(void)
     
     i2c_soft_init(SOFT_I2C3, &I2C_Info); 
     
-    //if used in application, nee
+    //if used in application, need disable irq
+    wdata[0] = 0x08;
     wdata[1] = 0x80;
     res = i2c_write_memory(SOFT_I2C3, BQ24780S_SLAVE_ADDRESS, BQ24780S_CHARGE_OPTION_0, 1, wdata, 2);
     if(res != I2C_OK)
@@ -446,7 +446,7 @@ uint8_t i2c_write_memory(uint8_t soft_i2c_num, uint8_t addr, uint32_t mem_addr, 
     //3. send the memory address(memory addr can be 2/4byte for epprom)
     for(index=0; index<mem_size; index++)
     {
-        uint8_t mem = (mem_addr>>(index*8))&0xff;
+        uint8_t mem = (mem_addr>>((mem_size - index - 1)*8))&0xff; //high byte first
         i2c_send_byte(i2c_info_ptr, mem);  
         if(i2c_wait_ack(i2c_info_ptr))
         {
@@ -504,7 +504,7 @@ uint8_t i2c_read_memory(uint8_t soft_i2c_num, uint8_t addr, uint32_t mem_addr, u
     //3. send the memory address(memory addr can be 2/4byte for epprom)
     for(index=0; index<mem_size; index++)
     {
-        uint8_t mem = (mem_addr>>(index*8))&0xff;
+        uint8_t mem = (mem_addr>>((mem_size - index - 1)*8))&0xff;  //high byte first
         i2c_send_byte(i2c_info_ptr, mem);  
         if(i2c_wait_ack(i2c_info_ptr))
         {
