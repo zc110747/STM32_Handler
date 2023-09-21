@@ -67,9 +67,6 @@ BaseType_t driver_init(void)
     //sdcard init
     result &= sdcard_driver_init();
     
-    //spi
-    result &= spi_driver_init();
-    
     //dma 
     result &= dma_driver_init();
     
@@ -77,10 +74,8 @@ BaseType_t driver_init(void)
     dsp_app();
     
     //wq test
-    wq_init();
-    wq_application();
+    result &= spi_wq_driver_init();
     
-
     result &= wdg_driver_init();
     iwdg_reload();
     

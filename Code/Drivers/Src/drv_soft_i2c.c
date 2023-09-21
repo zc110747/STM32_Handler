@@ -4,12 +4,14 @@
 //
 //  Name:
 //      drv_soft_i2c.c
-//      hardware: 
-//          I2C2_SCL ------------ PH4
-//          I2C2_SDA ------------ PH5
-//          EXIT ---------------- PB12
+//
 //  Purpose:
-//     i2c driver.
+//      1.driver default run with stm32 HAL library, other need update region below.
+//      2.system systick change, can debug 'I2C_DELAY_COUNT' to optimal performance.
+//      3.soft i2c interface not protect the time sequence, if used, need disable irq
+//        to ensure proper operation, use soft-i2c with multi-thread, must enter
+//        critical zone.
+//      
 //
 // Author:
 //      @zc
@@ -19,81 +21,165 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
+#include <string.h>
 #include "drv_soft_i2c.h"
-#include "drv_i2c.h"
 
-#define I2C_DELAY_COUNT 10
+static SOFT_I2C_INFO i2c_list[SOFT_I2C_NUM] = {0};
+static uint8_t is_i2c_init[SOFT_I2C_NUM] = {0};
 
-#if I2C_RUN_MODE == I2C_USE_SOFTWARE
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//region need update if not use stm32 hal library
+//     I2C_SCL_H(), I2C_SCL_L(), I2C_SDA_H(), I2C_SDA_L(), I2C_SDA_INPUT()
+//     i2c_soft_init(), i2c_sda_config_in(), i2c_sda_config_out().
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+#define I2C_SCL_H()     HAL_GPIO_WritePin(i2c_info_ptr->scl_port, i2c_info_ptr->scl_pin, GPIO_PIN_SET)
+#define I2C_SCL_L()     HAL_GPIO_WritePin(i2c_info_ptr->scl_port, i2c_info_ptr->scl_pin, GPIO_PIN_RESET)
+#define I2C_SDA_H()     HAL_GPIO_WritePin(i2c_info_ptr->sda_port, i2c_info_ptr->sda_pin, GPIO_PIN_SET)
+#define I2C_SDA_L()     HAL_GPIO_WritePin(i2c_info_ptr->sda_port, i2c_info_ptr->sda_pin, GPIO_PIN_RESET)
+#define I2C_SDA_INPUT() (HAL_GPIO_ReadPin(i2c_info_ptr->sda_port, i2c_info_ptr->sda_pin) == GPIO_PIN_SET)
 
-BaseType_t i2c_driver_init(void)
+static void i2c_sda_config_in(SOFT_I2C_INFO *i2c_info_ptr)
+{
+    GPIO_InitTypeDef GPIO_InitStruct;  
+
+    GPIO_InitStruct.Pin = i2c_info_ptr->sda_pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(i2c_info_ptr->sda_port, &GPIO_InitStruct);
+}
+
+static void i2c_sda_config_out(SOFT_I2C_INFO *i2c_info_ptr)
+{
+    GPIO_InitTypeDef GPIO_InitStruct;  
+
+    GPIO_InitStruct.Pin = i2c_info_ptr->sda_pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(i2c_info_ptr->sda_port, &GPIO_InitStruct);  
+}
+
+uint8_t i2c_soft_init(uint8_t soft_i2c_num, SOFT_I2C_INFO *info_ptr)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-    __HAL_RCC_I2C2_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOH_CLK_ENABLE();
-
+    SOFT_I2C_INFO *i2c_info_ptr;
+    
+    if(soft_i2c_num >= SOFT_I2C_NUM)
+        return I2C_ERROR;
+    
+    if(is_i2c_init[soft_i2c_num])
+    {
+        //i2c already init, use same pin
+        //support i2c with mutliple external device.
+        if(memcmp((char *)info_ptr, (char *)&i2c_list[soft_i2c_num], sizeof(SOFT_I2C_INFO)) == 0)
+        {
+            return I2C_OK;
+        }
+        
+        return I2C_ERROR;
+    }
+    i2c_info_ptr = &i2c_list[soft_i2c_num];
+    
+    is_i2c_init[soft_i2c_num] = 1;
+    memcpy((char *)i2c_info_ptr, (char *)info_ptr, sizeof(SOFT_I2C_INFO));
+    
     I2C_SCL_H();
     I2C_SDA_H();
     
-    GPIO_InitStruct.Pin = I2C_SCL_PIN;
+    GPIO_InitStruct.Pin = i2c_info_ptr->scl_pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
+#ifdef GPIO_SPEED_FREQ_VERY_HIGH
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    HAL_GPIO_Init(I2C_SCL_PORT, &GPIO_InitStruct);
+#else
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+#endif
+    HAL_GPIO_Init(i2c_info_ptr->scl_port, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = I2C_SDA_PIN;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    HAL_GPIO_Init(I2C_SDA_PORT, &GPIO_InitStruct);
+    GPIO_InitStruct.Pin = i2c_info_ptr->sda_pin;
+    HAL_GPIO_Init(i2c_info_ptr->sda_port, &GPIO_InitStruct);
     
-    /*Configure GPIO pin : PB12 */
-    GPIO_InitStruct.Pin = GPIO_PIN_12;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn); 
-    
-    return pdPASS;  
+    return I2C_OK;
 }
 
-BaseType_t i2c_write(uint8_t addr, uint8_t data)
+#if I2C_EXAMPLE_STM32F4_PCF8574 == 1
+#define PCF8574_ADDR 	        0x40
+void pcf8574_dev_example(void)
 {
-    uint8_t res;
-    
-    portENTER_CRITICAL();
-    res = i2c_write_device(addr, data);
-    portEXIT_CRITICAL();
-    
-    if(res != 0)
-    {
-        return pdFAIL;
-    }
-    
-    return pdPASS;    
-}
+    uint8_t data, res;
+    SOFT_I2C_INFO I2C_Info = {0};
 
-BaseType_t i2c_read(uint8_t addr,uint8_t *pdata)
-{
-    uint8_t res;
+    //clock need enable before software i2c Init
+    __HAL_RCC_GPIOH_CLK_ENABLE(); 
+
+    I2C_Info.scl_pin = GPIO_PIN_4;
+    I2C_Info.scl_port = GPIOH;
+    I2C_Info.sda_pin = GPIO_PIN_4;
+    I2C_Info.sda_port = GPIOH;
+
+    i2c_soft_init(SOFT_I2C1, &I2C_Info);
     
-    portENTER_CRITICAL();
-    res = i2c_read_device(addr, pdata);
-    portEXIT_CRITICAL();
-    
-    if(res != 0)
+    //if used in application, need disable irq
+    res = i2c_read_device(SOFT_I2C1, PCF8574_ADDR, &data, 1);
+    if(res != I2C_OK)
     {
-        return pdFAIL;
+        i2c_error_handle();
     }
     
-    return pdPASS;  
+    res = i2c_write_device(SOFT_I2C1, PCF8574_ADDR, &data, 1);
+    if(res != I2C_OK)
+    {
+        i2c_error_handle();
+    }   
 }
 #endif
 
+#if I2C_EXAMPLE_STM32F1_BQ24780S == 1
+#include <string.h>
+#define BQ24780S_SLAVE_ADDRESS      0x12
+#define BQ24780S_CHARGE_OPTION_0    0x12
+void bq24780s_memory_example(void)
+{
+    uint8_t wdata[2] = {0};
+    uint8_t rdata[2] = {0};
+    uint8_t res;
+    SOFT_I2C_INFO I2C_Info = {0};
+    
+    //clock need enable before sd disable irq
+    wdata[0] = 0x08;oftware i2c Init
+    __HAL_RCC_GPIOB_CLK_ENABLE(); 
+
+    I2C_Info.scl_pin = GPIO_PIN_8;
+    I2C_Info.scl_port = GPIOB;
+    I2C_Info.sda_pin = GPIO_PIN_9;
+    I2C_Info.sda_port = GPIOB;
+    
+    i2c_soft_init(SOFT_I2C3, &I2C_Info); 
+    
+    //if used in application, nee
+    wdata[1] = 0x80;
+    res = i2c_write_memory(SOFT_I2C3, BQ24780S_SLAVE_ADDRESS, BQ24780S_CHARGE_OPTION_0, 1, wdata, 2);
+    if(res != I2C_OK)
+    {
+        i2c_error_handle();
+    }
+    
+    res = i2c_read_memory(SOFT_I2C3, BQ24780S_SLAVE_ADDRESS, BQ24780S_CHARGE_OPTION_0, 1, rdata, 2);
+    if(res != I2C_OK)
+    {
+        i2c_error_handle();
+    }
+    
+    if(memcmp(wdata, rdata, 2) != 0)
+    {
+        i2c_error_handle();
+    }
+}
+#endif
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//end of the region
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static void i2c_delay(uint32_t count)
 {
@@ -107,41 +193,9 @@ static void i2c_delay(uint32_t count)
     }    
 }
 
-static void i2c_long_delay(uint32_t count)
+static void i2c_start(SOFT_I2C_INFO *i2c_info_ptr)
 {
-    unsigned int i, j;
-
-    for(i=0; i<count; i++)
-    {
-        i2c_delay(1000);
-    }
-}
-
-static void i2c_sda_config_in(void)
-{
-    GPIO_InitTypeDef GPIO_InitStruct;  
-
-    GPIO_InitStruct.Pin = I2C_SDA_PIN;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(I2C_SDA_PORT, &GPIO_InitStruct);
-}
-
-static void i2c_sda_config_out(void)
-{
-    GPIO_InitTypeDef GPIO_InitStruct;  
-
-    GPIO_InitStruct.Pin = I2C_SDA_PIN;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(I2C_SDA_PORT, &GPIO_InitStruct);  
-}
-
-void i2c_start(void)
-{
-    i2c_sda_config_out();
+    i2c_sda_config_out(i2c_info_ptr);
 
     I2C_SDA_H();
     i2c_delay(I2C_DELAY_COUNT);
@@ -152,11 +206,11 @@ void i2c_start(void)
     I2C_SCL_L();               
 }
 
-void i2c_send_byte(uint8_t byte)
+static void i2c_send_byte(SOFT_I2C_INFO *i2c_info_ptr, uint8_t byte)
 {
     uint8_t index;
 
-    i2c_sda_config_out();
+    i2c_sda_config_out(i2c_info_ptr);
     
     for(index=0; index<8; index++)
     {
@@ -177,9 +231,9 @@ void i2c_send_byte(uint8_t byte)
     }
 }
 
-void i2c_send_nack(void)
+static void i2c_send_ack(SOFT_I2C_INFO *i2c_info_ptr)
 {
-    i2c_sda_config_out();
+    i2c_sda_config_out(i2c_info_ptr);
     i2c_delay(I2C_DELAY_COUNT);
     I2C_SDA_L();
     i2c_delay(I2C_DELAY_COUNT);
@@ -188,9 +242,9 @@ void i2c_send_nack(void)
     I2C_SCL_L();
 }
 
-void i2c_send_ack(void)
+static void i2c_send_nack(SOFT_I2C_INFO *i2c_info_ptr)
 {
-    i2c_sda_config_out();
+    i2c_sda_config_out(i2c_info_ptr);
     i2c_delay(I2C_DELAY_COUNT);
     I2C_SDA_H();
     i2c_delay(I2C_DELAY_COUNT);
@@ -199,11 +253,11 @@ void i2c_send_ack(void)
     I2C_SCL_L();
 }
 
-uint8_t i2c_read_byte(uint8_t ack_status)
+static uint8_t i2c_read_byte(SOFT_I2C_INFO *i2c_info_ptr, uint8_t ack_status)
 {
     uint8_t index, value = 0;
 
-    i2c_sda_config_in();
+    i2c_sda_config_in(i2c_info_ptr);
     for(index=0; index<8; index++)
     {
         i2c_delay(I2C_DELAY_COUNT);
@@ -218,18 +272,18 @@ uint8_t i2c_read_byte(uint8_t ack_status)
     }
     
     if(!ack_status)
-        i2c_send_nack();
+        i2c_send_nack(i2c_info_ptr);
     else
-        i2c_send_ack();
+        i2c_send_ack(i2c_info_ptr);
     
     return value;
 }
 
-uint8_t i2c_wait_ack(void)
+static uint8_t i2c_wait_ack(SOFT_I2C_INFO *i2c_info_ptr)
 {
     uint16_t wait_time = 0;
 
-    i2c_sda_config_in();
+    i2c_sda_config_in(i2c_info_ptr);
     i2c_delay(I2C_DELAY_COUNT);
 
     while (I2C_SDA_INPUT())
@@ -248,9 +302,9 @@ uint8_t i2c_wait_ack(void)
     return 0;
 }
 
-void i2c_stop(void)
+static void i2c_stop(SOFT_I2C_INFO *i2c_info_ptr)
 {
-    i2c_sda_config_out();
+    i2c_sda_config_out(i2c_info_ptr);
     I2C_SDA_L();
     i2c_delay(I2C_DELAY_COUNT);	
 	I2C_SCL_H();
@@ -260,56 +314,238 @@ void i2c_stop(void)
 	I2C_SCL_L(); 
 }
 
-uint8_t i2c_write_device(uint8_t addr, uint8_t data)
+uint8_t i2c_soft_deinit(uint8_t soft_i2c_num)
 {
+    if(soft_i2c_num >= SOFT_I2C_NUM)
+        return I2C_ERROR; 
+    
+    is_i2c_init[soft_i2c_num] = 0;
+    return I2C_OK;
+}
+
+uint8_t i2c_write_device(uint8_t soft_i2c_num, uint8_t addr, uint8_t *data, uint16_t size)
+{
+    uint16_t index;
+    SOFT_I2C_INFO *i2c_info_ptr;
+    
+    if(soft_i2c_num >= SOFT_I2C_NUM)
+    {
+        return I2C_ERROR;
+    }
+    
+    if(!is_i2c_init[soft_i2c_num])
+    {
+        return I2C_ERROR;
+    }
+    
+    i2c_info_ptr = &i2c_list[soft_i2c_num];
+   
     //1. send start
-    i2c_start();
+    i2c_start(i2c_info_ptr);
 
     //2. send the address
-    i2c_send_byte(addr&0xfe);  //the bit0 is w, must 0
-    if(i2c_wait_ack())
+    i2c_send_byte(i2c_info_ptr, addr&0xfe);  //the bit0 is w, must 0
+    if(i2c_wait_ack(i2c_info_ptr))
     {
-        i2c_stop();
-        return 1;
+        i2c_stop(i2c_info_ptr);
+        return I2C_ERROR;
     }
 
     //3. send the data
-    i2c_send_byte(data);
-    if(i2c_wait_ack())
+    for(index=0; index<size; index++)
     {
-        i2c_stop();
-        return 2;
+        i2c_send_byte(i2c_info_ptr, data[index]);
+        if(i2c_wait_ack(i2c_info_ptr))
+        {
+            i2c_stop(i2c_info_ptr);
+            return I2C_ERROR;
+        }
     }
-
+    
     //4. send the stop
-    i2c_stop();
+    i2c_stop(i2c_info_ptr);
 
     i2c_delay(I2C_DELAY_COUNT);
-    return 0;     
+    return I2C_OK;     
 }
 
-uint8_t i2c_read_device(uint8_t addr, uint8_t *rdata)
+uint8_t i2c_read_device(uint8_t soft_i2c_num, uint8_t addr, uint8_t *rdata, uint16_t size)
 {
-    uint8_t data;
-
+    uint16_t index;
+    SOFT_I2C_INFO *i2c_info_ptr;
+    
+    if(soft_i2c_num >= SOFT_I2C_NUM)
+    {
+        return I2C_ERROR;
+    }
+    
+    if(!is_i2c_init[soft_i2c_num])
+    {
+        return I2C_ERROR;
+    }
+    
+    i2c_info_ptr = &i2c_list[soft_i2c_num];
+    
     //1. send start
-    i2c_start();
+    i2c_start(i2c_info_ptr);
 
     //2. send the address
-    i2c_send_byte(addr|0x01);  //the bit0 is r, must 1
-    if(i2c_wait_ack())
+    i2c_send_byte(i2c_info_ptr, addr|0x01);  //the bit0 is r, must 1
+    if(i2c_wait_ack(i2c_info_ptr))
     {
-        i2c_stop();
-        return 1;
+        i2c_stop(i2c_info_ptr);
+        return I2C_ERROR;
     }
 
     //3. read the data
-    data = i2c_read_byte(0);
+    for(index=0; index<size; index++)
+    {
+        if(index != size-1)
+        {
+            rdata[index] = i2c_read_byte(i2c_info_ptr, 1);
+        }
+        else
+        {
+            rdata[index] = i2c_read_byte(i2c_info_ptr, 0);
+        }
+    }
 
     //4. send the stop
-    i2c_stop();
+    i2c_stop(i2c_info_ptr);
+    return I2C_OK;     
+}
 
-    *rdata = data;
+uint8_t i2c_write_memory(uint8_t soft_i2c_num, uint8_t addr, uint32_t mem_addr, uint8_t mem_size, uint8_t *data, uint16_t size)
+{
+    uint16_t index;
+    SOFT_I2C_INFO *i2c_info_ptr;
     
-    return 0;     
+    if(soft_i2c_num >= SOFT_I2C_NUM)
+    {
+        return I2C_ERROR;
+    }
+    
+    if(!is_i2c_init[soft_i2c_num])
+    {
+        return I2C_ERROR;
+    }
+    
+    i2c_info_ptr = &i2c_list[soft_i2c_num];
+    
+    //1. send start
+    i2c_start(i2c_info_ptr); 
+    
+    //2. send the address
+    i2c_send_byte(i2c_info_ptr, addr&0xfe);  //the bit0 is w, must 0   
+    if(i2c_wait_ack(i2c_info_ptr))
+    {
+        i2c_stop(i2c_info_ptr);
+        return I2C_ERROR;
+    }
+
+    //3. send the memory address(memory addr can be 2/4byte for epprom)
+    for(index=0; index<mem_size; index++)
+    {
+        uint8_t mem = (mem_addr>>(index*8))&0xff;
+        i2c_send_byte(i2c_info_ptr, mem);  
+        if(i2c_wait_ack(i2c_info_ptr))
+        {
+            i2c_stop(i2c_info_ptr);
+            return I2C_ERROR;
+        }
+    }
+    
+    //3. send the data
+    for(index=0; index<size; index++)
+    {
+        i2c_send_byte(i2c_info_ptr, data[index]);
+        if(i2c_wait_ack(i2c_info_ptr))
+        {
+            i2c_stop(i2c_info_ptr);
+            return I2C_ERROR;
+        }
+    }
+    
+    //4. send the stop
+    i2c_stop(i2c_info_ptr);
+
+    i2c_delay(I2C_DELAY_COUNT);
+    return I2C_OK;
+}
+
+uint8_t i2c_read_memory(uint8_t soft_i2c_num, uint8_t addr, uint32_t mem_addr, uint8_t mem_size, uint8_t *rdata, uint16_t size)
+{
+    SOFT_I2C_INFO *i2c_info_ptr;
+    uint16_t index;
+    
+    if(soft_i2c_num >= SOFT_I2C_NUM)
+    {
+        return I2C_ERROR;
+    }
+    
+    if(!is_i2c_init[soft_i2c_num])
+    {
+        return I2C_ERROR;
+    }
+    
+    i2c_info_ptr = &i2c_list[soft_i2c_num];
+    
+    //1. send start
+    i2c_start(i2c_info_ptr);    
+    
+    //2. send the address
+    i2c_send_byte(i2c_info_ptr, addr&0xfe);  //the bit0 is w, must 0   
+    if(i2c_wait_ack(i2c_info_ptr))
+    {
+        i2c_stop(i2c_info_ptr);
+        return I2C_ERROR;
+    }
+    
+    //3. send the memory address(memory addr can be 2/4byte for epprom)
+    for(index=0; index<mem_size; index++)
+    {
+        uint8_t mem = (mem_addr>>(index*8))&0xff;
+        i2c_send_byte(i2c_info_ptr, mem);  
+        if(i2c_wait_ack(i2c_info_ptr))
+        {
+            i2c_stop(i2c_info_ptr);
+            return I2C_ERROR;
+        }
+    }
+    
+    //4. send restart
+    i2c_start(i2c_info_ptr);  
+    
+    //5. send the address with read
+    i2c_send_byte(i2c_info_ptr, addr | 0x01);  
+    if(i2c_wait_ack(i2c_info_ptr))
+    {
+        i2c_stop(i2c_info_ptr);
+        return I2C_ERROR;
+    }
+    
+    //6. read the data
+    for(index=0; index<size; index++)
+    {
+        if(index != size-1)
+        {
+            rdata[index] = i2c_read_byte(i2c_info_ptr, 1);
+        }
+        else
+        {
+            rdata[index] = i2c_read_byte(i2c_info_ptr, 0);
+        }
+    }
+    
+    //7. send the stop
+    i2c_stop(i2c_info_ptr);  
+    return I2C_OK;   
+}
+
+void i2c_error_handle(void)
+{
+    while(1)
+    {
+        
+    }
 }

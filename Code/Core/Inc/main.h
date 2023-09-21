@@ -34,7 +34,8 @@ extern "C" {
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
-
+#include <stdint.h>
+    
 //freertos header
 #include "FreeRTOS.h"
 #include "task.h"

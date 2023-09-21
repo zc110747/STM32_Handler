@@ -735,11 +735,6 @@
               <FilePath>..\Drivers\Src\drv_wdg.c</FilePath>
             </File>
             <File>
-              <FileName>drv_spi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\Src\drv_spi.c</FilePath>
-            </File>
-            <File>
               <FileName>drv_dma.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\drv_dma.c</FilePath>
@@ -822,22 +817,17 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>ThirdParts/segger_rtt</GroupName>
+          <GroupName>Driver/spi</GroupName>
           <Files>
             <File>
-              <FileName>SEGGER_RTT.c</FileName>
+              <FileName>drv_spi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\ThirdParts\SEGGER_RTT\RTT\SEGGER_RTT.c</FilePath>
+              <FilePath>..\Drivers\Src\drv_spi.c</FilePath>
             </File>
             <File>
-              <FileName>SEGGER_RTT_printf.c</FileName>
+              <FileName>drv_soft_spi.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\ThirdParts\SEGGER_RTT\RTT\SEGGER_RTT_printf.c</FilePath>
-            </File>
-            <File>
-              <FileName>SEGGER_RTT_ASM_ARMv7M.S</FileName>
-              <FileType>2</FileType>
-              <FilePath>..\ThirdParts\SEGGER_RTT\RTT\SEGGER_RTT_ASM_ARMv7M.S</FilePath>
+              <FilePath>..\Drivers\Src\drv_soft_spi.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1373,6 +1363,26 @@
               <FileName>lan8742.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\ThirdParts\LwIP\arch\lan8742\lan8742.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>ThirdParts/segger_rtt</GroupName>
+          <Files>
+            <File>
+              <FileName>SEGGER_RTT_ASM_ARMv7M.S</FileName>
+              <FileType>2</FileType>
+              <FilePath>..\ThirdParts\SEGGER_RTT\RTT\SEGGER_RTT_ASM_ARMv7M.S</FilePath>
+            </File>
+            <File>
+              <FileName>SEGGER_RTT_printf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ThirdParts\SEGGER_RTT\RTT\SEGGER_RTT_printf.c</FilePath>
+            </File>
+            <File>
+              <FileName>SEGGER_RTT.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\ThirdParts\SEGGER_RTT\RTT\SEGGER_RTT.c</FilePath>
             </File>
           </Files>
         </Group>
