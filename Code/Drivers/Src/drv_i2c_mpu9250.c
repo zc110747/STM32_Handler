@@ -62,7 +62,7 @@ BaseType_t mpu9250_i2c_multi_write(uint8_t reg, uint8_t *data, uint8_t size)
 {
     uint8_t res;
     
-    res = HAL_I2C_Mem_Write(&hi2c2, AP3216C_ADDR, reg, 1, data, size, AP3216C_TIMEOUT);  
+    res = HAL_I2C_Mem_Write(&hi2c2, MPU9250_ADDR, reg, 1, data, size, MPU9250_TIMEOUT);  
     
     if(res != HAL_OK)
         return pdFAIL;
@@ -74,7 +74,7 @@ BaseType_t mpu9250_i2c_multi_read(uint8_t reg, uint8_t *rdata, uint8_t size)
 {
     uint8_t res;
     
-    res = HAL_I2C_Mem_Read(&hi2c2, AP3216C_ADDR, reg, 1, rdata, size, AP3216C_TIMEOUT);  
+    res = HAL_I2C_Mem_Read(&hi2c2, MPU9250_ADDR, reg, 1, rdata, size, MPU9250_TIMEOUT);  
     
     if(res != HAL_OK)
         return pdFAIL; 

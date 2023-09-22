@@ -174,9 +174,17 @@ void monitor_manage::adc_monitor()
         lcd_driver::get_instance()->lcd_show_extra_num(10+26*8,140,((uint32_t)(voltage*100))%100, 2, 16, 0);
     }
 }
-    
+
+//task idle run, can process rx command
+void vApplicationIdleHook(void)
+{
+    logger_process_run();
+}
+
 void monitor_manage::run(void* parameter)
 {
+    logger_set_multi_thread_run();
+    
     while(1)
     {
         timer_loop_motion();

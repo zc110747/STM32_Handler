@@ -19,6 +19,8 @@
 #ifndef _PRODUCT_CONFIG_H
 #define _PRODUCT_CONFIG_H
 
+#define LOGGER_ON                       1
+
 #define IWDG_MODULE_ON                  0
 #define WWDG_MODULE_ON                  0
 

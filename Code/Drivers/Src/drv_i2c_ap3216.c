@@ -24,6 +24,7 @@ static I2C_HandleTypeDef hi2c2;
 
 BaseType_t ap3216_driver_init(void)
 {
+    uint8_t res;
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
     __HAL_RCC_I2C2_CLK_ENABLE();
@@ -67,7 +68,7 @@ BaseType_t ap3216_i2c_multi_write(uint8_t reg, uint8_t *data, uint8_t size)
 {
     uint8_t res;
     
-    res = HAL_I2C_Mem_Write(&hi2c2, AP3216C_ADDR, reg, 1, data, size, AP3216C_TIMEOUT);  
+    res = HAL_I2C_Mem_Write(&hi2c2, AP3216C_ADDR<<1, reg, 1, data, size, AP3216C_TIMEOUT);  
     
     if(res != HAL_OK)
         return pdFAIL;
@@ -79,7 +80,7 @@ BaseType_t ap3216_i2c_multi_read(uint8_t reg, uint8_t *rdata, uint8_t size)
 {
     uint8_t res;
     
-    res = HAL_I2C_Mem_Read(&hi2c2, AP3216C_ADDR, reg, 1, rdata, size, AP3216C_TIMEOUT);  
+    res = HAL_I2C_Mem_Read(&hi2c2, AP3216C_ADDR<<1, reg, 1, rdata, size, AP3216C_TIMEOUT);  
     
     if(res != HAL_OK)
         return pdFAIL; 
@@ -124,7 +125,7 @@ BaseType_t ap3216_i2c_multi_write(uint8_t reg, uint8_t *data, uint8_t size)
     uint8_t res;
     
     portENTER_CRITICAL();
-    res = i2c_write_memory(SOFT_I2C2, AP3216C_ADDR, reg, 1, data, size);
+    res = i2c_write_memory(SOFT_I2C2, AP3216C_ADDR<<1, reg, 1, data, size);
     portEXIT_CRITICAL();    
     
     if(res != I2C_OK)
@@ -138,7 +139,7 @@ BaseType_t ap3216_i2c_multi_read(uint8_t reg, uint8_t *rdata, uint8_t size)
     uint8_t res;
     
     portENTER_CRITICAL();
-    res = i2c_read_memory(SOFT_I2C2, AP3216C_ADDR, reg, 1, rdata, size);
+    res = i2c_read_memory(SOFT_I2C2, AP3216C_ADDR<<1, reg, 1, rdata, size);
     portEXIT_CRITICAL();    
     
     if(res != I2C_OK)

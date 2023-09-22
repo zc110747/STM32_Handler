@@ -38,9 +38,12 @@ int main(void)
     SystemClock_Config();
     
     //cm_backtrace_init("LowerBoard", TRACE_HARDWARE_VERSION, TRACE_SOFTWARE_VERSION);  
-       //logger interface init
-    //must init start first.
+    
+    //logger interface init, init before use PRINT_LOG.
     xReturned = logger_init();
+    
+    //uart driver init for logger
+    xReturned &= usart_driver_init();
     
     //driver interface init
     xReturned &= driver_init();

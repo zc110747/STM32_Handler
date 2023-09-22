@@ -5,7 +5,7 @@
 
 #include "main.h"
 #include "application.hpp"
-#include "logger.h"
+#include "logger_process.h"
 
 typedef enum
 {

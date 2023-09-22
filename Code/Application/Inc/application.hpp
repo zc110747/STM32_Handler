@@ -24,8 +24,7 @@
 #ifdef __cplusplus
     extern "C" {
 #endif
-     
-BaseType_t logger_init(void);        
+        
 BaseType_t application_init(void);
         
 #ifdef __cplusplus

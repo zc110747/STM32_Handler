@@ -60,6 +60,7 @@ BaseType_t driver_init(void)
     
     //i2c
     result &= pcf8574_driver_init();
+    result &= ap3216_driver_init();
     
     //dac
     result &= dac_driver_init();

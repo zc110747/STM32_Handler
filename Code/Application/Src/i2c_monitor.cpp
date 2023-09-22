@@ -164,30 +164,33 @@ void i2c_monitor::run(void* parameter)
 void i2c_monitor::ap3216c_i2c_run(void)
 {
     uint8_t buf[6];
- 
-    if(ap3216_i2c_multi_read(AP3216C_IRDATALOW, buf, 6) == pdPASS)
+    uint8_t index;
+    
+    for(index=0; index<6; index++)
     {
-        //ir data
-        if(buf[0]&(1<<7)) 	
-            ap3216_info_.ir = 0;					
-        else 			
-            ap3216_info_.ir = (((uint16_t)buf[1])<< 2) | (buf[0]&0X03); 			
-        
-        ap3216_info_.als = ((uint16_t)buf[3]<<8) | buf[2];
-        
-        if(buf[4]&(1<<6))	
-            ap3216_info_.ps = 0;    													
-        else 				
-            ap3216_info_.ps = ((uint16_t)(buf[5]&0X3F)<<4)|(buf[4] & 0X0F); 
-        
-        
-        PRINT_LOG(LOG_INFO, "ap3216c i2c read success, ir:%d, als:%d, ps:%d.",
-            ap3216_info_.ir, ap3216_info_.als, ap3216_info_.ps);
+        if(ap3216_i2c_multi_read(AP3216C_IRDATALOW+index, &buf[index], 1) != pdPASS)
+        {
+            PRINT_LOG(LOG_INFO, "ap3216c i2c device read failed.");
+            return;
+        }
     }
-    else
-    {
-        PRINT_LOG(LOG_INFO, "ap3216c i2c device read failed.");
-    }
+
+    //ir data
+    if(buf[0]&(1<<7)) 	
+        ap3216_info_.ir = 0;					
+    else 			
+        ap3216_info_.ir = (((uint16_t)buf[1])<< 2) | (buf[0]&0X03); 			
+    
+    ap3216_info_.als = ((uint16_t)buf[3]<<8) | buf[2];
+    
+    if(buf[4]&(1<<6))	
+        ap3216_info_.ps = 0;    													
+    else 				
+        ap3216_info_.ps = ((uint16_t)(buf[5]&0X3F)<<4)|(buf[4]&0X0F); 
+    
+    
+    PRINT_LOG(LOG_INFO, "ap3216c i2c read success, ir:%d, als:%d, ps:%d.",
+        ap3216_info_.ir, ap3216_info_.als, ap3216_info_.ps);
 }
 
 void i2c_monitor::registerIODelayTimeTrigger(void)

@@ -1,0 +1,20 @@
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//      parameter.c
+//
+//  Purpose:
+//      internal parameter process, saved in flash, used
+//
+// Author:
+//      @zc
+//
+//  Assumptions:
+//	
+//  Revision History:
+//
+/////////////////////////////////////////////////////////////////////////////
+#include "parameter.h"
+

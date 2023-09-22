@@ -23,7 +23,6 @@
 
 #define MPU9250_ADDR    	    0x68
 
-
 #define MPU9250_TIMEOUT         10
 
 #ifdef __cplusplus
