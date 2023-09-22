@@ -19,13 +19,13 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "drv_i2c.h"
+#include "drv_i2c_pcf8574.h"
 #include "drv_soft_i2c.h"
 
 #if I2C_RUN_MODE == I2C_USE_HARDWARE
 static I2C_HandleTypeDef hi2c2;
 
-BaseType_t i2c_driver_init(void)
+BaseType_t pcf8574_driver_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
@@ -70,24 +70,26 @@ BaseType_t i2c_driver_init(void)
     return pdPASS;  
 }
 
-BaseType_t i2c_write(uint8_t addr, uint8_t data)
+BaseType_t pcf8574_i2c_write(uint8_t data)
 {
-    if(HAL_I2C_Master_Transmit(&hi2c2, addr | 0x00, &data, 1, PCF8574_I2C_TIMEOUT) != HAL_OK)
+    if(HAL_I2C_Master_Transmit(&hi2c2, PCF8574_ADDR | 0x00, &data, 1, PCF8574_I2C_TIMEOUT) != HAL_OK)
         return pdFAIL;
 
     return pdPASS;    
 }
 
-BaseType_t i2c_read(uint8_t addr,uint8_t *pdata)
+BaseType_t pcf8574_i2c_read(uint8_t *pdata)
 {
-    if(HAL_I2C_Master_Receive(&hi2c2, addr | 0x01, pdata, 1, PCF8574_I2C_TIMEOUT) != HAL_OK)
+    if(HAL_I2C_Master_Receive(&hi2c2, PCF8574_ADDR | 0x01, pdata, 1, PCF8574_I2C_TIMEOUT) != HAL_OK)
         return pdFAIL;
     
     return pdPASS;
 }
 #else
-//PH4, PH5, PB4
-BaseType_t i2c_driver_init(void)
+//I2C_SCL: PH4
+//I2C_SDA: PH5
+//I2C_INT: PB12
+BaseType_t pcf8574_driver_init(void)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
     SOFT_I2C_INFO I2C_Info = {0};
@@ -96,10 +98,10 @@ BaseType_t i2c_driver_init(void)
     __HAL_RCC_GPIOB_CLK_ENABLE(); 
     __HAL_RCC_GPIOH_CLK_ENABLE(); 
 
-    I2C_Info.scl_pin = I2C_SCL_PIN;
-    I2C_Info.scl_port = I2C_SCL_PORT;
-    I2C_Info.sda_pin = I2C_SDA_PIN;
-    I2C_Info.sda_port = I2C_SDA_PORT;
+    I2C_Info.scl_pin = GPIO_PIN_4;
+    I2C_Info.scl_port = GPIOH;
+    I2C_Info.sda_pin = GPIO_PIN_5;
+    I2C_Info.sda_port = GPIOH;
     
     if(i2c_soft_init(SOFT_I2C2, &I2C_Info) != I2C_OK)
     {
@@ -107,23 +109,23 @@ BaseType_t i2c_driver_init(void)
     }
     
     /*Configure GPIO pin : PB12 */
-    GPIO_InitStruct.Pin = I2C_INT_PIN;
+    GPIO_InitStruct.Pin = GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
-    HAL_GPIO_Init(I2C_INT_PORT, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    HAL_NVIC_SetPriority(I2C_INT_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(I2C_INT_IRQn); 
+    HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(EXTI15_10_IRQn); 
 
     return pdPASS;  
 }
 
-BaseType_t i2c_write(uint8_t addr, uint8_t data)
+BaseType_t pcf8574_i2c_write(uint8_t data)
 {
     uint8_t res;
     
     portENTER_CRITICAL();
-    res = i2c_write_device(SOFT_I2C2, addr, &data, 1);
+    res = i2c_write_device(SOFT_I2C2, PCF8574_ADDR, &data, 1);
     portEXIT_CRITICAL();
     
     if(res != 0)
@@ -134,12 +136,12 @@ BaseType_t i2c_write(uint8_t addr, uint8_t data)
     return pdPASS;    
 }
 
-BaseType_t i2c_read(uint8_t addr,uint8_t *pdata)
+BaseType_t pcf8574_i2c_read(uint8_t *pdata)
 {
     uint8_t res;
     
     portENTER_CRITICAL();
-    res = i2c_read_device(SOFT_I2C2, addr, pdata, 1);
+    res = i2c_read_device(SOFT_I2C2, PCF8574_ADDR, pdata, 1);
     portEXIT_CRITICAL();
     
     if(res != 0)

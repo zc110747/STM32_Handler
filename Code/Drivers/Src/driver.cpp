@@ -59,7 +59,7 @@ BaseType_t driver_init(void)
     result &= pwm_driver_init();
     
     //i2c
-    result &= i2c_driver_init();
+    result &= pcf8574_driver_init();
     
     //dac
     result &= dac_driver_init();

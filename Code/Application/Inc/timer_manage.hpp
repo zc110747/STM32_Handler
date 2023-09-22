@@ -22,18 +22,22 @@
 #include "main.h"
 #include <new>
 
-#define EVENT_I2C_TIMER_TIGGER      0
+#define EVENT_I2C_IO_DELAY_TIMER_TIGGER         0
+#define EVENT_I2C_DEV_UPDATE_TIMER_TIGGER       1
 
-#define SYSTEM_TIME_MAX_TRIGGERS	10
-#define SOFT_LOOP_TIMER_PERIOD		(pdMS_TO_TICKS(100))
+#define SYSTEM_TIME_MAX_TRIGGERS	            10
+#define SOFT_LOOP_TIMER_PERIOD		            (pdMS_TO_TICKS(100))
+#define TIME_MANAGE_CNT(T)                      ((T)/SOFT_LOOP_TIMER_PERIOD)
+
+#define TIMER_TRIGGER_FOREVER                   UINT16_MAX
 
 template <typename T>
 class TimeTriggerFunction
 {
 public:
 	virtual ~TimeTriggerFunction(){}
-	virtual void operator()(T d){}
-	virtual void operator()(void){}
+	virtual void operator()(uint16_t id, T d){}
+	virtual void operator()(uint16_t id){}
 };
 
 class UserMemoryMange
@@ -147,9 +151,9 @@ public:
 			if(NULL != pFunc)
 			{
 				if(pVar != NULL) //if no pVar, just send nothing
-					(*pFunc)(*pVar);
+					(*pFunc)(trigId, *pVar);
 				else
-					(*pFunc)();
+					(*pFunc)(trigId);
 			}
 		}
 	}

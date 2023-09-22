@@ -59,14 +59,14 @@ uint32_t buffer[] = {
 std::function<void()> key_func_list[] = {
     [](){
         PRINT_LOG(LOG_INFO, "Key0 Push down!");
-        i2c_monitor::get_instance()->write_io(OUTPUT_BEEP, IO_ON);
+        i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_BEEP, IO_ON);
     },
     [](){
         uint32_t crc_value;
        
         crc_value = crc_get_value(buffer, 4);       
         PRINT_LOG(LOG_INFO, "Key1 Push down!");
-        i2c_monitor::get_instance()->write_io(OUTPUT_BEEP, IO_OFF);
+        i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_BEEP, IO_OFF);
         PRINT_LOG(LOG_INFO, "rng:%d crc:0x%x", rng_get_value(), crc_value);
     },
     [](){

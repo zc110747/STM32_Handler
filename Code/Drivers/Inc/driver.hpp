@@ -32,11 +32,13 @@
 #include "drv_alg.h"
 #include "drv_wdg.h"
 #include "drv_adc.h"
-#include "drv_i2c.h"
 #include "drv_spi.h"
 #include "drv_dma.h"
 #include "drv_key.h"
 #include "drv_sdcard.h"
+
+#include "drv_i2c_pcf8574.h"
+#include "drv_i2c_ap3216.h"
 
 #include "SEGGER_RTT.h"
 

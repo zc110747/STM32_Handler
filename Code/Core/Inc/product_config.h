@@ -35,6 +35,12 @@
 #define UART_TEST                       0
 #define SDMMC_TEST                      0
 
+//i2c workmode
+#define I2C_USE_HARDWARE                0
+#define I2C_USE_SOFTWARE                1
+
+#define I2C_RUN_MODE                    I2C_USE_SOFTWARE
+
 //default config
 #define DAC_DEFAULT_VOL                 1500   //uint:mv
 
