@@ -159,7 +159,7 @@
           <Type>0</Type>
           <LineNumber>186</LineNumber>
           <EnabledFlag>1</EnabledFlag>
-          <Address>134227938</Address>
+          <Address>134228114</Address>
           <ByteObject>0</ByteObject>
           <HtxType>0</HtxType>
           <ManyObjects>0</ManyObjects>
@@ -169,22 +169,6 @@
           <Filename>..\ThirdParts\LwIP\arch\Target\ethernetif.c</Filename>
           <ExecCommand></ExecCommand>
           <Expression>\\LowerBoard\../ThirdParts/LwIP/arch/Target/ethernetif.c\186</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>129</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>122</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\UsrParts\logger\cmd_process.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\LowerBoard\../UsrParts/logger/cmd_process.c\129</Expression>
         </Bp>
       </Breakpoint>
       <WatchWindow1>
@@ -268,7 +252,7 @@
       <DebugFlag>
         <trace>0</trace>
         <periodic>1</periodic>
-        <aLwin>1</aLwin>
+        <aLwin>0</aLwin>
         <aCover>0</aCover>
         <aSer1>0</aSer1>
         <aSer2>0</aSer2>
@@ -1212,7 +1196,7 @@
 
   <Group>
     <GroupName>Driver/spi</GroupName>
-    <tvExp>0</tvExp>
+    <tvExp>1</tvExp>
     <tvExpOptDlg>0</tvExpOptDlg>
     <cbSel>0</cbSel>
     <RteFlg>0</RteFlg>

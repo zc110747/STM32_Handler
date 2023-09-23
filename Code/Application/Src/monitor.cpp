@@ -175,12 +175,6 @@ void monitor_manage::adc_monitor()
     }
 }
 
-//task idle run, can process rx command
-void vApplicationIdleHook(void)
-{
-    logger_process_run();
-}
-
 void monitor_manage::run(void* parameter)
 {
     logger_set_multi_thread_run();

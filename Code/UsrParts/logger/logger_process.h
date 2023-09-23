@@ -1,4 +1,19 @@
-
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//      logger_process.h
+//
+//  Purpose:
+//     
+//
+// Author:
+//      @zc
+//
+// Revision History:
+//      Version V1.0b2 Create.
+/////////////////////////////////////////////////////////////////////////////
 #ifndef _LOOGGER_PROCESS_H
 #define _LOOGGER_PROCESS_H
 

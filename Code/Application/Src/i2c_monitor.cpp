@@ -189,8 +189,8 @@ void i2c_monitor::ap3216c_i2c_run(void)
         ap3216_info_.ps = ((uint16_t)(buf[5]&0X3F)<<4)|(buf[4]&0X0F); 
     
     
-    PRINT_LOG(LOG_INFO, "ap3216c i2c read success, ir:%d, als:%d, ps:%d.",
-        ap3216_info_.ir, ap3216_info_.als, ap3216_info_.ps);
+//    PRINT_LOG(LOG_INFO, "ap3216c i2c read success, ir:%d, als:%d, ps:%d.",
+//        ap3216_info_.ir, ap3216_info_.als, ap3216_info_.ps);
 }
 
 void i2c_monitor::registerIODelayTimeTrigger(void)

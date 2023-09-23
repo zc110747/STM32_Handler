@@ -62,6 +62,12 @@ int main(void)
     }
 }
 
+//task idle run, can process rx command
+void vApplicationIdleHook(void)
+{
+    logger_process_run();
+}
+
 static BaseType_t SystemClock_Config(void)
 {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
