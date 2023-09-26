@@ -3,6 +3,7 @@
 #include "lcd.hpp"
 #include "driver.hpp"
 #include "i2c_monitor.hpp"
+#include "multi_button.h"
 
 KEY_STATE monitor_manage::key_last_[KEY_NUM];
 KEY_STATE monitor_manage::key_now_[KEY_NUM];
@@ -53,31 +54,7 @@ bool monitor_manage::is_time_escape(uint32_t ticks , uint32_t time)
     return false;
 }
 
-uint32_t buffer[] = {
-    0x1234, 0x02341515, 0x12321321, 0x23458686 
-};
 std::function<void()> key_func_list[] = {
-    [](){
-        PRINT_LOG(LOG_INFO, "Key0 Push down!");
-        i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_BEEP, IO_ON);
-    },
-    [](){
-        uint32_t crc_value;
-       
-        crc_value = crc_get_value(buffer, 4);       
-        PRINT_LOG(LOG_INFO, "Key1 Push down!");
-        i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_BEEP, IO_OFF);
-        PRINT_LOG(LOG_INFO, "rng:%d crc:0x%x", rng_get_value(), crc_value);
-    },
-    [](){
-        static float precent = 1;
-        PRINT_LOG(LOG_INFO, "Key2 Push down!");
-        set_convert_vol(precent);
-        pwm_set_percent(precent);
-        precent -= 0.1;
-        if(precent < 0.5)
-            precent = 1;
-    },
     [](){
         PRINT_LOG(LOG_INFO, "Tpad Key Push down, no_push:%d, push:%d!",
             tpad_get_no_push_val(),
@@ -90,13 +67,123 @@ std::function<void()> key_func_list[] = {
     },    
 };
 
+enum Button_IDs {
+	btn0_id = 0,
+    btn1_id,
+    btn2_id,
+};
+
+uint8_t read_button_GPIO(uint8_t button_id)
+{
+    uint8_t gpio_state = 0;
+    
+    switch(button_id)
+    {
+        case btn0_id:
+            gpio_state = key_get_value(0);
+            break;
+        case btn1_id:
+            gpio_state = key_get_value(1);
+            break;
+        case btn2_id:
+            gpio_state = key_get_value(2);
+            break;            
+        default:
+            break;
+    }
+    return gpio_state;
+}
+
+void BTN0_PRESS_Handler(void* btn)
+{
+    PressEvent event = get_button_event((struct Button*)btn);
+    
+    if(event == PRESS_DOWN)
+    {
+        PRINT_LOG(LOG_INFO, "Key0 Push down!");
+        i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_BEEP, IO_ON);
+    }
+    else if(event == PRESS_UP)
+    {
+        PRINT_LOG(LOG_INFO, "Key0 Push up!");
+        i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_BEEP, IO_OFF);            
+    }
+}
+
+void BTN1_PRESS_Handler(void* btn)
+{
+    PressEvent event = get_button_event((struct Button*)btn);
+    uint32_t buffer[] = {
+        0x1234, 0x02341515, 0x12321321, 0x23458686 
+    };
+    
+    if(event == PRESS_DOWN)
+    {
+        uint32_t hw_crc_value;
+        uint32_t soft_crc_value;
+        
+        hw_crc_value = calc_hw_crc32(buffer, 4);
+        soft_crc_value = calc_crc32(buffer, 4);
+        
+        PRINT_LOG(LOG_INFO, "Key1 Push down!");
+        PRINT_LOG(LOG_INFO, "rng:%d crc:0x%x, 0x%x", rng_get_value(), hw_crc_value, soft_crc_value);
+    }
+    else if(event == PRESS_UP)
+    {
+        PRINT_LOG(LOG_INFO, "Key1 Push up!");    
+    }    
+}
+
+void BTN2_PRESS_Handler(void* btn)
+{
+    PressEvent event = get_button_event((struct Button*)btn);
+    
+    if(event == PRESS_DOWN)
+    {
+        static float precent = 1;
+        
+        PRINT_LOG(LOG_INFO, "Key2 Push down!");
+        set_convert_vol(precent);
+        pwm_set_percent(precent);
+        precent -= 0.1;
+        if(precent < 0.5)
+            precent = 1;
+    }
+    else if(event == PRESS_UP)
+    {
+        PRINT_LOG(LOG_INFO, "Key2 Push up!");    
+    }  
+}
+
+static struct Button btn0, btn1, btn2;
 void monitor_manage::key_motion()
 {
-    key_now_[0] = monitor_manage::get_instance()->anti_shake(&tick[0], key_now_[0], key_get_value(0));
-    key_now_[1] = monitor_manage::get_instance()->anti_shake(&tick[1], key_now_[1], key_get_value(1));
-    key_now_[2] = monitor_manage::get_instance()->anti_shake(&tick[2], key_now_[2], key_get_value(2));
-    key_now_[3] = monitor_manage::get_instance()->anti_shake(&tick[3], key_now_[3], tpad_scan_key()==1?KEY_ON:KEY_OFF);
-    key_now_[4] = monitor_manage::get_instance()->anti_shake(&tick[4], key_now_[4], i2c_monitor::get_instance()->get_read_io()->u.exio==0?KEY_ON:KEY_OFF);
+    static uint8_t key_first_run = 0;
+    
+    if(key_first_run == 0)
+    {
+        key_first_run = 1;
+        
+        button_init(&btn0, read_button_GPIO, 0, btn0_id);
+        button_init(&btn1, read_button_GPIO, 0, btn1_id);
+        button_init(&btn2, read_button_GPIO, 0, btn2_id);
+
+        button_attach(&btn0, PRESS_DOWN,  BTN0_PRESS_Handler);
+        button_attach(&btn0, PRESS_UP,  BTN0_PRESS_Handler);
+        button_attach(&btn1, PRESS_DOWN,  BTN1_PRESS_Handler);
+        button_attach(&btn1, PRESS_UP,  BTN1_PRESS_Handler);
+        button_attach(&btn2, PRESS_DOWN,  BTN2_PRESS_Handler);
+        button_attach(&btn2, PRESS_UP,  BTN2_PRESS_Handler);
+        
+        button_start(&btn0);
+        button_start(&btn1);
+        button_start(&btn2);
+    }
+    
+    button_ticks();
+    
+    key_now_[0] = monitor_manage::get_instance()->anti_shake(&tick[0], key_now_[0], tpad_scan_key()==1?KEY_ON:KEY_OFF);
+    key_now_[1] = monitor_manage::get_instance()->anti_shake(&tick[1], key_now_[1], i2c_monitor::get_instance()->get_read_io()->u.exio==0?KEY_ON:KEY_OFF);
     
     for(int index=0; index<KEY_NUM; index++)
     {

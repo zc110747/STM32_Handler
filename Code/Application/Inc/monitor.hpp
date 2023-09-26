@@ -2,7 +2,7 @@
 
 #include "driver.hpp"
 
-#define KEY_NUM     5
+#define KEY_NUM     2
 
 class monitor_manage
 {

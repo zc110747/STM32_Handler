@@ -1,8 +1,30 @@
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//      drv_sdram.h
+//
+//  Purpose:
+//      sdram driver by fsmc.
+//
+// Author:
+//      @zc
+//
+//  Assumptions:
+//
+//  Revision History:
+//
+/////////////////////////////////////////////////////////////////////////////
+#ifndef __DRV_SDRAM_H
+#define __DRV_SDRAM_H
 
-_Pragma("once")
+#include "interface.h"
 
-#include "includes.hpp"
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
 #define SDRAM_MODEREG_BURST_LENGTH_1             ((uint16_t)0x0000)
 #define SDRAM_MODEREG_BURST_LENGTH_2             ((uint16_t)0x0001)
 #define SDRAM_MODEREG_BURST_LENGTH_4             ((uint16_t)0x0002)
@@ -15,21 +37,9 @@ _Pragma("once")
 #define SDRAM_MODEREG_WRITEBURST_MODE_PROGRAMMED ((uint16_t)0x0000)
 #define SDRAM_MODEREG_WRITEBURST_MODE_SINGLE     ((uint16_t)0x0200)
 
-class sdram_driver
-{
-public:
-    BaseType_t init();
-    bool test();
-    static sdram_driver* get_instance(){
-        static sdram_driver instance_;
-        return &instance_;
-    }
-
-private:
-    BaseType_t hardware_init();
-    BaseType_t initialize_sequence();
-    BaseType_t send_command(uint8_t bank, uint8_t cmd, uint8_t refresh, uint16_t regval);
-
-private:
-    SDRAM_HandleTypeDef hsdram1;
-};
+BaseType_t sdram_driver_init(void);
+    
+#ifdef __cplusplus
+}
+#endif
+#endif

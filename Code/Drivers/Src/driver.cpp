@@ -17,7 +17,6 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 #include "driver.hpp"
-#include "sdram.hpp"
 #include "lcd.hpp"
 
 void wq_application(void);
@@ -40,7 +39,7 @@ BaseType_t driver_init(void)
     result &= led_driver_init();
 
     //sdram init
-    result &= sdram_driver::get_instance()->init();
+    result &= sdram_driver_init();
 
     //lcd init
     result &= lcd_driver::get_instance()->init();
@@ -71,13 +70,12 @@ BaseType_t driver_init(void)
     //dma 
     result &= dma_driver_init();
     
-    //dfu test
-    dsp_app();
-    
     //wq test
     result &= spi_wq_driver_init();
     
+    //watchdog enable
     result &= wdg_driver_init();
+    
     iwdg_reload();
     
     return result;

@@ -19,12 +19,12 @@
 #include "application.hpp"
 #include "cm_backtrace.h"
 #include "lwip.h"
+#include "dsp.h"
 
 ////local define
 
 ////global parameter
 SRAM_HandleTypeDef hsram1;
-SDRAM_HandleTypeDef hsdram1;
 
 ///local function
 static BaseType_t SystemClock_Config(void);
@@ -37,17 +37,22 @@ int main(void)
 
     SystemClock_Config();
     
-    //cm_backtrace_init("LowerBoard", TRACE_HARDWARE_VERSION, TRACE_SOFTWARE_VERSION);  
-    
     //logger interface init, init before use PRINT_LOG.
     xReturned = logger_init();
     
     //uart driver init for logger
     xReturned &= usart_driver_init();
     
+    //logger interface must start, otherwise printf not work.
+    //cm_backtrace_init("STM32 Handler", TRACE_HARDWARE_VERSION, TRACE_SOFTWARE_VERSION);  
+    
     //driver interface init
     xReturned &= driver_init();
     
+    //dfu test
+    xReturned &= dsp_app();
+    
+    //aplication init, must after driver init because call driver
     xReturned &= application_init();
     
     //start the rtos schedular.

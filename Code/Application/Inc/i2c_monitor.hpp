@@ -29,7 +29,7 @@ typedef union
         uint8_t rs485_sel:1;
         uint8_t eth_reset:1;
     }u;
-}io_ex_info;
+}PC8574_IO;
 
 typedef struct
 {
@@ -50,7 +50,6 @@ public:
 	void operator() (uint16_t timer_event);
 };
 
-
 class i2c_monitor
 {
 public:  
@@ -68,11 +67,13 @@ public:
     BaseType_t trigger_isr(uint8_t event, uint8_t *pdata, uint8_t size);
     
 public:
-    static io_ex_info *get_write_io() {
+    QueueHandle_t get_queue(void)   {return queue_;}
+    
+    PC8574_IO *get_write_io() {
         return &pcf8574_write_data_;
     }    
     
-    static io_ex_info *get_read_io() {
+    PC8574_IO *get_read_io() {
         return &pcf8574_read_data_;
     }   
     
@@ -92,13 +93,13 @@ private:
     void ap3216c_i2c_run(void);
 
 private:
-    static TaskHandle_t task_handle_;
+    TaskHandle_t task_handle_{nullptr};
     
-    static QueueHandle_t queue_;
+    QueueHandle_t queue_{nullptr};
     
-    static io_ex_info pcf8574_read_data_;
+    PC8574_IO pcf8574_read_data_{0xff};
 
-    static  io_ex_info pcf8574_write_data_;
+    PC8574_IO pcf8574_write_data_{0xff};
     
     AP3216C_INFO ap3216_info_;
 

@@ -27,8 +27,11 @@ extern "C" {
     
 BaseType_t alg_driver_init(void);
 uint32_t rng_get_value(void);
-uint32_t crc_get_value(uint32_t *pbuffer, uint32_t size);
-    
+uint32_t calc_hw_crc32(uint32_t *pbuffer, uint32_t size);
+
+uint8_t calc_crc8(uint8_t *ptr, uint32_t len);    
+uint16_t calc_crc16(uint8_t *ptr, uint16_t len);    
+uint32_t calc_crc32(uint32_t *data, size_t length);
 #ifdef __cplusplus
 }
 #endif

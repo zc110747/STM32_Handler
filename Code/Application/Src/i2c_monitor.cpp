@@ -18,15 +18,11 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "driver.hpp"
 #include "i2c_monitor.hpp"
-
-TaskHandle_t i2c_monitor::task_handle_{nullptr};
-QueueHandle_t i2c_monitor::queue_{nullptr};
-io_ex_info i2c_monitor::pcf8574_read_data_{0x00};
-io_ex_info i2c_monitor::pcf8574_write_data_{0xff};   
  
 BaseType_t i2c_monitor::init()
 {
     BaseType_t xReturn;
+    uint8_t io_read;
     
     xReturn = xTaskCreate(
                     run,      
@@ -37,12 +33,15 @@ BaseType_t i2c_monitor::init()
                     &task_handle_ );      
   
     queue_ = xQueueCreate(i2c_monitor_MAX_QUEUE, sizeof(i2c_event));
-    if(queue_ == nullptr)
-    {
-        xReturn = pdFAIL;
-    }
+    if(queue_ == nullptr || xReturn != pdPASS)
+        return pdFAIL;
     
-    return xReturn;
+    
+    //read before device run to avoid spurious triggering.
+    if(pcf8574_i2c_read(&pcf8574_read_data_.data) != pdPASS)
+        return pdFAIL;
+    
+    return pdPASS;
 }
 
 BaseType_t i2c_monitor::trigger(uint8_t event, uint8_t *pdata, uint8_t size)
@@ -119,17 +118,22 @@ void i2c_monitor::pcf8574_write_io(uint8_t pin, uint8_t status)
 void i2c_monitor::run(void* parameter)
 {
     i2c_event event;
+    QueueHandle_t i2c_queue;
+    PC8574_IO *p_read_io, *p_write_io;
     
     i2c_monitor::get_instance()->registerDevUpdateTimeTrigger();
+    i2c_queue = i2c_monitor::get_instance()->get_queue();
+    p_read_io = i2c_monitor::get_instance()->get_read_io();
+    p_write_io = i2c_monitor::get_instance()->get_write_io();
     
     while(1)
     {
-        if(xQueueReceive(queue_, &event, portMAX_DELAY) == pdPASS)
+        if(xQueueReceive(i2c_queue, &event, portMAX_DELAY) == pdPASS)
         { 
             if(event.id == I2C_EVENT_IO_CHIP_WRITE)
             {
-                pcf8574_i2c_write(pcf8574_write_data_.data);
-                PRINT_LOG(LOG_INFO, "i2c write:0x%x!", pcf8574_write_data_.data);
+                pcf8574_i2c_write(p_write_io->data);
+                PRINT_LOG(LOG_INFO, "i2c write:0x%x!", p_write_io->data);
             }
             else if(event.id == I2C_EVENT_IO_CHIP_READ)
             {
@@ -140,7 +144,7 @@ void i2c_monitor::run(void* parameter)
                 
                 if(pcf8574_i2c_read(&io_read) == pdPASS)
                 {
-                    pcf8574_read_data_.data = io_read;
+                    p_read_io->data = io_read;
                     PRINT_LOG(LOG_INFO, "i2c read:0x%x!", io_read);
                 }
                 else

@@ -19,10 +19,6 @@
 #ifndef __DRIVER_H
 #define __DRIVER_H
 
-
-
-#include "dsp_test.h"
-
 #include "drv_usart.h"
 #include "drv_rtc.h"
 #include "drv_led.h"
@@ -36,6 +32,7 @@
 #include "drv_dma.h"
 #include "drv_key.h"
 #include "drv_sdcard.h"
+#include "drv_sdram.h"
 
 #include "drv_i2c_pcf8574.h"
 #include "drv_i2c_ap3216.h"
