@@ -3,7 +3,7 @@
 //  All Rights Reserved
 //
 //  Name:
-//      parameter.c
+//      parameter.cpp
 //
 //  Purpose:
 //      internal parameter process, saved in flash, used

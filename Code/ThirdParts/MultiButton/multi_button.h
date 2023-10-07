@@ -13,8 +13,7 @@
 #define TICKS_INTERVAL    20	//ms
 #define DEBOUNCE_TICKS    3	    //MAX 8
 #define SHORT_TICKS       (300 /TICKS_INTERVAL)
-#define LONG_TICKS        (1000 /TICKS_INTERVAL)
-
+#define LONG_TICKS        (4000 /TICKS_INTERVAL)
 
 typedef void (*BtnCallback)(void*);
 
@@ -48,9 +47,11 @@ typedef struct Button {
 extern "C" {
 #endif
 
+uint8_t get_button_level(struct Button* handle);
+uint8_t is_button_active(struct Button* handle);
+PressEvent get_button_event(struct Button* handle);
 void button_init(struct Button* handle, uint8_t(*pin_level)(uint8_t), uint8_t active_level, uint8_t button_id);
 void button_attach(struct Button* handle, PressEvent event, BtnCallback cb);
-PressEvent get_button_event(struct Button* handle);
 int  button_start(struct Button* handle);
 void button_stop(struct Button* handle);
 void button_ticks(void);

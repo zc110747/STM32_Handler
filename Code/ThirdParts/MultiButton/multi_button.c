@@ -51,6 +51,21 @@ PressEvent get_button_event(struct Button* handle)
 }
 
 /**
+  * @brief  Inquire the button current level.
+  * @param  handle: the button handle strcut.
+  * @retval button level.
+  */
+uint8_t get_button_level(struct Button* handle)
+{
+    return handle->button_level;
+}
+
+uint8_t is_button_active(struct Button* handle)
+{
+    return (handle->button_level == handle->active_level);
+}
+
+/**
   * @brief  Button driver core function, driver state machine.
   * @param  handle: the button handle strcut.
   * @retval None

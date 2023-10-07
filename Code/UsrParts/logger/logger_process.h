@@ -24,12 +24,6 @@ extern "C" {
 #include "main.h"
 #include "circular_buffer.h"
 
-#ifndef uint8_t
-typedef unsigned char uint8_t;
-typedef unsigned short uint16_t;
-typedef unsigned int uint32_t;
-#endif
-
 #define LOGGER_OK               0
 #define LOGGER_ERROR            1
 

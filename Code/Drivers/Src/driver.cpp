@@ -71,7 +71,7 @@ BaseType_t driver_init(void)
     result &= dma_driver_init();
     
     //wq test
-    result &= spi_wq_driver_init();
+    result &= wq25_driver_init();
     
     //watchdog enable
     result &= wdg_driver_init();
@@ -92,7 +92,9 @@ void wq_application(void)
 //    wq_write_page(buffer, 0, strlen(ptr));
     
     memset(buffer, 0, 256);
-    wq_read(buffer, 0, strlen(ptr));
     
-    PRINT_LOG(LOG_INFO, "%s", buffer);
+    if(wq_memory_read(0, buffer,strlen(ptr)) == WQ_OP_OK)
+    {  
+        PRINT_LOG(LOG_INFO, "%s", buffer);
+    }
 }

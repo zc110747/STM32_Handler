@@ -59,6 +59,9 @@
 
 
 //task define
+#define HTTPD_TASK_STACK            512
+#define HTTPD_TASK_PROITY           (tskIDLE_PRIORITY+8)
+
 #define START_TASK_STACK            1024
 #define LOGGER_RX_TASK_STACK        1024   
 #define LOGGER_TX_TASK_STACK        1024

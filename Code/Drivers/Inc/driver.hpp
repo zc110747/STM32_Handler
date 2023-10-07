@@ -34,6 +34,7 @@
 #include "drv_sdcard.h"
 #include "drv_sdram.h"
 
+#include "drv_spi_w25q.h"
 #include "drv_i2c_pcf8574.h"
 #include "drv_i2c_ap3216.h"
 

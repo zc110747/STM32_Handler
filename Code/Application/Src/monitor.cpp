@@ -71,6 +71,7 @@ enum Button_IDs {
 	btn0_id = 0,
     btn1_id,
     btn2_id,
+    btn3_id,
 };
 
 uint8_t read_button_GPIO(uint8_t button_id)
@@ -87,17 +88,33 @@ uint8_t read_button_GPIO(uint8_t button_id)
             break;
         case btn2_id:
             gpio_state = key_get_value(2);
-            break;            
+            break;
+        case btn3_id:
+            gpio_state = ((key_get_value(0)== GPIO_PIN_SET)&&(key_get_value(1) == GPIO_PIN_SET))?GPIO_PIN_SET:GPIO_PIN_RESET;
+            break;        
         default:
             break;
     }
-    return gpio_state;
+    return gpio_state == GPIO_PIN_SET?1:0;
 }
 
+/*
+按键除了按下，抬起，长按，短按等，还有多个按键的组合功能和限制
+1.两个按键的功能冲突, 同时只能一个生效一个(加/减按钮)
+2.组合按键，两个按键同时按一段时间，执行不同的命令
+设计功能:
+1.Btn0, Btn1同时按下，只能一个生效
+2.Btn0，Btn1同时长按一段时间，则产生一个事件
+*/
+static struct Button btn0, btn1, btn2, btn3;
 void BTN0_PRESS_Handler(void* btn)
 {
     PressEvent event = get_button_event((struct Button*)btn);
     
+    //当btn1按下时, btn0不处理
+    if(is_button_active(&btn1))
+        return;
+
     if(event == PRESS_DOWN)
     {
         PRINT_LOG(LOG_INFO, "Key0 Push down!");
@@ -117,6 +134,10 @@ void BTN1_PRESS_Handler(void* btn)
         0x1234, 0x02341515, 0x12321321, 0x23458686 
     };
     
+    //当btn0按下时, btn1不处理
+    if(is_button_active(&btn0))
+        return;
+
     if(event == PRESS_DOWN)
     {
         uint32_t hw_crc_value;
@@ -131,7 +152,7 @@ void BTN1_PRESS_Handler(void* btn)
     else if(event == PRESS_UP)
     {
         PRINT_LOG(LOG_INFO, "Key1 Push up!");    
-    }    
+    }  
 }
 
 void BTN2_PRESS_Handler(void* btn)
@@ -155,7 +176,11 @@ void BTN2_PRESS_Handler(void* btn)
     }  
 }
 
-static struct Button btn0, btn1, btn2;
+void BTN3_LONG_PRESS_Handler(void *btn)
+{
+    PRINT_LOG(LOG_INFO, "long press group button set!");    
+}
+
 void monitor_manage::key_motion()
 {
     static uint8_t key_first_run = 0;
@@ -167,6 +192,7 @@ void monitor_manage::key_motion()
         button_init(&btn0, read_button_GPIO, 0, btn0_id);
         button_init(&btn1, read_button_GPIO, 0, btn1_id);
         button_init(&btn2, read_button_GPIO, 0, btn2_id);
+        button_init(&btn3, read_button_GPIO, 0, btn3_id);
 
         button_attach(&btn0, PRESS_DOWN,  BTN0_PRESS_Handler);
         button_attach(&btn0, PRESS_UP,  BTN0_PRESS_Handler);
@@ -174,7 +200,8 @@ void monitor_manage::key_motion()
         button_attach(&btn1, PRESS_UP,  BTN1_PRESS_Handler);
         button_attach(&btn2, PRESS_DOWN,  BTN2_PRESS_Handler);
         button_attach(&btn2, PRESS_UP,  BTN2_PRESS_Handler);
-        
+        button_attach(&btn3, LONG_PRESS_START,  BTN3_LONG_PRESS_Handler);
+
         button_start(&btn0);
         button_start(&btn1);
         button_start(&btn2);
