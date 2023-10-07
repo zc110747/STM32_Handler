@@ -27,6 +27,24 @@ static void wq_write_enable(void);
 static void wq_write_disable(void);
 static uint16_t wq_read_chipid(void);
 static WQ_OP_STATUS wq_wait_busy(uint8_t mode);
+static WQ_OP_STATUS wq_enter_4byte_addr(void);
+
+void wq25_read_test(void)
+{
+    uint8_t buffer[25] = {0};
+    
+    memcpy(buffer, "hello spi test!", strlen("hello spi test!"));
+    
+    //if(wq_sector_erase(0) == WQ_OP_OK)
+    {
+        //wq_memory_write(4096, buffer, 25);
+    }
+    
+    memset(buffer, 0, 25);
+    wq_memory_read(0, buffer, 24);
+    
+    PRINT_LOG(LOG_INFO, "spi wq read info:%s!", buffer);
+}
 
 //wq interface
 BaseType_t wq25_driver_init(void)
@@ -44,13 +62,36 @@ BaseType_t wq25_driver_init(void)
             xReturn = pdFAIL;
         }
         else
+        {
+        
+            if(w25q_chip_id == CHIP_ID_Q256)        //SPI FLASHΪW25Q256
+            {
+                wq_enter_4byte_addr();
+            }
+    
+            wq25_read_test();
+            
             PRINT_LOG(LOG_INFO, "spi wq init success, id:0x%x!", w25q_chip_id);
+        }
     }
     else
     {
         PRINT_LOG(LOG_ERROR, "spi wq init failed!"); 
     }
     return xReturn;
+}
+
+static WQ_OP_STATUS wq_enter_4byte_addr(void)
+{
+    //driver must match the manufacturer id
+    if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
+        return WQ_OP_DEVICE_ERR;
+          
+  	WQ25_CS_ON();
+    spi_rw_byte(W25X_Enable4ByteAddr);
+  	WQ25_CS_OFF();  
+
+    return WQ_OP_OK;
 }
 
 WQ_OP_STATUS wq_sector_erase(uint32_t addr)
@@ -191,9 +232,10 @@ WQ_OP_STATUS wq_memory_write(uint32_t addr, uint8_t *pbuffer, uint16_t num)
     }
     WQ25_CS_OFF();
     
-    wq_wait_busy(0);
+    if(wq_wait_busy(0) != WQ_OP_OK)
+        return WQ_OP_TIMEOUT_ERR; 
     
-    return num;
+    return WQ_OP_OK;
 }
 
 #if SPI_RUN_MODE == SPI_USE_HARDWARE_DMA

@@ -29,7 +29,7 @@
 #define SPI_USE_HARDWARE_DMA    1        
 #define SPI_USE_SOFTWARE        2
 
-#define SPI_RUN_MODE            SPI_USE_HARDWARE_DMA   
+#define SPI_RUN_MODE            SPI_USE_SOFTWARE   
 
 //spi interface
 BaseType_t spi_driver_init(void);

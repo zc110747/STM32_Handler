@@ -36,6 +36,7 @@
 #define W25X_INSTRU_WRDI		    0x04 
 #define W25X_INSTRU_RDSR_1		    0x05 
 #define W25X_INSTRU_READ			0x03 
+#define W25X_INSTRU_WRSR_1          0x01
 #define W25X_PageProgram		    0x02 
 #define W25X_BlockErase			    0xD8 
 #define W25X_SectorErase		    0x20 
@@ -73,8 +74,8 @@ typedef enum
 BaseType_t wq25_driver_init(void);
 
 WQ_OP_STATUS wq_chip_erase(void);
-WQ_OP_STATUS wq_sector_erase(uint32_t sector);
-WQ_OP_STATUS wq_block_erase(uint32_t sector);
+WQ_OP_STATUS wq_sector_erase(uint32_t addr);
+WQ_OP_STATUS wq_block_erase(uint32_t addr);
 
 WQ_OP_STATUS wq_memory_read(uint32_t addr, uint8_t *pbuffer, uint16_t num);
 WQ_OP_STATUS wq_memory_write(uint32_t addr, uint8_t *pbuffer, uint16_t num);    

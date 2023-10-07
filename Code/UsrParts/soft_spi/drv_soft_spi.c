@@ -65,7 +65,6 @@ uint8_t spi_soft_init(uint8_t soft_spi_num, SOFT_SPI_INFO *info_ptr)
     spi_info_ptr = &spi_list[soft_spi_num];
     memcpy((char *)spi_info_ptr, (char *)info_ptr, sizeof(SOFT_SPI_INFO));
     
-
     SPI_MOSI_H();
     if(spi_info_ptr->mode == SPI_MODE_CPOL_H_CPHA_1
     || spi_info_ptr->mode == SPI_MODE_CPOL_H_CPHA_2)
