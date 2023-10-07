@@ -185,7 +185,6 @@ FlashOperatorStatus_t flash_read(FlashInfo_t *Handler, uint8_t *pbuffer, uint16_
             flash_crc = pcrc[0]<<8 | pcrc[1];
             if(soft_crc == flash_crc)
             {
-                //for flash, just copy the data from flash to buffer
                 memcpy((char *)pbuffer, (char *)pHeader->buffer, size);
                 return FLASH_OP_SUCCESS;
             }

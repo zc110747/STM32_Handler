@@ -193,6 +193,22 @@ static void i2c_delay(uint32_t count)
     }    
 }
 
+static uint8_t i2c_idle_check(SOFT_I2C_INFO *i2c_info_ptr)
+{
+    uint16_t wait_time = 0;
+    i2c_sda_config_in(i2c_info_ptr);
+    
+    while (I2C_SDA_INPUT() != 1)
+    {
+        wait_time++;
+        if(wait_time > 10000)
+        {
+            return I2C_ERROR;
+        }
+    }
+    return I2C_OK;
+}
+
 static void i2c_start(SOFT_I2C_INFO *i2c_info_ptr)
 {
     i2c_sda_config_out(i2c_info_ptr);
@@ -291,7 +307,7 @@ static uint8_t i2c_wait_ack(SOFT_I2C_INFO *i2c_info_ptr)
         wait_time++;
         if(wait_time > 10000)
         {
-            return 1;
+            return I2C_ERROR;
         }
     }
     
@@ -299,7 +315,7 @@ static uint8_t i2c_wait_ack(SOFT_I2C_INFO *i2c_info_ptr)
     I2C_SCL_H();
     i2c_delay(I2C_DELAY_COUNT);
     I2C_SCL_L();   
-    return 0;
+    return I2C_OK;
 }
 
 static void i2c_stop(SOFT_I2C_INFO *i2c_info_ptr)
@@ -311,7 +327,7 @@ static void i2c_stop(SOFT_I2C_INFO *i2c_info_ptr)
     i2c_delay(I2C_DELAY_COUNT);
 	I2C_SDA_H();  
     i2c_delay(I2C_DELAY_COUNT);
-	I2C_SCL_L(); 
+	//I2C_SCL_L(); 
 }
 
 uint8_t i2c_soft_deinit(uint8_t soft_i2c_num)
@@ -340,6 +356,12 @@ uint8_t i2c_write_device(uint8_t soft_i2c_num, uint8_t addr, uint8_t *data, uint
     
     i2c_info_ptr = &i2c_list[soft_i2c_num];
    
+     //0.i2c idle check must high.
+    if(i2c_idle_check(i2c_info_ptr))
+    {
+       return I2C_ERROR; 
+    }
+    
     //1. send start
     i2c_start(i2c_info_ptr);
 
@@ -386,6 +408,12 @@ uint8_t i2c_read_device(uint8_t soft_i2c_num, uint8_t addr, uint8_t *rdata, uint
     
     i2c_info_ptr = &i2c_list[soft_i2c_num];
     
+    //0.i2c idle check must high.
+    if(i2c_idle_check(i2c_info_ptr))
+    {
+       return I2C_ERROR; 
+    }
+  
     //1. send start
     i2c_start(i2c_info_ptr);
 
@@ -431,6 +459,12 @@ uint8_t i2c_write_memory(uint8_t soft_i2c_num, uint8_t addr, uint32_t mem_addr, 
     }
     
     i2c_info_ptr = &i2c_list[soft_i2c_num];
+    
+    //0.i2c idle check must high.
+    if(i2c_idle_check(i2c_info_ptr))
+    {
+       return I2C_ERROR; 
+    }
     
     //1. send start
     i2c_start(i2c_info_ptr); 
@@ -489,6 +523,12 @@ uint8_t i2c_read_memory(uint8_t soft_i2c_num, uint8_t addr, uint32_t mem_addr, u
     }
     
     i2c_info_ptr = &i2c_list[soft_i2c_num];
+    
+    //0.i2c idle check must high.
+    if(i2c_idle_check(i2c_info_ptr))
+    {
+       return I2C_ERROR; 
+    }
     
     //1. send start
     i2c_start(i2c_info_ptr);    
