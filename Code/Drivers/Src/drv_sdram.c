@@ -92,7 +92,7 @@ static BaseType_t sdram_hardware_init(void)
     GPIO_InitStruct.Alternate = GPIO_AF12_FMC;
     HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10
                           |GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14
                           |GPIO_PIN_15;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -202,10 +202,11 @@ static void sdram_memory_test(void)
     {
         if(test_sdram[i] != i)
         {
-            PRINT_LOG(LOG_INFO, "sdram test failed:%d, %d", test_sdram[i], i);
+            PRINT_LOG(LOG_INFO, "sdram test failed:%d, %d!", test_sdram[i], i);
             break;
         }
     }
+    PRINT_LOG(LOG_INFO, "sdram test success!");
 }
 
 
