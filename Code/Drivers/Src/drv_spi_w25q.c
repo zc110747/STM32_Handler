@@ -196,9 +196,102 @@ WQ_OP_STATUS wq_memory_write(uint32_t addr, uint8_t *pbuffer, uint16_t num)
     return num;
 }
 
+#if SPI_RUN_MODE == SPI_USE_HARDWARE_DMA
+WQ_OP_STATUS wq_memory_read_dma(uint32_t addr, uint8_t *pbuffer, uint16_t num)
+{
+    uint16_t i;
+    uint16_t error_count = 0;
+    
+    //driver must match the manufacturer id
+    if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
+        return WQ_OP_DEVICE_ERR;
+    
+    WQ25_CS_ON();  
+    
+    spi_rw_byte(W25X_INSTRU_READ);
+    if(w25q_chip_id == CHIP_ID_Q256)
+    {
+        spi_rw_byte((uint8_t)(addr>>24));
+    }
+    spi_rw_byte((uint8_t)(addr>>16));
+    spi_rw_byte((uint8_t)(addr>>8));
+    spi_rw_byte((uint8_t)(addr));
+  
+    spi_read_dma(pbuffer, num);
+    do
+    {
+        if(spi_read_check_ok() == HAL_OK)
+        {
+            break;
+        }
+        else
+        {
+            error_count++;
+            if(error_count > W25X_WATI_TIMEOUT) //wait spi send finished
+            {
+                return WQ_OP_TIMEOUT_ERR;
+            }    
+            delay_ms(1);  //when os run, will release the protocol
+        }
+    }while(1);
+    
+    WQ25_CS_OFF();
+    return WQ_OP_OK;    
+}
+
+WQ_OP_STATUS wq_memory_write_dma(uint32_t addr, uint8_t *pbuffer, uint16_t num)
+{
+    uint16_t i;
+    uint16_t error_count = 0;
+    
+    //driver must match the manufacturer id
+    if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
+        return pdFAIL;
+    
+    if(wq_wait_busy(0) != WQ_OP_OK)
+        return WQ_OP_TIMEOUT_ERR;
+    
+    wq_write_enable();
+    
+    WQ25_CS_ON();
+    spi_rw_byte(W25X_PageProgram); 
+    
+    if(w25q_chip_id == CHIP_ID_Q256)          
+    {
+        spi_rw_byte((uint8_t)((addr)>>24)); 
+    }
+    spi_rw_byte((uint8_t)((addr)>>16)); 
+    spi_rw_byte((uint8_t)((addr)>>8));   
+    spi_rw_byte((uint8_t)addr);   
+    
+    spi_write_dma(pbuffer, num);
+    do
+    {
+        if(spi_write_check_ok() == HAL_OK)
+        {
+            break;
+        }
+        else
+        {
+            error_count++;
+            if(error_count > W25X_WATI_TIMEOUT) //wait spi send finished
+            {
+                return WQ_OP_TIMEOUT_ERR;
+            }    
+            delay_ms(1);  //when os run, will release the protocol
+        }
+    }while(1);    
+    
+    WQ25_CS_OFF();
+    
+    wq_wait_busy(0);    
+    return WQ_OP_OK;
+}
+#endif
+
 static WQ_OP_STATUS wq_wait_busy(uint8_t mode)
 {
-    uint32_t index = 0, timeout;
+    uint32_t error_count = 0, timeout;
     uint8_t reg_status;
     WQ_OP_STATUS status = WQ_OP_OK;
     
@@ -221,8 +314,8 @@ static WQ_OP_STATUS wq_wait_busy(uint8_t mode)
         }
         else
         {
-            index++;
-            if(index>= timeout)
+            error_count++;
+            if(error_count>= timeout)
             {
                status = WQ_OP_TIMEOUT_ERR;
                break;

@@ -208,7 +208,7 @@ void i2c_monitor::registerIODelayTimeTrigger(void)
 
 void i2c_monitor::removeIODelayTimeTrigger(void)
 {
-   SysTimeManage::get_instance()->removeEventTrigger(EVENT_I2C_IO_DELAY_TIMER_TIGGER);
+    SysTimeManage::get_instance()->removeEventTrigger(EVENT_I2C_IO_DELAY_TIMER_TIGGER);
 }
 
 void i2c_monitor::registerDevUpdateTimeTrigger(void)

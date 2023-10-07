@@ -163,6 +163,7 @@ void EXTI15_10_IRQHandler(void)
         
         i2c_isr_trigger();
         
+        //avoid repeater trigger, just disable until delay
         HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); 
     }
 }

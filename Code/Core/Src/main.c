@@ -49,7 +49,7 @@ int main(void)
     //driver interface init
     xReturned &= driver_init();
     
-    //dfu test
+    //dfu&dsp test
     xReturned &= dsp_app();
     
     //aplication init, must after driver init because call driver
