@@ -65,8 +65,8 @@ uint8_t fatfs_logs_init(void)
     
     //choose the logger file name
     rtc_get_info(&gRtcInfo);
-    sprintf(gLoggerInfo.file_name, "%02d-%02d-%02d.txt", 
-        gRtcInfo.date.Year, gRtcInfo.date.Month, gRtcInfo.date.Date);
+    sprintf(gLoggerInfo.file_name, "%s%02d-%02d-%02d.txt", 
+        FATFS_LOG_SYS, gRtcInfo.date.Year, gRtcInfo.date.Month, gRtcInfo.date.Date);
     
     //open the logger file
     f_res = f_open(&gLoggerInfo.f_file, gLoggerInfo.file_name, FA_WRITE);
@@ -88,6 +88,7 @@ uint8_t fatfs_logs_init(void)
     if(fatfs_os_init() != pdPASS)
         return FATFS_LOG_OS_ERROR;
 
+    PRINT_LOG(LOG_DEBUG, "fatfs logger system run!"); 
     gLoggerInfo.state = FATFS_LOG_OPEN;
     return FATFS_LOG_OK;
 }
@@ -144,7 +145,7 @@ uint8_t fatfs_write(uint8_t *ptr, uint8_t size)
         memcpy((char *)&pbuffer[total_size], ptr, size);
         total_size += size;
         
-        if(fatfs_send_message(pbuffer, size) == 0)
+        if(fatfs_send_message(pbuffer, total_size) == 0)
         {
             status = FATFS_LOG_WRITE_ERROR;
         }

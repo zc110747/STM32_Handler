@@ -225,7 +225,7 @@ int print_log(LOG_LEVEL level, const char* fmt, ...)
         bufferlen = len - 1;
         pbuf = LoggerMaxBuffer;
         
-        len = snprintf(pbuf, bufferlen, "level:%d info:", level);
+        len = snprintf(pbuf, bufferlen, "level:%d info:", (level&(~LOG_RECORD)));
         if((len<=0) || (len>=bufferlen))
         {
             logger_unprotect();

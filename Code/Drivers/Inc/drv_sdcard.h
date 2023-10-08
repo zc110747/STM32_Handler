@@ -21,7 +21,7 @@
 
 #include "interface.h"
 
-#define SDMMC_READ_WRITE_TIMEOUT        100
+#define SDMMC_READ_WRITE_TIMEOUT        1000
 #define SDMMC_BLOCK_SIZE                512
 #define SDMMC_CLOCK_DIV                 2
 

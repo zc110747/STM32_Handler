@@ -16,6 +16,7 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "cmd_process.h"
 #include "logger_process.h"
+#include "fatfs_logs.h"
 
 #define CMD_SEARCH_NULL 0xFF
 
@@ -39,8 +40,18 @@ static uint16_t cmd_help(char *pdata, uint8_t len)
 {
     return len;
 }
+
+static uint16_t cmd_save(char *pdata, uint8_t len)
+{
+    fatfs_close();
+    PRINT_LOG(LOG_INFO, "save logger info");
+    
+    return len;
+}
+
 static CMD_COMMAND_STRUCT cmd_struct_list[] = {
   {"!showall",  0, cmd_show_all},
+  {"!save", 0, cmd_save},
   {"!help",     0, cmd_help},    
   {"!?",        0, cmd_help},  
 };

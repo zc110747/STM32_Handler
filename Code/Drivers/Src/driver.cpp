@@ -34,6 +34,8 @@ BaseType_t driver_init(void)
     __HAL_RCC_GPIOD_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
 
+    result &= rtc_driver_init();
+    
     //led init
     //all io clock init in this function, so need the first execute.
     result &= led_driver_init();
