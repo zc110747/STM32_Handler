@@ -60,9 +60,11 @@ BaseType_t rtc_driver_init(void)
     return result;   
 }
 
-RTC_INFO rtc_get_info(void)
+void rtc_get_info(RTC_INFO *pGetInfo)
 {
-    return rtc_info_;
+    portENTER_CRITICAL();
+    memcpy(pGetInfo, &rtc_info_, sizeof(RTC_INFO));
+    portEXIT_CRITICAL();
 }
 
 void rtc_set_alarm(uint8_t week, uint8_t hour, uint8_t min, uint8_t sec)
@@ -141,24 +143,24 @@ RTC_INFO rtc_update(void)
 
 void RTC_Alarm_IRQHandler(void)
 {
-  RTC_HandleTypeDef *prtc_handler = &rtc_handler_;
-    
-  if(__HAL_RTC_ALARM_GET_IT(prtc_handler, RTC_IT_ALRA))
-  {
-    if((uint32_t)(prtc_handler->Instance->CR & RTC_IT_ALRA) != (uint32_t)RESET)
+    RTC_HandleTypeDef *prtc_handler = &rtc_handler_;
+
+    if(__HAL_RTC_ALARM_GET_IT(prtc_handler, RTC_IT_ALRA))
     {
-      is_alarm = pdTRUE;
-        
-      /* Clear the Alarm interrupt pending bit */
-      __HAL_RTC_ALARM_CLEAR_FLAG(prtc_handler,RTC_FLAG_ALRAF);
+        if((uint32_t)(prtc_handler->Instance->CR & RTC_IT_ALRA) != (uint32_t)RESET)
+        {
+            is_alarm = pdTRUE;
+
+            /* Clear the Alarm interrupt pending bit */
+            __HAL_RTC_ALARM_CLEAR_FLAG(prtc_handler,RTC_FLAG_ALRAF);
+        }
     }
-  }
-  
+
     /* Clear the EXTI's line Flag for RTC Alarm */
-  __HAL_RTC_ALARM_EXTI_CLEAR_FLAG();
-  
-  /* Change RTC state */
-  prtc_handler->State = HAL_RTC_STATE_READY; 
+    __HAL_RTC_ALARM_EXTI_CLEAR_FLAG();
+
+    /* Change RTC state */
+    prtc_handler->State = HAL_RTC_STATE_READY; 
 }
 
 void rtc_set_alarm_flag(BaseType_t type)

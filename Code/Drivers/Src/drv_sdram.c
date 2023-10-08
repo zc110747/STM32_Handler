@@ -7,7 +7,16 @@
 //
 //  Purpose:
 //      sdram driver by fsmc.
-//
+//      Access the sdram memory can used method as follows.
+//      1.  define variable or array in the sdram region just as follows.
+//              static uint8_t sdram_memory[100] __attribute__((section(".ARM.__at_0xC0000000")));
+//      2.  define address with in sdram, and convert to point, then can access. this method
+//          need pay attention that address must align to the point, unaligned access for same 
+//          sdram will leader to hardfault.
+//              uint32_t sdram_address = 0xC0001000;
+//              uint8_t *psd_byte8 = (uint8_t *)sdram_address;
+//              uint16_t *psd_byte16 = (uint16_t *)sdram_address;
+//         
 // Author:
 //      @zc
 //
@@ -32,12 +41,16 @@ BaseType_t sdram_driver_init(void)
     result =  sdram_hardware_init();
     if(result == pdPASS)
     {
-        //initialize sdram command sequence
+        /* initialize sdram command sequence */
         result = sdram_initialize_sequence();
 
         if(result == pdPASS)
         {
-            //define sdram refresh rate.
+            /* Set the refresh rate counter
+                COUNT = refresh_peroid/peroid/lines - 20 
+                refresh peroid is 64ms, lines 2^13, clock is 11.1ns
+                64*10^6/11.1/8192-20 = 682.7
+                Set the device refresh counter */
             HAL_SDRAM_ProgramRefreshRate(&hsdram1, 683);
             
             sdram_memory_test();
@@ -61,6 +74,7 @@ static BaseType_t sdram_hardware_init(void)
     FMC_SDRAM_TimingTypeDef SdramTiming = {0};
     GPIO_InitTypeDef GPIO_InitStruct ={0};
   
+    /* Enable FMC Related Clock*/
     __HAL_RCC_FMC_CLK_ENABLE();
     __HAL_RCC_GPIOF_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();   
@@ -68,6 +82,7 @@ static BaseType_t sdram_hardware_init(void)
     __HAL_RCC_GPIOE_CLK_ENABLE();    
     __HAL_RCC_GPIOD_CLK_ENABLE();  
     
+    /* Initialize FMC pins */
     GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
                           |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_11|GPIO_PIN_12
                           |GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
@@ -112,9 +127,11 @@ static BaseType_t sdram_hardware_init(void)
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
   
     hsdram1.Instance = FMC_SDRAM_DEVICE;
-    /* hsdram1.Init */
     hsdram1.Init.SDBank = FMC_SDRAM_BANK1;
+    
+    /* Row address:[8:0] */
     hsdram1.Init.ColumnBitsNumber = FMC_SDRAM_COLUMN_BITS_NUM_9;
+    /* Col address:[12:0] */
     hsdram1.Init.RowBitsNumber = FMC_SDRAM_ROW_BITS_NUM_13;
     hsdram1.Init.MemoryDataWidth = FMC_SDRAM_MEM_BUS_WIDTH_16;
     hsdram1.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
@@ -125,12 +142,20 @@ static BaseType_t sdram_hardware_init(void)
     hsdram1.Init.ReadPipeDelay = FMC_SDRAM_RPIPE_DELAY_1;
 
     /* SdramTiming */
+    /* AHB Clock 180M, FMC SDRAM Clock 180/2=90M 11.1ns */
+    /* TPRD:min=2*tck=20ns => 2*11.1ns*/
     SdramTiming.LoadToActiveDelay = 2;
+    /* TXSR:min=75ns=> 8*11.1ns */     
     SdramTiming.ExitSelfRefreshDelay = 8;
+    /* TRAS:min=45~100000ns=> 6*11.1ns */ 
     SdramTiming.SelfRefreshTime = 6;
+    /* TRC: min=65ns => 6*11.1ns*/
     SdramTiming.RowCycleDelay = 6;
+    /* TWR: min=1+2ns(1+1*11.1ns)*/
     SdramTiming.WriteRecoveryTime = 2;
+    /* TRO: min=20ns => 2x11.1ns*/
     SdramTiming.RPDelay = 2;
+    /* TRCD:min=20ns => 2x11.1ns*/
     SdramTiming.RCDDelay = 2;
 
     if (HAL_SDRAM_Init(&hsdram1, &SdramTiming) != HAL_OK)

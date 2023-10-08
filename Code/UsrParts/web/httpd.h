@@ -23,7 +23,6 @@
 
 #include "main.h"
 
-
 #define HTTP_PORT           3000
 #define RX_BUFFER_MAX_LEN   1600
 

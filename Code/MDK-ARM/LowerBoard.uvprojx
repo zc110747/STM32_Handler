@@ -1576,6 +1576,31 @@
               <FileType>1</FileType>
               <FilePath>..\UsrParts\web\httpd_device.c</FilePath>
             </File>
+            <File>
+              <FileName>httpd.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\UsrParts\web\httpd.h</FilePath>
+            </File>
+            <File>
+              <FileName>httpd_device.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\UsrParts\web\httpd_device.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>UsrParts/fatfs_log</GroupName>
+          <Files>
+            <File>
+              <FileName>fatfs_logs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UsrParts\fatfs_log\fatfs_logs.c</FilePath>
+            </File>
+            <File>
+              <FileName>fatfs_logs.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\UsrParts\fatfs_log\fatfs_logs.h</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
