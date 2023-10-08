@@ -45,6 +45,15 @@ typedef enum
 	LOG_FATAL,
 }LOG_LEVEL;
 
+//define LOG wheather be record
+#define LOG_RECORD              (1<<7)
+
+//only level more than info can record
+#define LOG_INFO_RECORD         (LOG_INFO | LOG_RECORD)
+#define LOG_WARN_RECORD         (LOG_WARN | LOG_RECORD)
+#define LOG_ERROR_RECORD        (LOG_ERROR | LOG_RECORD)
+#define LOG_FATAL_RECORD        (LOG_FATAL | LOG_RECORD)
+
 //current used logger interface
 //only one support at one time
 typedef enum
@@ -71,7 +80,7 @@ uint8_t uart_logger_write(uint8_t *ptr, uint8_t size);
 uint8_t eth_logger_write(uint8_t *ptr, uint8_t size);
     
 #if LOGGER_ON == 1
-#define PRINT_LOG(level, fmt, ...)       print_log(level, fmt, ##__VA_ARGS__);
+#define PRINT_LOG(level, fmt, ...)       print_log((LOG_LEVEL)level, fmt, ##__VA_ARGS__);
 #else
 #define PRINT_LOG(level, fmt, ...)          
 #endif

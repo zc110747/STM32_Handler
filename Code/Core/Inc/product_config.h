@@ -20,6 +20,7 @@
 #define _PRODUCT_CONFIG_H
 
 #define LOGGER_ON                       1
+#define SUPPORT_FATFS_LOG               1
 
 #define IWDG_MODULE_ON                  0
 #define WWDG_MODULE_ON                  0
@@ -62,20 +63,15 @@
 #define HTTPD_TASK_STACK            512
 #define HTTPD_TASK_PROITY           (tskIDLE_PRIORITY+8)
 
-#define START_TASK_STACK            1024
-#define LOGGER_RX_TASK_STACK        1024   
-#define LOGGER_TX_TASK_STACK        1024
 #define SCHEDULAR_TASK_STACK        2048
 #define MONITOR_TASK_STACK           512
 #define I2C_MONITOR_TASK_STACK       512
+#define FATFS_LOG_TASK_STACK         512
 
 #define LWIP_TASK_PROITY            (tskIDLE_PRIORITY+8)
-
-#define START_TASK_PROITY           (tskIDLE_PRIORITY+5)
-#define LOGGER_RX_TASK_PROITY       (tskIDLE_PRIORITY+2)
-#define LOGGER_TX_TASK_PROITY       (tskIDLE_PRIORITY+2)
 #define SCHEDULAR_TASK_PROITY       (tskIDLE_PRIORITY+2)
 #define MONITOR_TASK_PROITY         (tskIDLE_PRIORITY+2)
 #define I2C_MONITOR_TASK_PROITY     (tskIDLE_PRIORITY+3)
+#define FATFS_LOG_TASK_PROITY       (tskIDLE_PRIORITY+2)
 
 #endif

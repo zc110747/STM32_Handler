@@ -23,6 +23,7 @@
 #include "i2c_monitor.hpp"
 #include "ff.h"
 #include "timer_manage.hpp"
+#include "fatfs_logs.h"
 
 BYTE work[FF_MAX_SS];
 
@@ -51,7 +52,7 @@ void fatfs_app(void)
                 res = f_open(&fil, "1:hello.txt", FA_READ | FA_WRITE);
                 if(res != FR_OK)
                 {
-                   PRINT_LOG(LOG_INFO, "f_mount open failed!") 
+                   PRINT_LOG(LOG_DEBUG, "f_mount open failed!") 
                 }
                 else
                 {
@@ -59,7 +60,7 @@ void fatfs_app(void)
                     if(bw != 0)
                     {
                         work[bw] = 0;
-                        PRINT_LOG(LOG_INFO, "%s", work); 
+                        PRINT_LOG(LOG_DEBUG, "%s", work); 
                     }
                     f_close(&fil);
                 }
@@ -67,12 +68,12 @@ void fatfs_app(void)
             }
             else
             {
-               PRINT_LOG(LOG_INFO, "f_mount failed:%d", res); 
+               PRINT_LOG(LOG_DEBUG, "f_mount failed:%d", res); 
             }
         }
         else
         {
-            PRINT_LOG(LOG_INFO, "f_mkfs failed:%d", res); 
+            PRINT_LOG(LOG_DEBUG, "f_mkfs failed:%d", res); 
         }
     }
 }
@@ -96,6 +97,9 @@ BaseType_t application_init(void)
     //i2c motion key and output
     xReturn &= i2c_monitor::get_instance()->init();
     
+    if(fatfs_logs_init() != FATFS_LOG_OK)
+        xReturn = pdFAIL;
+        
     return xReturn;
 }
 

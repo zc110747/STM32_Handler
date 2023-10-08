@@ -56,14 +56,14 @@ bool monitor_manage::is_time_escape(uint32_t ticks , uint32_t time)
 
 std::function<void()> key_func_list[] = {
     [](){
-        PRINT_LOG(LOG_INFO, "Tpad Key Push down, no_push:%d, push:%d!",
+        PRINT_LOG(LOG_INFO_RECORD, "Tpad Key Push down, no_push:%d, push:%d!",
             tpad_get_no_push_val(),
             tpad_current_val()
         );
         rtc_delay_alarm(0, 0, 0, 5);
     },    
     [](){
-        PRINT_LOG(LOG_INFO, "EXIO Push down!");
+        PRINT_LOG(LOG_INFO_RECORD, "EXIO Push down!");
     },    
 };
 
@@ -117,12 +117,12 @@ void BTN0_PRESS_Handler(void* btn)
 
     if(event == PRESS_DOWN)
     {
-        PRINT_LOG(LOG_INFO, "Key0 Push down!");
+        PRINT_LOG(LOG_INFO_RECORD, "Key0 Push down!");
         i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_BEEP, IO_ON);
     }
     else if(event == PRESS_UP)
     {
-        PRINT_LOG(LOG_INFO, "Key0 Push up!");
+        PRINT_LOG(LOG_INFO_RECORD, "Key0 Push up!");
         i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_BEEP, IO_OFF);            
     }
 }
@@ -146,12 +146,12 @@ void BTN1_PRESS_Handler(void* btn)
         hw_crc_value = calc_hw_crc32(buffer, 4);
         soft_crc_value = calc_crc32(buffer, 4);
         
-        PRINT_LOG(LOG_INFO, "Key1 Push down!");
-        PRINT_LOG(LOG_INFO, "rng:%d crc:0x%x, 0x%x", rng_get_value(), hw_crc_value, soft_crc_value);
+        PRINT_LOG(LOG_INFO_RECORD, "Key1 Push down!");
+        PRINT_LOG(LOG_INFO_RECORD, "rng:%d crc:0x%x, 0x%x", rng_get_value(), hw_crc_value, soft_crc_value);
     }
     else if(event == PRESS_UP)
     {
-        PRINT_LOG(LOG_INFO, "Key1 Push up!");    
+        PRINT_LOG(LOG_INFO_RECORD, "Key1 Push up!");    
     }  
 }
 
@@ -163,7 +163,7 @@ void BTN2_PRESS_Handler(void* btn)
     {
         static float precent = 1;
         
-        PRINT_LOG(LOG_INFO, "Key2 Push down!");
+        PRINT_LOG(LOG_INFO_RECORD, "Key2 Push down!");
         set_convert_vol(precent);
         pwm_set_percent(precent);
         precent -= 0.1;
@@ -172,13 +172,13 @@ void BTN2_PRESS_Handler(void* btn)
     }
     else if(event == PRESS_UP)
     {
-        PRINT_LOG(LOG_INFO, "Key2 Push up!");    
+        PRINT_LOG(LOG_INFO_RECORD, "Key2 Push up!");    
     }  
 }
 
 void BTN3_LONG_PRESS_Handler(void *btn)
 {
-    PRINT_LOG(LOG_INFO, "long press group button set!");    
+    PRINT_LOG(LOG_INFO_RECORD, "long press group button set!");    
 }
 
 void monitor_manage::key_motion()
@@ -257,7 +257,7 @@ void monitor_manage::timer_loop_motion()
      
     if(rtc_get_alarm_flag() == pdTRUE)
     {
-        PRINT_LOG(LOG_INFO, "RTC Alarm");
+        PRINT_LOG(LOG_INFO_RECORD, "RTC Alarm");
 
         rtc_set_alarm_flag(pdFALSE);
     }

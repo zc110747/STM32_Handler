@@ -199,6 +199,10 @@ uint8_t logger_put_tx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size)
     return LOGGER_OK;   
 }
 
+#if SUPPORT_FATFS_LOG == 1
+#include "fatfs_logs.h"
+#endif
+
 #define LOGGER_MAX_BUFFER_SIZE      128
 static char LoggerMaxBuffer[LOGGER_MAX_BUFFER_SIZE];
 int print_log(LOG_LEVEL level, const char* fmt, ...)
@@ -210,7 +214,7 @@ int print_log(LOG_LEVEL level, const char* fmt, ...)
     if(g_logger_info.is_init != 1)
         return -1;
 
-    if(level < g_logger_info.level)
+    if((level&(~LOG_RECORD)) < g_logger_info.level)
         return -2;
 
     if(logger_protect() == LOGGER_OK)
@@ -253,6 +257,12 @@ int print_log(LOG_LEVEL level, const char* fmt, ...)
         pbuf[1] = '\n';
         outlen += 2;
         logger_dev_tx_buffer((uint8_t *)LoggerMaxBuffer, outlen);
+#if SUPPORT_FATFS_LOG == 1
+        if(level&LOG_RECORD)
+        {
+            fatfs_write((uint8_t *)LoggerMaxBuffer, outlen);
+        }
+#endif
         logger_unprotect();
     }
     
