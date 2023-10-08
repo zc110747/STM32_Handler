@@ -50,11 +50,13 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-Code/MDK-ARM/DebugConfig
-Code/MDK-ARM/LowerBoard
 *.html
 *.zip
 *.png
+*.lst
 
-/Code/MDK-ARM/LowerBoard.uvguix.Administrator
-/Code/MDK-ARM/startup_stm32f429xx.lst
+
+Code/MDK-ARM/DebugConfig
+Code/MDK-ARM/LowerBoard
+Code/MDK-ARM/LowerBoard.uvguix.*
+Code/MDK-ARM/*.scvd
