@@ -16,8 +16,7 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "driver.hpp"
-#include "lcd.hpp"
+#include "driver.h"
 
 void wq_application(void);
 
@@ -44,7 +43,7 @@ BaseType_t driver_init(void)
     result &= sdram_driver_init();
 
     //lcd init
-    result &= lcd_driver::get_instance()->init();
+    result &= lcd_driver_init();
 
     //adc init
     result &= adc_driver_init();

@@ -16,9 +16,10 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-_Pragma("once")
+#ifndef _DRV_LCD_H
+#define _DRV_LCD_H
 
-#include "driver.hpp"
+#include "interface.h"
 
 //LCD register and data 
 typedef struct
@@ -32,6 +33,23 @@ typedef struct
     uint16_t reg;
     uint16_t val;
 }LCD_RegValue;
+
+typedef struct
+{
+    uint16_t lcd_id;
+    
+    uint16_t lcd_dir;
+    
+    uint16_t wramcmd;	
+	
+    uint16_t setxcmd;
+	
+    uint16_t setycmd;		
+    
+    uint32_t lcd_width;
+    
+    uint32_t lcd_height;
+}LCD_INFO;
 
 #define LCD_BASE        ((uint32_t)(0x60000000 | 0x0007FFFE))
 #define LCD             ((LCD_TypeDef *) LCD_BASE)
@@ -70,51 +88,18 @@ typedef struct
 #define LED_BACKLIGHT_ON	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
 #define LED_BACKLIGHT_OFF	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
 
-class lcd_driver
-{
-public:
-    BaseType_t init(void);
-    static lcd_driver *get_instance()
-    {
-        static lcd_driver instance_;
-        return &instance_;
-    }
 
-public:
-    void lcd_clear(uint32_t color);
-    uint32_t lcd_pow(uint8_t m,uint8_t n);
-    void lcd_setcursor(uint16_t Xpos, uint16_t Ypos);
-    void lcd_showstring(uint16_t x,uint16_t y,uint16_t width,uint16_t height, uint8_t size, char *p);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    void lcd_show_num(uint16_t x,uint16_t y,uint32_t num,uint8_t len,uint8_t size,uint8_t mode);
-    void lcd_show_extra_num(uint16_t x,uint16_t y,uint32_t num,uint8_t len,uint8_t size,uint8_t mode);
-        
-    void lcd_showchar(uint16_t x, uint16_t y, uint8_t num, uint8_t size, uint8_t mode);
-    void fast_drawpoint(uint16_t x, uint16_t y, uint32_t color);		
-    void test();
+BaseType_t lcd_driver_init(void);
+void lcd_driver_clear(uint32_t color);
+void lcd_driver_showstring(uint16_t x,uint16_t y,uint16_t width,uint16_t height, uint8_t size, char *p);
+void lcd_driver_show_num(uint16_t x,uint16_t y,uint32_t num,uint8_t len,uint8_t size,uint8_t mode);
+void lcd_driver_show_extra_num(uint16_t x,uint16_t y, uint32_t num, uint8_t len, uint8_t size, uint8_t mode);
 
-private:
-    //config interface
-    BaseType_t hardware_init(void);
-    void config_init(void);
-    void display_dir(uint8_t dir);
-    void lcd_scan_dir(uint8_t dir);
-
-    //reg data interface
-    void lcd_wr_reg(uint16_t regval);
-    void lcd_wr_data(uint16_t data);
-    uint16_t lcd_rd_data(void);
-    void lcd_wr_reg_data(uint16_t reg, uint16_t data);
-    uint16_t lcd_read_reg(uint16_t reg);
-    void write_ram_prepare(void);
-
-private:	
-    SRAM_HandleTypeDef hsram1;
-    uint16_t id_{0};
-    uint32_t width_{480};
-    uint32_t height_{800};
-    uint16_t dir_{0};						
-    uint16_t wramcmd_{0x2c00};		
-    uint16_t setxcmd_{0x2a00};	
-    uint16_t setycmd_{0x2b00};		
-};
+#ifdef __cplusplus
+}
+#endif
+#endif

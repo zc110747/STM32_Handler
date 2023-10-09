@@ -16,24 +16,55 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "lcd.hpp"
+#include "drv_lcd.h"
 #include "font.h"
 
-uint32_t POINT_COLOR = 0xFF000000;		
-uint32_t BACK_COLOR = 0xFFFFFFFF;  	 
+#define POINT_COLOR     0xFF000000	
+#define BACK_COLOR      0xFFFFFFFF
 
-BaseType_t lcd_driver::init(void)
+//local parameter
+static SRAM_HandleTypeDef hsram1;
+static LCD_INFO gLcdInfo = {0};
+
+//local function
+static void lcd_config_init(void);
+static BaseType_t lcd_hardware_init(void);
+static void lcd_test(void);
+static uint16_t lcd_rd_data(void);
+static void lcd_wr_reg(uint16_t regval);
+static void lcd_wr_data(uint16_t data);
+static void lcd_wr_reg_data(uint16_t reg, uint16_t data);
+static uint16_t lcd_read_reg(uint16_t reg);
+static void lcd_write_ram_prepare(void);
+static void lcd_setcursor(uint16_t Xpos, uint16_t Ypos);
+static void lcd_display_dir(uint8_t dir);
+static uint32_t lcd_pow(uint8_t m,uint8_t n);
+static void lcd_display_dir(uint8_t dir);
+static void lcd_scan_dir(uint8_t dir);
+static void lcd_display_dir(uint8_t dir);
+static void lcd_fast_drawpoint(uint16_t x, uint16_t y, uint32_t color);
+static void lcd_showchar(uint16_t x, uint16_t y, uint8_t num, uint8_t size, uint8_t mode);
+
+BaseType_t lcd_driver_init(void)
 {
     BaseType_t result;
     
-    result = hardware_init();
+    memset((char *)&gLcdInfo, 0, sizeof(LCD_INFO));
+    
+    gLcdInfo.lcd_width = 480;
+    gLcdInfo.lcd_height = 800;
+    gLcdInfo.wramcmd = 0x2c00;
+    gLcdInfo.setxcmd = 0x2a00;
+    gLcdInfo.setycmd = 0x2b00;
+    
+    result = lcd_hardware_init();
     if(result == pdPASS)
     {
         HAL_Delay(20);
 
-        config_init(); 
+        lcd_config_init(); 
         
-        test();     
+        lcd_test();     
     }
     else
     {
@@ -42,18 +73,229 @@ BaseType_t lcd_driver::init(void)
     return result;
 }
 
-void lcd_driver::config_init(void)
+void lcd_driver_showstring(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint8_t size, char *p)
+{
+    uint8_t x0 = x;
+    width += x;
+    height += y;
+    while((*p<='~')&&(*p>=' '))
+    {       
+        if(x>=width)
+        {
+            x=x0;
+            y+=size;
+        }
+        if(y >= height)
+            break;
+
+        lcd_showchar(x, y, *p, size, 0);
+        x+=size/2;
+        p++;
+    }
+}
+
+void lcd_driver_show_num(uint16_t x, uint16_t y, uint32_t num, uint8_t len, uint8_t size, uint8_t mode)
+{  
+    uint8_t t,temp;
+    uint8_t enshow=0;
+    for(t=0;t<len;t++)
+    {
+        temp=(num/lcd_pow(10,len-t-1))%10;
+        if(enshow==0&&t<(len-1))
+        {
+            if(temp==0)
+            {
+                if(mode&0x80)
+                {
+                    lcd_showchar(x+(size/2)*t,y,'0',size,mode&0x01);
+                }
+                else 
+                {
+                    lcd_showchar(x+(size/2)*t,y,' ',size,mode&0x01);  
+                }
+                continue;
+            }
+            else 
+                enshow=1;
+        }
+        lcd_showchar(x+(size/2)*t,y,temp+'0',size,mode&0x01); 
+    }
+} 
+
+void lcd_driver_show_extra_num(uint16_t x,uint16_t y, uint32_t num, uint8_t len, uint8_t size, uint8_t mode)
+{  
+    uint8_t t,temp;
+    uint8_t enshow=0;
+    for(t=0;t<len;t++)
+    {
+        temp=(num/lcd_pow(10,len-t-1))%10;
+        if(enshow==0&&t<(len-1))
+        {
+            if(temp==0)
+            {
+                if(mode&0x80)
+                {
+                    lcd_showchar(x+(size/2)*t,y,'0',size,mode&0x01);
+                }                    
+                else 
+                {
+                    lcd_showchar(x+(size/2)*t,y,' ',size,mode&0x01);
+                }
+                continue;
+            }
+            else 
+                enshow=1;
+        }
+        lcd_showchar(x+(size/2)*t,y,temp+'0',size,mode&0x01); 
+    }
+} 
+
+void lcd_driver_clear(uint32_t color)
+{
+    uint32_t index =0;      
+    uint32_t totalpoint= gLcdInfo.lcd_width; 
+    
+    totalpoint *= gLcdInfo.lcd_height; 						
+    lcd_setcursor(0x0, 0x0);		
+    lcd_write_ram_prepare();     		  
+    for(index=0; index<totalpoint; index++)
+    {
+        LCD->LCD_RAM=color;	
+    } 
+}
+
+///////////////////////////////////////local function////////////////////////////
+static BaseType_t lcd_hardware_init(void)
+{
+    FMC_NORSRAM_TimingTypeDef Timing = {0};
+    FMC_NORSRAM_TimingTypeDef ExtTiming = {0};
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    /* USER CODE BEGIN FMC_Init 1 */
+
+    /* USER CODE END FMC_Init 1 */
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+
+    /*Configure GPIO pin : PB5 */
+    GPIO_InitStruct.Pin = GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /** Perform the SRAM1 memory initialization sequence
+     */
+    hsram1.Instance = FMC_NORSRAM_DEVICE;
+    hsram1.Extended = FMC_NORSRAM_EXTENDED_DEVICE;
+    /* hsram1.Init */
+    hsram1.Init.NSBank = FMC_NORSRAM_BANK1;
+    hsram1.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
+    hsram1.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
+    hsram1.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_16;
+    hsram1.Init.BurstAccessMode = FMC_BURST_ACCESS_MODE_DISABLE;
+    hsram1.Init.WaitSignalPolarity = FMC_WAIT_SIGNAL_POLARITY_LOW;
+    hsram1.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
+    hsram1.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
+    hsram1.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
+    hsram1.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
+    hsram1.Init.ExtendedMode = FMC_EXTENDED_MODE_ENABLE;
+    hsram1.Init.AsynchronousWait = FMC_ASYNCHRONOUS_WAIT_DISABLE;
+    hsram1.Init.WriteBurst = FMC_WRITE_BURST_DISABLE;
+    hsram1.Init.ContinuousClock = FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
+    hsram1.Init.PageSize = FMC_PAGE_SIZE_NONE;
+    
+    /* Timing */
+    Timing.AddressSetupTime = 15;
+    Timing.AddressHoldTime = 15;
+    Timing.DataSetupTime = 70;
+    Timing.BusTurnAroundDuration = 1;
+    Timing.CLKDivision = 16;
+    Timing.DataLatency = 17;
+    Timing.AccessMode = FMC_ACCESS_MODE_A;
+    
+    /* ExtTiming */
+    ExtTiming.AddressSetupTime = 15;
+    ExtTiming.AddressHoldTime = 15;
+    ExtTiming.DataSetupTime = 15;
+    ExtTiming.BusTurnAroundDuration = 1;
+    ExtTiming.CLKDivision = 16;
+    ExtTiming.DataLatency = 17;
+    ExtTiming.AccessMode = FMC_ACCESS_MODE_A;
+
+    if (HAL_SRAM_Init(&hsram1, &Timing, &ExtTiming) != HAL_OK)
+        return pdFAIL;
+    
+    return pdPASS;
+    
+}
+
+static void lcd_wr_reg(uint16_t regval)
+{
+    __NOP();
+    LCD->LCD_REG = regval;
+}
+
+static uint16_t lcd_rd_data(void)
+{
+    volatile uint16_t ram;
+    __NOP(); 
+    ram = LCD->LCD_RAM;
+    return ram;
+}
+
+static void lcd_wr_data(uint16_t data)
+{
+    __NOP();
+    LCD->LCD_RAM = data;
+}
+
+static void lcd_wr_reg_data(uint16_t reg, uint16_t data)
+{
+    __NOP(); 
+    LCD->LCD_REG = reg;
+    LCD->LCD_RAM = data;
+}
+
+static uint16_t lcd_read_reg(uint16_t reg)
+{
+    lcd_wr_reg(reg);
+    delay_us(5);
+    return lcd_rd_data();
+}
+
+static void lcd_setcursor(uint16_t Xpos, uint16_t Ypos)
+{	 
+    lcd_wr_reg(gLcdInfo.setxcmd);lcd_wr_data(Xpos>>8); 		
+    lcd_wr_reg(gLcdInfo.setxcmd+1);lcd_wr_data(Xpos&0xFF);			 
+    lcd_wr_reg(gLcdInfo.setycmd);lcd_wr_data(Ypos>>8);  		
+    lcd_wr_reg(gLcdInfo.setycmd+1);lcd_wr_data(Ypos&0xFF);			
+} 
+
+static void lcd_write_ram_prepare(void)
+{
+    LCD->LCD_REG = gLcdInfo.wramcmd;
+    __NOP();
+}	 
+
+static uint32_t lcd_pow(uint8_t m,uint8_t n)
+{
+    uint32_t result=1;
+    while(n--)result*=m;
+    return result;
+}	
+
+static void lcd_config_init(void)
 {
     //read device id
-    lcd_wr_reg(0XDA00);	
-    id_ = lcd_rd_data(); 
-    lcd_wr_reg(0XDB00);	
-    id_ = lcd_rd_data();
-    id_<<=8;	
-    lcd_wr_reg(0XDC00);	
-    id_ |= lcd_rd_data();
+    lcd_wr_reg(0xDA00);	
+    gLcdInfo.lcd_id = lcd_rd_data(); 
+    lcd_wr_reg(0xDB00);	
+    gLcdInfo.lcd_id = lcd_rd_data();
+    gLcdInfo.lcd_id<<=8;	
+    lcd_wr_reg(0xDC00);	
+    gLcdInfo.lcd_id |= lcd_rd_data();
 
-    if(id_ == 0x8000)
+    if(gLcdInfo.lcd_id == 0x8000)
     {
         lcd_wr_reg_data(0xF000,0x55);
         lcd_wr_reg_data(0xF001,0xAA);
@@ -438,8 +680,8 @@ void lcd_driver::config_init(void)
         lcd_wr_reg_data(0xF003,0x08);
         lcd_wr_reg_data(0xF004,0x00);
         //Display control
-        lcd_wr_reg_data(0xB100, 0xCC);
-        lcd_wr_reg_data(0xB101, 0x00);
+        lcd_wr_reg_data(0xB100,0xCC);
+        lcd_wr_reg_data(0xB101,0x00);
         //Source hold time
         lcd_wr_reg_data(0xB600,0x05);
         //Gate EQ control
@@ -467,262 +709,132 @@ void lcd_driver::config_init(void)
         lcd_wr_reg(0x2900);  
     }
                                     
-    FMC_Bank1E->BWTR[0]&=~(0XF<<0);	 
-    FMC_Bank1E->BWTR[0]&=~(0XF<<8);	
+    FMC_Bank1E->BWTR[0]&=~(0xF<<0);	 
+    FMC_Bank1E->BWTR[0]&=~(0xF<<8);	
     FMC_Bank1E->BWTR[0]|=4<<0;	 		 
     FMC_Bank1E->BWTR[0]|=4<<8; 		
 
-    display_dir(0);
+    lcd_display_dir(0);
 
-    lcd_clear(WHITE);
+    lcd_driver_clear(WHITE);
 
     LED_BACKLIGHT_ON;
 }
 
-void lcd_driver::lcd_scan_dir(uint8_t dir)
+static void lcd_display_dir(uint8_t dir)
+{
+    gLcdInfo.lcd_dir = dir;
+    if(dir == 0)
+    {
+        gLcdInfo.wramcmd = 0x2C00;
+        gLcdInfo.setxcmd = 0x2A00;
+        gLcdInfo.setycmd = 0x2B00; 
+        gLcdInfo.lcd_width = 480;
+        gLcdInfo.lcd_height = 800;
+    }
+    else
+    {
+        gLcdInfo.wramcmd = 0x2C00;
+        gLcdInfo.setxcmd = 0x2A00;
+        gLcdInfo.setycmd = 0x2B00; 
+        gLcdInfo.lcd_width = 800;
+        gLcdInfo.lcd_height = 480;
+    }
+    lcd_scan_dir(DFT_SCAN_DIR);
+}
+
+static void lcd_scan_dir(uint8_t dir)
 {
     uint16_t regval=0;
     uint16_t dirreg=0;
     uint16_t temp;  
 
-    //if(id==0x9341||id==0X5310||id==0X5510||id==0X1963)//9341/5310/5510/1963
+    switch(dir)
     {
-        switch(dir)
+        case L2R_U2D:
+            regval|=(0<<7)|(0<<6)|(0<<5); 
+            break;
+        case L2R_D2U:
+            regval|=(1<<7)|(0<<6)|(0<<5); 
+            break;
+        case R2L_U2D:
+            regval|=(0<<7)|(1<<6)|(0<<5); 
+            break;
+        case R2L_D2U:
+            regval|=(1<<7)|(1<<6)|(0<<5); 
+            break;	 
+        case U2D_L2R:
+            regval|=(0<<7)|(0<<6)|(1<<5); 
+            break;
+        case U2D_R2L:
+            regval|=(0<<7)|(1<<6)|(1<<5); 
+            break;
+        case D2U_L2R:
+            regval|=(1<<7)|(0<<6)|(1<<5); 
+            break;
+        case D2U_R2L:
+            regval|=(1<<7)|(1<<6)|(1<<5); 
+            break;	 
+    }
+    
+    dirreg = 0x3600;
+    lcd_wr_reg_data(dirreg, regval);
+    if(regval&0x20)
+    {
+        if(gLcdInfo.lcd_width< gLcdInfo.lcd_height)
         {
-            case L2R_U2D:
-                regval|=(0<<7)|(0<<6)|(0<<5); 
-                break;
-            case L2R_D2U:
-                regval|=(1<<7)|(0<<6)|(0<<5); 
-                break;
-            case R2L_U2D:
-                regval|=(0<<7)|(1<<6)|(0<<5); 
-                break;
-            case R2L_D2U:
-                regval|=(1<<7)|(1<<6)|(0<<5); 
-                break;	 
-            case U2D_L2R:
-                regval|=(0<<7)|(0<<6)|(1<<5); 
-                break;
-            case U2D_R2L:
-                regval|=(0<<7)|(1<<6)|(1<<5); 
-                break;
-            case D2U_L2R:
-                regval|=(1<<7)|(0<<6)|(1<<5); 
-                break;
-            case D2U_R2L:
-                regval|=(1<<7)|(1<<6)|(1<<5); 
-                break;	 
+            temp = gLcdInfo.lcd_width;
+            gLcdInfo.lcd_width = gLcdInfo.lcd_height;
+            gLcdInfo.lcd_height=temp;
         }
-        dirreg = 0X3600;
-
-        lcd_wr_reg_data(dirreg, regval);
-        //if(id!=0X1963)
+    }
+    else  
+    {
+        if(gLcdInfo.lcd_width > gLcdInfo.lcd_height)
         {
-            if(regval&0X20)
-            {
-                if(width_< height_)
-                {
-                    temp = width_;
-                    width_= height_;
-                    height_=temp;
-                }
-            }
-            else  
-            {
-                if(width_ > height_)
-                {
-                    temp = width_;
-                    width_= height_;
-                    height_ =temp;
-                }
-            }  
+            temp = gLcdInfo.lcd_width;
+            gLcdInfo.lcd_width = gLcdInfo.lcd_height;
+            gLcdInfo.lcd_height =temp;
         }
-
-        lcd_wr_reg(setxcmd_);
-        lcd_wr_data(0); 
-        lcd_wr_reg(setxcmd_+1);
-        lcd_wr_data(0); 
-        lcd_wr_reg(setxcmd_+2);
-        lcd_wr_data((width_-1)>>8); 
-        lcd_wr_reg(setxcmd_+3);
-        lcd_wr_data((width_-1)&0XFF); 
-        lcd_wr_reg(setycmd_);
-        lcd_wr_data(0); 
-        lcd_wr_reg(setycmd_+1);
-        lcd_wr_data(0); 
-        lcd_wr_reg(setycmd_+2);
-        lcd_wr_data((height_-1)>>8); 
-        lcd_wr_reg(setycmd_+3);
-        lcd_wr_data((height_-1)&0XFF);
-    } 
+    }  
+    
+    //define the screen region
+    lcd_wr_reg(gLcdInfo.setxcmd);
+    lcd_wr_data(0); 
+    lcd_wr_reg(gLcdInfo.setxcmd+1);
+    lcd_wr_data(0); 
+    lcd_wr_reg(gLcdInfo.setxcmd+2);
+    lcd_wr_data((gLcdInfo.lcd_width-1)>>8); 
+    lcd_wr_reg(gLcdInfo.setxcmd+3);
+    lcd_wr_data((gLcdInfo.lcd_width-1)&0xFF); 
+    lcd_wr_reg(gLcdInfo.setycmd);
+    lcd_wr_data(0); 
+    lcd_wr_reg(gLcdInfo.setycmd+1);
+    lcd_wr_data(0); 
+    lcd_wr_reg(gLcdInfo.setycmd+2);
+    lcd_wr_data((gLcdInfo.lcd_height-1)>>8); 
+    lcd_wr_reg(gLcdInfo.setycmd+3);
+    lcd_wr_data((gLcdInfo.lcd_height-1)&0xFF);
 }  
 
-void lcd_driver::display_dir(uint8_t dir)
-{
-    dir_ = dir;
-    if(dir == 0)
-    {
-        wramcmd_= 0X2c00;
-        setxcmd_= 0X2A00;
-        setycmd_ = 0X2B00; 
-        width_ = 480;
-        height_ = 800;
-    }
-    else
-    {
-        wramcmd_ = 0X2C00;
-        setxcmd_ = 0X2A00;
-        setycmd_ = 0X2B00; 
-        width_ = 800;
-        height_ = 480;
-    }
-    lcd_scan_dir(DFT_SCAN_DIR);
-}
-
-void lcd_driver::lcd_setcursor(uint16_t Xpos, uint16_t Ypos)
-{	 
-    lcd_wr_reg(setxcmd_);lcd_wr_data(Xpos>>8); 		
-    lcd_wr_reg(setxcmd_+1);lcd_wr_data(Xpos&0XFF);			 
-    lcd_wr_reg(setycmd_);lcd_wr_data(Ypos>>8);  		
-    lcd_wr_reg(setycmd_+1);lcd_wr_data(Ypos&0XFF);			
-} 
-
-void lcd_driver::write_ram_prepare(void)
-{
-    LCD->LCD_REG = wramcmd_;
-    __NOP();
-}	 
-
-void lcd_driver::lcd_clear(uint32_t color)
-{
-    uint32_t index=0;      
-    uint32_t totalpoint= width_; 
-    totalpoint *= height_; 						
-    lcd_setcursor(0x00, 0x0000);		
-    write_ram_prepare();     		  
-    for(index=0; index<totalpoint; index++)
-    {
-        LCD->LCD_RAM=color;	
-    } 
-}
-
-BaseType_t lcd_driver::hardware_init(void)
-{
-    FMC_NORSRAM_TimingTypeDef Timing = {0};
-    FMC_NORSRAM_TimingTypeDef ExtTiming = {0};
-    GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-    /* USER CODE BEGIN FMC_Init 1 */
-
-    /* USER CODE END FMC_Init 1 */
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
-
-    /*Configure GPIO pin : PB5 */
-    GPIO_InitStruct.Pin = GPIO_PIN_5;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-    /** Perform the SRAM1 memory initialization sequence
-     */
-    hsram1.Instance = FMC_NORSRAM_DEVICE;
-    hsram1.Extended = FMC_NORSRAM_EXTENDED_DEVICE;
-    /* hsram1.Init */
-    hsram1.Init.NSBank = FMC_NORSRAM_BANK1;
-    hsram1.Init.DataAddressMux = FMC_DATA_ADDRESS_MUX_DISABLE;
-    hsram1.Init.MemoryType = FMC_MEMORY_TYPE_SRAM;
-    hsram1.Init.MemoryDataWidth = FMC_NORSRAM_MEM_BUS_WIDTH_16;
-    hsram1.Init.BurstAccessMode = FMC_BURST_ACCESS_MODE_DISABLE;
-    hsram1.Init.WaitSignalPolarity = FMC_WAIT_SIGNAL_POLARITY_LOW;
-    hsram1.Init.WrapMode = FMC_WRAP_MODE_DISABLE;
-    hsram1.Init.WaitSignalActive = FMC_WAIT_TIMING_BEFORE_WS;
-    hsram1.Init.WriteOperation = FMC_WRITE_OPERATION_ENABLE;
-    hsram1.Init.WaitSignal = FMC_WAIT_SIGNAL_DISABLE;
-    hsram1.Init.ExtendedMode = FMC_EXTENDED_MODE_ENABLE;
-    hsram1.Init.AsynchronousWait = FMC_ASYNCHRONOUS_WAIT_DISABLE;
-    hsram1.Init.WriteBurst = FMC_WRITE_BURST_DISABLE;
-    hsram1.Init.ContinuousClock = FMC_CONTINUOUS_CLOCK_SYNC_ONLY;
-    hsram1.Init.PageSize = FMC_PAGE_SIZE_NONE;
-    
-    /* Timing */
-    Timing.AddressSetupTime = 15;
-    Timing.AddressHoldTime = 15;
-    Timing.DataSetupTime = 70;
-    Timing.BusTurnAroundDuration = 1;
-    Timing.CLKDivision = 16;
-    Timing.DataLatency = 17;
-    Timing.AccessMode = FMC_ACCESS_MODE_A;
-    
-    /* ExtTiming */
-    ExtTiming.AddressSetupTime = 15;
-    ExtTiming.AddressHoldTime = 15;
-    ExtTiming.DataSetupTime = 15;
-    ExtTiming.BusTurnAroundDuration = 1;
-    ExtTiming.CLKDivision = 16;
-    ExtTiming.DataLatency = 17;
-    ExtTiming.AccessMode = FMC_ACCESS_MODE_A;
-
-    if (HAL_SRAM_Init(&hsram1, &Timing, &ExtTiming) != HAL_OK)
-        return pdFAIL;
-    
-    return pdPASS;
-    
-}
-
-void lcd_driver::lcd_wr_reg(uint16_t regval)
-{
-    __NOP();
-    LCD->LCD_REG = regval;
-}
-
-void lcd_driver::lcd_wr_data(uint16_t data)
-{
-    __NOP();
-    LCD->LCD_RAM = data;
-}
-
-uint16_t lcd_driver::lcd_rd_data(void)
-{
-    volatile uint16_t ram;
-    __NOP(); 
-    ram = LCD->LCD_RAM;
-    return ram;
-}
-
-void lcd_driver::lcd_wr_reg_data(uint16_t reg, uint16_t data)
-{
-    __NOP(); 
-    LCD->LCD_REG = reg;
-    LCD->LCD_RAM = data;
-}
-
-uint16_t lcd_driver::lcd_read_reg(uint16_t reg)
-{
-    lcd_wr_reg(reg);
-    delay_us(5);
-    return lcd_rd_data();
-}
-
-void lcd_driver::fast_drawpoint(uint16_t x, uint16_t y, uint32_t color)
+static void lcd_fast_drawpoint(uint16_t x, uint16_t y, uint32_t color)
 {	   
-    lcd_wr_reg(setxcmd_); lcd_wr_data(x>>8);  
-    lcd_wr_reg(setxcmd_+1); lcd_wr_data(x&0XFF);	  
-    lcd_wr_reg(setycmd_); lcd_wr_data(y>>8);  
-    lcd_wr_reg(setycmd_+1); lcd_wr_data(y&0XFF); 
+    lcd_wr_reg(gLcdInfo.setxcmd); lcd_wr_data(x>>8);  
+    lcd_wr_reg(gLcdInfo.setxcmd+1); lcd_wr_data(x&0xFF);	  
+    lcd_wr_reg(gLcdInfo.setycmd); lcd_wr_data(y>>8);  
+    lcd_wr_reg(gLcdInfo.setycmd+1); lcd_wr_data(y&0xFF); 
 
-    LCD->LCD_REG = wramcmd_; 
+    LCD->LCD_REG = gLcdInfo.wramcmd; 
     LCD->LCD_RAM = color; 
 }	
 
-void lcd_driver::lcd_showchar(uint16_t x, uint16_t y, uint8_t num, uint8_t size, uint8_t mode)
+static void lcd_showchar(uint16_t x, uint16_t y, uint8_t num, uint8_t size, uint8_t mode)
 {
     uint8_t temp,t1,t;
     uint16_t y0=y;
     uint8_t csize=(size/8+((size%8)?1:0))*(size/2);		
     num=num-' ';
-    for(t=0;t<csize;t++)
+    for(t=0; t<csize; t++)
     { 
         switch(size)
         {
@@ -754,120 +866,57 @@ void lcd_driver::lcd_showchar(uint16_t x, uint16_t y, uint8_t num, uint8_t size,
                 return;
         }
                             
-        for(t1=0;t1<8;t1++)
+        for(t1=0; t1<8; t1++)
         {			    
-            if(temp&0x80)	
-                fast_drawpoint(x,y,POINT_COLOR);
+            if(temp&0x80)
+            {
+                lcd_fast_drawpoint(x, y, POINT_COLOR);
+            }
             else if(mode==0)
-                fast_drawpoint(x,y,BACK_COLOR);
+            {
+                lcd_fast_drawpoint(x, y, BACK_COLOR);
+            }
+            
             temp<<=1;
             y++;
-            if(y>=height_)
-                return;		
+            if(y >= gLcdInfo.lcd_height)
+            {
+                return;
+            }
             if((y-y0)==size)
             {
                 y=y0;
                 x++;
-                if(x>=width_)return;	
+                if(x>=gLcdInfo.lcd_width)
+                    return;	
                 break;
             }
         }
     }
 }
 	
-void lcd_driver::lcd_showstring(uint16_t x,uint16_t y,uint16_t width,uint16_t height, uint8_t size, char *p)
-{
-    uint8_t x0 = x;
-    width += x;
-    height += y;
-    while((*p<='~')&&(*p>=' '))
-    {       
-        if(x>=width)
-        {
-            x=x0;
-            y+=size;
-        }
-        if(y >= height)
-            break;
 
-        lcd_showchar(x, y, *p, size, 0);
-        x+=size/2;
-        p++;
-    }
-}
-
-uint32_t lcd_driver::lcd_pow(uint8_t m,uint8_t n)
-{
-    uint32_t result=1;
-    while(n--)result*=m;
-    return result;
-}		
-
-void lcd_driver::lcd_show_num(uint16_t x,uint16_t y,uint32_t num,uint8_t len,uint8_t size,uint8_t mode)
-{  
-    uint8_t t,temp;
-    uint8_t enshow=0;
-    for(t=0;t<len;t++)
-    {
-        temp=(num/lcd_pow(10,len-t-1))%10;
-        if(enshow==0&&t<(len-1))
-        {
-            if(temp==0)
-            {
-                if(mode&0X80)lcd_showchar(x+(size/2)*t,y,'0',size,mode&0X01);  
-                else lcd_showchar(x+(size/2)*t,y,' ',size,mode&0X01);  
-                continue;
-            }
-            else 
-                enshow=1;
-        }
-        lcd_showchar(x+(size/2)*t,y,temp+'0',size,mode&0X01); 
-    }
-} 
-
-void lcd_driver::lcd_show_extra_num(uint16_t x,uint16_t y,uint32_t num,uint8_t len,uint8_t size,uint8_t mode)
-{  
-    uint8_t t,temp;
-    uint8_t enshow=0;
-    for(t=0;t<len;t++)
-    {
-        temp=(num/lcd_pow(10,len-t-1))%10;
-        if(enshow==0&&t<(len-1))
-        {
-            if(temp==0)
-            {
-                if(mode&0X80)lcd_showchar(x+(size/2)*t,y,'0',size,mode&0X01);  
-                else lcd_showchar(x+(size/2)*t,y,' ',size,mode&0X01);  
-                continue;
-            }
-            else 
-                enshow=1;
-        }
-        lcd_showchar(x+(size/2)*t,y,temp+'0',size,mode&0X01); 
-    }
-} 
-
-void lcd_driver::test()
+static void lcd_test(void)
 {
 #if LCD_TEST == 1
-    lcd_clear(WHITE);
+    lcd_driver_clear(WHITE);
     HAL_Delay(100);
-    lcd_clear(BLACK);
+    lcd_driver_clear(BLACK);
     HAL_Delay(100);
-    lcd_clear(BLUE);
+    lcd_driver_clear(BLUE);
     HAL_Delay(100);
-    lcd_clear(RED);
+    lcd_driver_clear(RED);
     HAL_Delay(100);
-    lcd_clear(MAGENTA);
+    lcd_driver_clear(MAGENTA);
     HAL_Delay(100);
-    lcd_clear(GREEN);
+    lcd_driver_clear(GREEN);
     HAL_Delay(100);
-    lcd_clear(WHITE);
+    lcd_driver_clear(WHITE);
     
-    lcd_showstring(10, 40, 320, 32, 32, (char *)"Apollo STM32F4/F7");
-    lcd_showstring(10, 80, 240, 24, 24, (char *)"TFTLCD TEST");
-    lcd_showstring(10, 110, 240, 16, 16, (char *)"ATOM@ALIENTEK");
-    lcd_showstring(10, 140, 320, 16, 16, (char *)"TEMPERATE: 00.00C, Vol:00.00V");
-    lcd_showstring(10, 160, 200, 16, 16, (char *)"Timer: 00-00-00 00:00:00");
+    lcd_driver_showstring(10, 40, 320, 32, 32, (char *)"Apollo STM32F4/F7");
+    lcd_driver_showstring(10, 80, 240, 24, 24, (char *)"TFTLCD TEST");
+    lcd_driver_showstring(10, 110, 240, 16, 16, (char *)"ATOM@ALIENTEK");
+    lcd_driver_showstring(10, 140, 320, 16, 16, (char *)"TEMPERATE: 00.00C, Vol:00.00V");
+    lcd_driver_showstring(10, 160, 200, 16, 16, (char *)"Timer: 00-00-00 00:00:00");
 #endif
 }

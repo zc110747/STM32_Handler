@@ -8,5 +8,4 @@
 #define SUPPORT_ASCII_2412              1
 #define SUPPORT_ASCII_3216              1
 
-
 #endif

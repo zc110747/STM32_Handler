@@ -1,7 +1,21 @@
-
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//      monitor.cpp
+//
+//  Purpose:
+//
+// Author:
+//      @zc
+//
+//  Assumptions:
+//	
+//  Revision History:
+//
+/////////////////////////////////////////////////////////////////////////////
 #include "monitor.hpp"
-#include "lcd.hpp"
-#include "driver.hpp"
 #include "i2c_monitor.hpp"
 #include "multi_button.h"
 
@@ -251,7 +265,7 @@ void monitor_manage::timer_loop_motion()
                 rtc_info.time.Hours,
                 rtc_info.time.Minutes,
                 rtc_info.time.Seconds);
-            lcd_driver::get_instance()->lcd_showstring(10, 160, 200, 16, 16, tbuf);
+            lcd_driver_showstring(10, 160, 200, 16, 16, tbuf);
         }
     }
      
@@ -279,13 +293,13 @@ void monitor_manage::adc_monitor()
         temperate = (float)adc_temp*(3.3/4096);	
         temperate = (temperate-0.76)/0.0025 + 25; 
 
-        lcd_driver::get_instance()->lcd_show_extra_num(10+11*8,140,(uint32_t)temperate, 2, 16, 0);		
-        lcd_driver::get_instance()->lcd_show_extra_num(10+14*8,140,((uint32_t)(temperate*100))%100, 2, 16, 0);		
+        lcd_driver_show_extra_num(10+11*8,140,(uint32_t)temperate, 2, 16, 0);		
+        lcd_driver_show_extra_num(10+14*8,140,((uint32_t)(temperate*100))%100, 2, 16, 0);		
         
         adc_vol = adc_get_avg(ADC_CHANNEL_6);
         voltage = (float)adc_vol*(3.3/4096);
-        lcd_driver::get_instance()->lcd_show_extra_num(10+23*8,140,(uint32_t)voltage, 2, 16, 0);	
-        lcd_driver::get_instance()->lcd_show_extra_num(10+26*8,140,((uint32_t)(voltage*100))%100, 2, 16, 0);
+        lcd_driver_show_extra_num(10+23*8,140,(uint32_t)voltage, 2, 16, 0);	
+        lcd_driver_show_extra_num(10+26*8,140,((uint32_t)(voltage*100))%100, 2, 16, 0);
     }
 }
 

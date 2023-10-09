@@ -8,7 +8,7 @@
 /*-----------------------------------------------------------------------*/
 #include "disk_interface.h"
 #include "diskio.h"
-#include "driver.hpp"
+#include "driver.h"
 #include <string.h>
 
 //RAM disk

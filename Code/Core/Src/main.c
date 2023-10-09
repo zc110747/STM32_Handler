@@ -15,7 +15,7 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "driver.hpp"
+#include "driver.h"
 #include "application.hpp"
 #include "cm_backtrace.h"
 #include "lwip.h"

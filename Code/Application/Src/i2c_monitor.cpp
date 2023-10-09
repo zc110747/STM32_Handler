@@ -16,7 +16,7 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "driver.hpp"
+#include "driver.h"
 #include "i2c_monitor.hpp"
  
 BaseType_t i2c_monitor::init()

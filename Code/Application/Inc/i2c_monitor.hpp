@@ -1,7 +1,7 @@
 #pragma once
 
+#include "driver.h"
 #include "includes.hpp"
-#include "driver.hpp"
 #include "timer_manage.hpp"
 
 #define i2c_monitor_MAX_QUEUE               32
