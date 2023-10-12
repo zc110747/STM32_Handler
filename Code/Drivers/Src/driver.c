@@ -57,6 +57,7 @@ BaseType_t driver_init(void)
     //tpad 
     result &= tpad_driver_init();
     result &= pwm_driver_init();
+    result &= timer_extend_driver_init();
     
     //i2c
     result &= pcf8574_driver_init();

@@ -3,7 +3,7 @@
 //  All Rights Reserved
 //
 //  Name:
-//     adc.cpp
+//     drv_adc.c
 //
 //  Purpose:
 //     adc driver normal get.

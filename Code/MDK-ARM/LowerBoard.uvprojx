@@ -774,6 +774,11 @@
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\drv_tpad.c</FilePath>
             </File>
+            <File>
+              <FileName>drv_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_timer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

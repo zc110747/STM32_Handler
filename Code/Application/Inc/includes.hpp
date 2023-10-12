@@ -8,6 +8,7 @@
 #include <numeric>
 #include <functional>
 #include <type_traits>
+#include <vector>
 
 //stm32 hal header
 #include "main.h"

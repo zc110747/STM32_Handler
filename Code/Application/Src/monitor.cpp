@@ -19,10 +19,6 @@
 #include "i2c_monitor.hpp"
 #include "multi_button.h"
 
-KEY_STATE monitor_manage::key_last_[KEY_NUM];
-KEY_STATE monitor_manage::key_now_[KEY_NUM];
-uint8_t monitor_manage::tick[KEY_NUM];
-
 bool monitor_manage::init()
 {
     BaseType_t xReturned;
@@ -36,7 +32,7 @@ bool monitor_manage::init()
     }
     
     xReturned = xTaskCreate(
-                    run,      
+                    run,    
                     "monitor_manage",        
                     MONITOR_TASK_STACK,              
                     ( void * ) NULL,   
@@ -162,6 +158,7 @@ void BTN1_PRESS_Handler(void* btn)
         
         PRINT_LOG(LOG_INFO_RECORD, "Key1 Push down!");
         PRINT_LOG(LOG_INFO_RECORD, "rng:%d crc:0x%x, 0x%x", rng_get_value(), hw_crc_value, soft_crc_value);
+        PRINT_LOG(LOG_INFO_RECORD, "time per cnt:0x%x", monitor_manage::get_instance()->get_per_second());
     }
     else if(event == PRESS_UP)
     {
@@ -303,21 +300,37 @@ void monitor_manage::adc_monitor()
     }
 }
 
+void monitor_manage::task_per_second(void)
+{
+    static uint16_t temp_loop = 0;
+    
+    temp_loop++;
+    if(temp_loop >= 50)
+    {
+        temp_loop = 0;
+        per_second = get_cnt_per_second(); 
+    }
+}
+
+
 void monitor_manage::run(void* parameter)
 {
+    auto pInstance = monitor_manage::get_instance();
+    
     logger_set_multi_thread_run();
     
     while(1)
     {
-        timer_loop_motion();
+        pInstance->timer_loop_motion();
         
         //key motion loop
-        key_motion();
+        pInstance->key_motion();
          
-        adc_monitor();
+        pInstance->adc_monitor();
+        
+        pInstance->task_per_second();
         
         iwdg_reload();
-        
         vTaskDelay(20);
     }
 }

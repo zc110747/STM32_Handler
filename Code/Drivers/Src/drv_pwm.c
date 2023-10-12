@@ -1,4 +1,21 @@
-
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//     drv_pwm.c
+//
+//  Purpose:
+//     timer pwm output driver.
+//
+// Author:
+//     @zc
+//
+//  Assumptions:
+//
+//  Revision History:
+//
+/////////////////////////////////////////////////////////////////////////////
 #include "drv_pwm.h"
 
 #define TIME_PWM_PEROID 1000
