@@ -3,19 +3,19 @@
 //  All Rights Reserved
 //
 //  Name:
-//      template.c
+//      application.hpp
 //
 //  Purpose:
-//      ?¡ê?¨¦?¦Ì?¡Â
+//      application work main workflow.
 //
-// Author:
+//  Author:
 //      @zc
 //
 //  Assumptions:
-//	
+//
 //  Revision History:
 //
-////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////
 #ifndef _APPLICATION_H
 #define _APPLICATION_H
 

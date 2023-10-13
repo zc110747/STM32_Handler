@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//     drv_adc.c
+//      drv_adc.c
 //
 //  Purpose:
-//     adc driver normal get.
+//      adc driver normal get.
 //
 // Author:
 //      @zc

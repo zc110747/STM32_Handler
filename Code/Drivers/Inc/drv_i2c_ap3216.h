@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//     drv_i2c.h
+//      drv_i2c.h
 //
 //  Purpose:
-//     i2c driver.
+//      i2c driver.
 //
 // Author:
 //      @zc
@@ -23,7 +23,7 @@
 
 #define AP3216C_ADDR    	    0X1E	
 
-/* AP3316C¼Ä´æÆ÷ */
+/* AP3316Cï¿½Ä´ï¿½ï¿½ï¿½ */
 #define AP3216C_SYSTEMCONG	    0x00	
 #define AP3216C_INTSTATUS	    0X01	
 #define AP3216C_INTCLEAR	    0X02	

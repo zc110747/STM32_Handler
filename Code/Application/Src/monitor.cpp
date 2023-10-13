@@ -6,12 +6,13 @@
 //      monitor.cpp
 //
 //  Purpose:
+//      system monitor functional.
 //
 // Author:
 //      @zc
 //
 //  Assumptions:
-//	
+//
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
@@ -19,9 +20,9 @@
 #include "i2c_monitor.hpp"
 #include "multi_button.h"
 
-bool monitor_manage::init()
+BaseType_t monitor_manage::init()
 {
-    BaseType_t xReturned;
+    BaseType_t xReturn;
     int index;
     
     for(index=0; index<KEY_NUM; index++)
@@ -31,17 +32,12 @@ bool monitor_manage::init()
         tick[index] = 0;
     }
     
-    xReturned = xTaskCreate(
-                    run,    
-                    "monitor_manage",        
-                    MONITOR_TASK_STACK,              
-                    ( void * ) NULL,   
-                    MONITOR_TASK_PROITY,
-                    &task_handle_ );      
-  
-   if(xReturned == pdPASS)
-       return true;
-   return false;
+    xReturn = xTaskCreate(run, "monitor_manage",        
+                        MONITOR_TASK_STACK, 
+                        (void *)this,   
+                        MONITOR_TASK_PROITY,
+                        &task_handle_ );                   
+    return xReturn;
 }
 
 bool monitor_manage::is_time_escape(uint32_t ticks , uint32_t time)
@@ -64,7 +60,7 @@ bool monitor_manage::is_time_escape(uint32_t ticks , uint32_t time)
     return false;
 }
 
-std::function<void()> key_func_list[] = {
+const std::function<void()> key_func_list[] = {
     [](){
         PRINT_LOG(LOG_INFO_RECORD, "Tpad Key Push down, no_push:%d, push:%d!",
             tpad_get_no_push_val(),
@@ -180,6 +176,11 @@ void BTN2_PRESS_Handler(void* btn)
         precent -= 0.1;
         if(precent < 0.5)
             precent = 1;
+       
+        auto ap3216_info = i2c_monitor::get_instance()->get_ap3216_val();
+        
+        PRINT_LOG(LOG_INFO_RECORD, "ap3216c i2c read success, ir:%d, als:%d, ps:%d.",
+            ap3216_info.ir, ap3216_info.als, ap3216_info.ps);
     }
     else if(event == PRESS_UP)
     {
@@ -315,7 +316,7 @@ void monitor_manage::task_per_second(void)
 
 void monitor_manage::run(void* parameter)
 {
-    auto pInstance = monitor_manage::get_instance();
+    monitor_manage* pInstance = (monitor_manage *)parameter;
     
     logger_set_multi_thread_run();
     
@@ -331,6 +332,7 @@ void monitor_manage::run(void* parameter)
         pInstance->task_per_second();
         
         iwdg_reload();
+        
         vTaskDelay(20);
     }
 }

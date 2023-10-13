@@ -1,4 +1,21 @@
-
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//      interface.c
+//
+//  Purpose:
+//      interface used for system and library.
+//
+// Author:
+//      @zc
+//
+//  Assumptions:
+//
+//  Revision History:
+//
+/////////////////////////////////////////////////////////////////////////////
 #include "interface.h"
 
 uint8_t is_os_on = 0;

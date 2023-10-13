@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//     i2c_monitor.cpp
+//      i2c_monitor.cpp
 //
 //  Purpose:
-//     i2c montion driver.
+//      i2c device monitor task.
 //
 // Author:
 //      @zc
@@ -16,19 +16,17 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "driver.h"
 #include "i2c_monitor.hpp"
- 
+
 BaseType_t i2c_monitor::init()
 {
     BaseType_t xReturn;
     uint8_t io_read;
     
-    xReturn = xTaskCreate(
-                    run,      
+    xReturn = xTaskCreate(run,      
                     "i2c_monitor",        
                     I2C_MONITOR_TASK_STACK,              
-                    ( void * ) NULL,   
+                    ( void * ) this,   
                     I2C_MONITOR_TASK_PROITY,
                     &task_handle_ );      
   
@@ -41,6 +39,7 @@ BaseType_t i2c_monitor::init()
     if(pcf8574_i2c_read(&pcf8574_read_data_.data) != pdPASS)
         return pdFAIL;
     
+    registerDevUpdateTimeTrigger();
     return pdPASS;
 }
 
@@ -118,48 +117,61 @@ void i2c_monitor::pcf8574_write_io(uint8_t pin, uint8_t status)
 void i2c_monitor::run(void* parameter)
 {
     i2c_event event;
-    QueueHandle_t i2c_queue;
-    PC8574_IO *p_read_io, *p_write_io;
-    
-    i2c_monitor::get_instance()->registerDevUpdateTimeTrigger();
-    i2c_queue = i2c_monitor::get_instance()->get_queue();
-    p_read_io = i2c_monitor::get_instance()->get_read_io();
-    p_write_io = i2c_monitor::get_instance()->get_write_io();
+    i2c_monitor *i2c_instance;
+
+    i2c_instance = (i2c_monitor *)parameter;
     
     while(1)
     {
-        if(xQueueReceive(i2c_queue, &event, portMAX_DELAY) == pdPASS)
+        if(xQueueReceive(i2c_instance->get_queue(), &event, portMAX_DELAY) == pdPASS)
         { 
             if(event.id == I2C_EVENT_IO_CHIP_WRITE)
             {
-                pcf8574_i2c_write(p_write_io->data);
-                PRINT_LOG(LOG_INFO, "i2c write:0x%x!", p_write_io->data);
+                pcf8574_i2c_write(i2c_instance->get_write_io()->data);
+                PRINT_LOG(LOG_INFO, "i2c write:0x%x!", i2c_instance->get_write_io()->data);
             }
             else if(event.id == I2C_EVENT_IO_CHIP_READ)
             {
                 uint8_t io_read;
                 
-                __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_12);
-                HAL_NVIC_EnableIRQ(EXTI15_10_IRQn); 
                 
                 if(pcf8574_i2c_read(&io_read) == pdPASS)
                 {
-                    p_read_io->data = io_read;
+                    i2c_instance->get_read_io()->data = io_read;
                     PRINT_LOG(LOG_INFO, "i2c read:0x%x!", io_read);
+                    i2c_instance->ap3216c_i2c_run();
+                    
+                    auto ap3216_info = i2c_instance->get_ap3216_val();
+                    PRINT_LOG(LOG_INFO_RECORD, "ap3216c i2c read success, ir:%d, als:%d, ps:%d.",
+                    ap3216_info.ir, ap3216_info.als, ap3216_info.ps);  
+                    
+                    if(ap3216_info.ps > 500)
+                    {
+                       i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_BEEP, IO_ON);
+                    }
+                    else
+                    {
+                        i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_BEEP, IO_OFF);
+                    }
                 }
                 else
                 {
                    PRINT_LOG(LOG_ERROR, "i2c read failed!");
                 }
+                
+                //when extend interrupt, close.
+                //until read i2c, can read next
+                __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_12);
+                HAL_NVIC_EnableIRQ(EXTI15_10_IRQn); 
             }
             else if(event.id == I2C_EVENT_IO_DELAY_READ)
             {
-               i2c_monitor::get_instance()->registerIODelayTimeTrigger();
+               i2c_instance->registerIODelayTimeTrigger();
                PRINT_LOG(LOG_DEBUG, "i2c trigger delay read!");
             }
-            else if(event.id == I2C_EVENT_DEVICE_UPDATE)
+            else if(event.id == I2C_EVENT_DEVICE_REFRESH)
             {
-               i2c_monitor::get_instance()->ap3216c_i2c_run();
+               i2c_instance->ap3216c_i2c_run();
             }
         }
     }
@@ -191,10 +203,6 @@ void i2c_monitor::ap3216c_i2c_run(void)
         ap3216_info_.ps = 0;    													
     else 				
         ap3216_info_.ps = ((uint16_t)(buf[5]&0X3F)<<4)|(buf[4]&0X0F); 
-    
-    
-//    PRINT_LOG(LOG_DEBUG, "ap3216c i2c read success, ir:%d, als:%d, ps:%d.",
-//        ap3216_info_.ir, ap3216_info_.als, ap3216_info_.ps);
 }
 
 void i2c_monitor::registerIODelayTimeTrigger(void)
@@ -214,6 +222,7 @@ void i2c_monitor::removeIODelayTimeTrigger(void)
 void i2c_monitor::registerDevUpdateTimeTrigger(void)
 {
     removeDevUpdateTimeTrigger();
+    
     SysTimeManage::get_instance()->registerEventTrigger(EVENT_I2C_DEV_UPDATE_TIMER_TIGGER, 
                                                         TIME_MANAGE_CNT(I2C_DEVICE_UPDATE_TIME_MS), 
                                                         &TriggerFunc, NULL, TIMER_TRIGGER_FOREVER);
@@ -232,13 +241,13 @@ void I2cTriggerFunc::operator() (uint16_t timer_event)
     }
     else if(timer_event == EVENT_I2C_DEV_UPDATE_TIMER_TIGGER)
     {
-        i2c_monitor::get_instance()->trigger(I2C_EVENT_DEVICE_UPDATE, nullptr, 0);
+        i2c_monitor::get_instance()->trigger(I2C_EVENT_DEVICE_REFRESH, nullptr, 0);
     }
 }
 
 extern "C"
 {
-    void i2c_isr_trigger(void)
+    void i2c_io_isr_trigger(void)
     {
         i2c_monitor::get_instance()->trigger_isr(I2C_EVENT_IO_DELAY_READ, nullptr, 0);
     }

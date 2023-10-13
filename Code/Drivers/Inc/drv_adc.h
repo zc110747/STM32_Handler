@@ -6,7 +6,7 @@
 //      drv_adc.hpp
 //
 //  Purpose:
-//     adc driver normal get.
+//      adc driver normal get.
 //
 // Author:
 //      @zc

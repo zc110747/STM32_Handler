@@ -1,3 +1,21 @@
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//      monitor.hpp
+//
+//  Purpose:
+//      system monitor functional.
+//
+// Author:
+//      @zc
+//
+//  Assumptions:
+//
+//  Revision History:
+//
+/////////////////////////////////////////////////////////////////////////////
 #pragma once
 
 #include "driver.h"
@@ -8,7 +26,13 @@
 class monitor_manage
 {
 public: 
-    bool init();
+    /// \brief constructor.  
+    monitor_manage() {}
+
+    /// \brief destructor.    
+    ~monitor_manage() {}   
+
+    BaseType_t init();
     
     static monitor_manage* get_instance()
     {

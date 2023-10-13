@@ -20,7 +20,6 @@
 
 static TIM_HandleTypeDef htim5;
 
-//硬件连接PB1和PH11即可读取一段时间的计数值
 #if TIME_EXTEND_ENCODE == 0
 BaseType_t timer_extend_driver_init(void)
 {

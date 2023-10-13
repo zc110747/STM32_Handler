@@ -9,6 +9,7 @@
 //      use timer capture for tpad.
 //      Input: PA5
 //      Module: TIM2
+//
 // Author:
 //      @zc
 //

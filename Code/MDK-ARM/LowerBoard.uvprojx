@@ -689,16 +689,6 @@
               <FileType>8</FileType>
               <FilePath>..\Application\Src\timer_manage.cpp</FilePath>
             </File>
-            <File>
-              <FileName>workflow.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\Application\Src\workflow.cpp</FilePath>
-            </File>
-            <File>
-              <FileName>error_manage.cpp</FileName>
-              <FileType>8</FileType>
-              <FilePath>..\Application\Src\error_manage.cpp</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
@@ -758,6 +748,11 @@
               <FileName>driver.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_can.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//     rng.h
+//      rng.h
 //
 //  Purpose:
-//     rng driver interface.
+//      rng driver interface.
 //
 // Author:
 //      @zc

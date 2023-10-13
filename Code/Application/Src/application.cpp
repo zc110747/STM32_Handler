@@ -8,7 +8,7 @@
 //  Purpose:
 //      application work main workflow.
 //
-// Author:
+//  Author:
 //      @zc
 //
 //  Assumptions:
@@ -17,11 +17,9 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 #include "application.hpp"
-#include "includes.hpp"
 #include "schedular.hpp"
 #include "monitor.hpp"
 #include "i2c_monitor.hpp"
-#include "ff.h"
 #include "timer_manage.hpp"
 #include "fatfs_logs.h"
 

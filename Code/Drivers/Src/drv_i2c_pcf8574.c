@@ -153,7 +153,7 @@ BaseType_t pcf8574_i2c_read(uint8_t *pdata)
 }
 #endif
 
-extern void i2c_isr_trigger(void);
+extern void i2c_io_isr_trigger(void);
 
 void EXTI15_10_IRQHandler(void)
 {
@@ -161,7 +161,7 @@ void EXTI15_10_IRQHandler(void)
     {
         __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_12);
         
-        i2c_isr_trigger();
+        i2c_io_isr_trigger();
         
         //avoid repeater trigger, just disable until delay
         HAL_NVIC_DisableIRQ(EXTI15_10_IRQn); 

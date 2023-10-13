@@ -1,10 +1,25 @@
-
-
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//      interface.h
+//
+//  Purpose:
+//      interface for global run.
+//
+// Author:
+//      @zc
+//
+//  Assumptions:
+//
+//  Revision History:
+//
+/////////////////////////////////////////////////////////////////////////////
 #ifndef _INTERFACE_H
 #define _INTERFACE_H
 
 #include "main.h"
-#include "application.hpp"
 #include "logger_process.h"
 
 typedef enum

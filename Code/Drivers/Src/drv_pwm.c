@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//     drv_pwm.c
+//      drv_pwm.c
 //
 //  Purpose:
-//     timer pwm output driver.
+//      timer pwm output driver.
 //
 // Author:
 //     @zc
@@ -33,7 +33,7 @@ BaseType_t pwm_driver_init(void)
     __HAL_RCC_TIM3_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
 
-    //STM32F42xÊý¾ÝÊÖ²áÓÐÒý½ÅµÄ¸´ÓÃËµÃ÷
+    //STM32F42xï¿½ï¿½ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÅµÄ¸ï¿½ï¿½ï¿½Ëµï¿½ï¿½
     GPIO_InitStruct.Pin = GPIO_PIN_1;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -41,26 +41,26 @@ BaseType_t pwm_driver_init(void)
     GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    //ÅäÖÃTIM3µÄÊ±ÖÓ
+    //ï¿½ï¿½ï¿½ï¿½TIM3ï¿½ï¿½Ê±ï¿½ï¿½
     htim3_pwm.Instance = TIM3;
-    htim3_pwm.Init.Prescaler = 89;                          //·ÖÆµ£¬¼ÆÊýÊ±ÖÓÎªTimerClk/(prescaler+1), ÒÔ90MÎªÀýÔòÎª1M
+    htim3_pwm.Init.Prescaler = 89;                          //ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ÎªTimerClk/(prescaler+1), ï¿½ï¿½90MÎªï¿½ï¿½ï¿½ï¿½Îª1M
     htim3_pwm.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim3_pwm.Init.Period = TIME_PWM_PEROID;                //×Ô¶¯ÖØ×°ÔØ¼ÆÊýÆ÷Öµ
-    htim3_pwm.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;  //·ÖÆµ×÷ÎªTimerµÄÊµ¼ÊÊäÈëÊ±ÖÓ
+    htim3_pwm.Init.Period = TIME_PWM_PEROID;                //ï¿½Ô¶ï¿½ï¿½ï¿½×°ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+    htim3_pwm.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;  //ï¿½ï¿½Æµï¿½ï¿½ÎªTimerï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
     htim3_pwm.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_PWM_Init(&htim3_pwm) != HAL_OK)
     {
         return pdFAIL;
     }
     
-    //¶¨ÒåtimerÑ¡ÔñµÄÊ±ÖÓÀ´Ô´
+    //ï¿½ï¿½ï¿½ï¿½timerÑ¡ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ô´
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     if (HAL_TIM_ConfigClockSource(&htim3_pwm, &sClockSourceConfig) != HAL_OK)
     {
         return pdFAIL;
     }
 
-    //¹Ø±ÕÍâ²¿´¥·¢
+    //ï¿½Ø±ï¿½ï¿½â²¿ï¿½ï¿½ï¿½ï¿½
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim3_pwm, &sMasterConfig) != HAL_OK)
@@ -68,9 +68,9 @@ BaseType_t pwm_driver_init(void)
         return pdFAIL;
     }
 
-    //ÅäÖÃOutput Compare¹¦ÄÜ£¬ÓÃÓÚPWMÊä³ö
+    //ï¿½ï¿½ï¿½ï¿½Output Compareï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½PWMï¿½ï¿½ï¿½
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = TIME_PWM_PEROID/2;  //50%Õ¼¿Õ±È
+    sConfigOC.Pulse = TIME_PWM_PEROID/2;  //50%Õ¼ï¿½Õ±ï¿½
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     if (HAL_TIM_PWM_ConfigChannel(&htim3_pwm, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
@@ -105,7 +105,7 @@ BaseType_t pwm_driver_init(void)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_DMA1_CLK_ENABLE();
 
-    //STM32F42xÊý¾ÝÊÖ²áÓÐÒý½ÅµÄ¸´ÓÃËµÃ÷
+    //STM32F42xï¿½ï¿½ï¿½ï¿½ï¿½Ö²ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÅµÄ¸ï¿½ï¿½ï¿½Ëµï¿½ï¿½
     GPIO_InitStruct.Pin = GPIO_PIN_1;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -113,26 +113,26 @@ BaseType_t pwm_driver_init(void)
     GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    //ÅäÖÃTIM3µÄÊ±ÖÓ
+    //ï¿½ï¿½ï¿½ï¿½TIM3ï¿½ï¿½Ê±ï¿½ï¿½
     htim3_pwm.Instance = TIM3;
-    htim3_pwm.Init.Prescaler = 89;                          //·ÖÆµ£¬¼ÆÊýÊ±ÖÓÎªTimerClk/(prescaler+1), ÒÔ90MÎªÀýÔòÎª1M
+    htim3_pwm.Init.Prescaler = 89;                          //ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ÎªTimerClk/(prescaler+1), ï¿½ï¿½90MÎªï¿½ï¿½ï¿½ï¿½Îª1M
     htim3_pwm.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim3_pwm.Init.Period = TIME_PWM_PEROID;                //×Ô¶¯ÖØ×°ÔØ¼ÆÊýÆ÷Öµ
-    htim3_pwm.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;  //·ÖÆµ×÷ÎªTimerµÄÊµ¼ÊÊäÈëÊ±ÖÓ
+    htim3_pwm.Init.Period = TIME_PWM_PEROID;                //ï¿½Ô¶ï¿½ï¿½ï¿½×°ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½Öµ
+    htim3_pwm.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;  //ï¿½ï¿½Æµï¿½ï¿½ÎªTimerï¿½ï¿½Êµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½
     htim3_pwm.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_PWM_Init(&htim3_pwm) != HAL_OK)
     {
         return pdFAIL;
     }
     
-    //¶¨ÒåtimerÑ¡ÔñµÄÊ±ÖÓÀ´Ô´
+    //ï¿½ï¿½ï¿½ï¿½timerÑ¡ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Ô´
     sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
     if (HAL_TIM_ConfigClockSource(&htim3_pwm, &sClockSourceConfig) != HAL_OK)
     {
         return pdFAIL;
     }
 
-    //¹Ø±ÕÍâ²¿´¥·¢
+    //ï¿½Ø±ï¿½ï¿½â²¿ï¿½ï¿½ï¿½ï¿½
     sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
     sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
     if (HAL_TIMEx_MasterConfigSynchronization(&htim3_pwm, &sMasterConfig) != HAL_OK)
@@ -140,9 +140,9 @@ BaseType_t pwm_driver_init(void)
         return pdFAIL;
     }
 
-    //ÅäÖÃOutput Compare¹¦ÄÜ£¬ÓÃÓÚPWMÊä³ö
+    //ï¿½ï¿½ï¿½ï¿½Output Compareï¿½ï¿½ï¿½Ü£ï¿½ï¿½ï¿½ï¿½ï¿½PWMï¿½ï¿½ï¿½
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
-    sConfigOC.Pulse = TIME_PWM_PEROID/2;  //50%Õ¼¿Õ±È
+    sConfigOC.Pulse = TIME_PWM_PEROID/2;  //50%Õ¼ï¿½Õ±ï¿½
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
     if (HAL_TIM_PWM_ConfigChannel(&htim3_pwm, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
@@ -150,8 +150,8 @@ BaseType_t pwm_driver_init(void)
         return pdFAIL;
     }
     
-    //TIM3_CH4, TIM3_UPDATA¶ÔÓ¦µÄDMAÍ¨µÀÎª
-    //DMA1_Stream2, Channel5, ÏêÏ¸¼û²Î¿¼ÊÖ²á10.3.3 Channel Selection
+    //TIM3_CH4, TIM3_UPDATAï¿½ï¿½Ó¦ï¿½ï¿½DMAÍ¨ï¿½ï¿½Îª
+    //DMA1_Stream2, Channel5, ï¿½ï¿½Ï¸ï¿½ï¿½ï¿½Î¿ï¿½ï¿½Ö²ï¿½10.3.3 Channel Selection
     hdma_tim3.Instance = DMA1_Stream2;
     hdma_tim3.Init.Channel = DMA_CHANNEL_5;
     hdma_tim3.Init.Direction = DMA_MEMORY_TO_PERIPH;
@@ -167,7 +167,7 @@ BaseType_t pwm_driver_init(void)
       return pdFAIL;
     }
     
-    //Ê¹ÓÃUPDATA×÷ÎªPWM¸ü»»ÖÜÆÚ
+    //Ê¹ï¿½ï¿½UPDATAï¿½ï¿½ÎªPWMï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     __HAL_TIM_ENABLE_DMA(&htim3_pwm, TIM_DMA_UPDATE);
     HAL_DMA_Start(&hdma_tim3, (uint32_t)timer_pwm_buffer, (uint32_t)&htim3_pwm.Instance->CCR4, 4);
     HAL_TIM_PWM_Start(&htim3_pwm, TIM_CHANNEL_4);

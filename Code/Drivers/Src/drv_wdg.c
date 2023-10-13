@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//     drv_wdg.c
+//      drv_wdg.c
 //
 //  Purpose:
-//     watchdog application.
+//      watchdog application.
 //
 // Author:
 //      @zc

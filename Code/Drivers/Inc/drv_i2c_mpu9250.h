@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//     drv_i2c_mpu9250.h
+//      drv_i2c_mpu9250.h
 //
 //  Purpose:
-//     mpu9250 i2c driver.
+//      mpu9250 i2c driver.
 //
 // Author:
 //      @zc

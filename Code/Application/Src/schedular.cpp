@@ -1,4 +1,21 @@
-
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//      schdeular.c
+//
+//  Purpose:
+//      task used run lower period task.
+//
+//  Author:
+//      @zc
+//
+//  Assumptions:
+//	
+//  Revision History:
+//
+/////////////////////////////////////////////////////////////////////////////
 #include "schedular.hpp"
 #include "driver.h"
 
@@ -6,8 +23,9 @@ bool schedular::init(void)
 {
     BaseType_t xReturned;
     
-    xReturned = xTaskCreate(run, "schedular", SCHEDULAR_TASK_STACK, (void *)NULL,  
-                    SCHEDULAR_TASK_PROITY, &task_handle_ );
+    xReturned = xTaskCreate(run, "schedular", 
+                    SCHEDULAR_TASK_STACK, (void *)NULL,  
+                    SCHEDULAR_TASK_PROITY, &task_handle_);
                     
    if(xReturned == pdPASS)
        return true;

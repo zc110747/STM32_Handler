@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//     tpad.hpp
+//      tpad.hpp
 //
 //  Purpose:
-//     tpad key driver interface.
+//      tpad key driver interface.
 //
 // Author:
 //      @zc

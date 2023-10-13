@@ -3,10 +3,10 @@
 //  All Rights Reserved
 //
 //  Name:
-//     rtc.hpp
+//      rtc.hpp
 //
 //  Purpose:
-//     rtc interface driver.
+//      rtc interface driver.
 //
 // Author:
 //      @zc
