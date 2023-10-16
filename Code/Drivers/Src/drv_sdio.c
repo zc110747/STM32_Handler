@@ -3,7 +3,7 @@
 //  All Rights Reserved
 //
 //  Name:
-//      sdmmc.cpp
+//      drv_sdio.c
 //
 //  Purpose:
 //      sdcard driver for init, read, write.
@@ -16,10 +16,10 @@
 //  Revision History:
 //
 /////////////////////////////////////////////////////////////////////////////
-#include "drv_sdcard.h"
+#include "drv_sdio.h"
 
+#if SDIO_RUN_MODE == SDIO_MODE_PULL
 static SD_HandleTypeDef hsdcard1;
-static BaseType_t sdcard_driver_test(void);
 
 BaseType_t sdcard_driver_init(void)
 {
@@ -73,39 +73,6 @@ BaseType_t sdcard_driver_init(void)
     return pdPASS;
 }
 
-static BaseType_t sdcard_driver_test(void)
-{
-#if SDMMC_TEST == 1   
-    uint8_t buffer[512] = {0};
-    char *ptr = (char *)"sdmmc test success\r\n";
-    uint16_t index = 0;
-    
-
-    strcpy((char *)buffer, ptr);
-    
-    for(index=0; index<20000; index++)
-    {
-        if(write_disk(buffer, index, 1) == HAL_OK)
-        {       
-            memset(buffer, 0, 512);
-            if(read_disk(buffer, index, 1) == HAL_OK)
-            {
-                printf("block%d:%s", index, buffer);
-            }
-            else
-                return pdFAIL;
-        }
-        else
-        {   
-            printf("block write failed:%d", index);
-            continue;
-        }
-    }
-#endif
-    
-    return pdPASS;
-}
-
 HAL_StatusTypeDef sdcard_read_disk(uint8_t *buf, uint32_t startBlocks, uint32_t NumberOfBlocks)
 {
     HAL_StatusTypeDef status = HAL_OK;
@@ -151,4 +118,38 @@ HAL_StatusTypeDef sdcard_write_disk(const uint8_t *buf, uint32_t startBlocks, ui
     }
 
     return status;
+}
+#endif
+
+BaseType_t sdcard_driver_test(void)
+{
+#if SDMMC_TEST == 1   
+    uint8_t buffer[512] = {0};
+    char *ptr = (char *)"sdmmc test success\r\n";
+    uint16_t index = 0;
+    
+
+    strcpy((char *)buffer, ptr);
+    
+    for(index=0; index<20000; index++)
+    {
+        if(write_disk(buffer, index, 1) == HAL_OK)
+        {       
+            memset(buffer, 0, 512);
+            if(read_disk(buffer, index, 1) == HAL_OK)
+            {
+                printf("block%d:%s", index, buffer);
+            }
+            else
+                return pdFAIL;
+        }
+        else
+        {   
+            printf("block write failed:%d", index);
+            continue;
+        }
+    }
+#endif
+    
+    return pdPASS;
 }

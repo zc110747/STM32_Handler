@@ -33,7 +33,7 @@ extern "C" {
 #endif
 
 BaseType_t adc_driver_init(void);
-uint16_t adc_get_avg(uint32_t channel);
+uint16_t adc_avg_value_read(uint32_t channel);
     
 #ifdef __cplusplus
 }

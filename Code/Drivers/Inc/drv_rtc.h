@@ -33,11 +33,14 @@ typedef struct
 
 BaseType_t rtc_driver_init(void);
 
+//rtc info process
 RTC_INFO rtc_update(void); 
-void rtc_get_info(RTC_INFO *pGetInfo);
-BaseType_t rtc_get_alarm_flag(void);   
-void rtc_set_alarm_flag(BaseType_t type);        
-void rtc_delay_alarm(uint8_t day, uint8_t hour, uint8_t min, uint8_t sec);
+void rtc_time_read(RTC_INFO *pGetInfo);
+
+//rtc alarm process
+BaseType_t rtc_alarm_state_read(void);   
+void rtc_alarm_state_write(BaseType_t type);        
+void rtc_alarm_register(uint8_t day, uint8_t hour, uint8_t min, uint8_t sec);
         
 #ifdef __cplusplus
 }

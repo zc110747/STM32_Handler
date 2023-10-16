@@ -26,7 +26,7 @@ static TIM_HandleTypeDef htim;
 //global function
 static void dac_run_test(void);
 
-void dac_set_voltage(uint16_t mv)
+void dac_voltage_write(uint16_t mv)
 {
     float adc_value;
     
@@ -64,7 +64,7 @@ BaseType_t dac_driver_init()
     if(HAL_DAC_ConfigChannel(&hdac, &sConfig, DAC_CHANNEL_1) != HAL_OK)
         return pdFAIL;
      
-    dac_set_voltage(2000);   
+    dac_voltage_write(2000);   
     
 #if RUN_TEST_MODE == DAC_TEST
     dac_run_test();
@@ -74,7 +74,7 @@ BaseType_t dac_driver_init()
 
 static void dac_run_test(void)
 {
-    dac_set_voltage(1000);
+    dac_voltage_write(1000);
     
     while(1)
     {
@@ -82,12 +82,12 @@ static void dac_run_test(void)
     }
 }
 
-void set_convert_vol(float percent)
+void dac_convert_voltage_write(float percent)
 {
     uint32_t adc_vol;
     
     adc_vol = DAC_MAX_VALUE*percent;
-    dac_set_voltage(adc_vol);
+    dac_voltage_write(adc_vol);
 }
 #else
 
@@ -103,7 +103,7 @@ uint16_t vol_cycle[] = {
 };
 uint16_t vol_convert_cycle[40];
 
-void set_convert_vol(float percent)
+void dac_convert_voltage_write(float percent)
 {
     uint8_t i;
     
@@ -184,7 +184,7 @@ BaseType_t dac_driver_init()
       return pdFAIL;
     }
   
-    set_convert_vol(1.0);
+    dac_convert_voltage_write(1.0);
     
     //enable dac and dma send
     HAL_TIM_Base_Start(&htim);

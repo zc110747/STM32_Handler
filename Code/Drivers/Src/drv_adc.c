@@ -55,7 +55,7 @@ BaseType_t adc_driver_init(void)
     return pdPASS;    
 }
 
-uint16_t adc_get_value(uint32_t channel)
+uint16_t adv_value_read(uint32_t channel)
 {
     ADC_ChannelConfTypeDef sConfig = {0};
     
@@ -72,14 +72,14 @@ uint16_t adc_get_value(uint32_t channel)
     return HAL_ADC_GetValue(&hadc1);    
 }
 
-uint16_t adc_get_avg(uint32_t channel)
+uint16_t adc_avg_value_read(uint32_t channel)
 {
     uint32_t temp = 0;
     uint8_t index;
     
     for(index=0; index<ADC_AVG_TIMES; index++)
     {
-        temp += adc_get_value(channel);
+        temp += adv_value_read(channel);
         vTaskDelay(1);
     }
     

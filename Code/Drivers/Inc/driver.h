@@ -31,7 +31,7 @@
 #include "drv_spi.h"
 #include "drv_dma.h"
 #include "drv_key.h"
-#include "drv_sdcard.h"
+#include "drv_sdio.h"
 #include "drv_sdram.h"
 #include "drv_timer.h"
 

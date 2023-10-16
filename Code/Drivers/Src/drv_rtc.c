@@ -51,7 +51,7 @@ BaseType_t rtc_driver_init(void)
     if(result == pdPASS)
     {
         rtc_update();
-        rtc_delay_alarm(0, 0, 0, 5);
+        rtc_alarm_register(0, 0, 0, 5);
     }
     else
     {
@@ -60,7 +60,7 @@ BaseType_t rtc_driver_init(void)
     return result;   
 }
 
-void rtc_get_info(RTC_INFO *pGetInfo)
+void rtc_time_read(RTC_INFO *pGetInfo)
 {
     portENTER_CRITICAL();
     memcpy(pGetInfo, &rtc_info_, sizeof(RTC_INFO));
@@ -87,7 +87,7 @@ void rtc_set_alarm(uint8_t week, uint8_t hour, uint8_t min, uint8_t sec)
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
 }
 
-void rtc_delay_alarm(uint8_t day, uint8_t hour, uint8_t min, uint8_t sec)
+void rtc_alarm_register(uint8_t day, uint8_t hour, uint8_t min, uint8_t sec)
 {
     uint8_t alarm_week = 0;
     uint8_t alarm_hour = 0;
@@ -163,14 +163,14 @@ void RTC_Alarm_IRQHandler(void)
     prtc_handler->State = HAL_RTC_STATE_READY; 
 }
 
-void rtc_set_alarm_flag(BaseType_t type)
+void rtc_alarm_state_write(BaseType_t type)
 {
     HAL_NVIC_DisableIRQ(RTC_Alarm_IRQn);
     is_alarm = type;
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
 }
 
-BaseType_t rtc_get_alarm_flag(void)
+BaseType_t rtc_alarm_state_read(void)
 {
     return is_alarm;
 }    

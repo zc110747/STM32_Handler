@@ -64,7 +64,7 @@ uint8_t fatfs_logs_init(void)
         return FATFS_LOG_MOUNT_ERROR;
     
     //choose the logger file name
-    rtc_get_info(&gRtcInfo);
+    rtc_time_read(&gRtcInfo);
     sprintf(gLoggerInfo.file_name, "%s%02d-%02d-%02d.txt", 
         FATFS_LOG_SYS, gRtcInfo.date.Year, gRtcInfo.date.Month, gRtcInfo.date.Date);
     
@@ -123,10 +123,10 @@ uint8_t fatfs_write(uint8_t *ptr, uint8_t size)
     uint8_t *pbuffer;
     pbuffer = pvPortMalloc(FATFS_SIGNAL_WRITE_MAX_SIZE);
     
-    rtc_get_info(&gRtcInfo);
+    rtc_time_read(&gRtcInfo);
     if(is_fatfs_os_on == 0)
     {
-        sprintf((char *)pbuffer, "%02d-%02d-%02d ", 
+        sprintf((char *)pbuffer, "%02d:%02d:%02d ", 
             gRtcInfo.time.Hours, gRtcInfo.time.Minutes, gRtcInfo.time.Seconds);
         total_size = strlen((char *)pbuffer);
         memcpy((char *)&pbuffer[total_size], ptr, size);
@@ -139,7 +139,7 @@ uint8_t fatfs_write(uint8_t *ptr, uint8_t size)
     {
         pbuffer[0] = FATFS_EVENT_WRITE;
         total_size = 1;
-        sprintf((char *)&pbuffer[1], "%02d-%02d-%02d ", 
+        sprintf((char *)&pbuffer[1], "%02d:%02d:%02d ", 
             gRtcInfo.time.Hours, gRtcInfo.time.Minutes, gRtcInfo.time.Seconds);
         total_size += strlen((char *)&pbuffer[1]);
         memcpy((char *)&pbuffer[total_size], ptr, size);

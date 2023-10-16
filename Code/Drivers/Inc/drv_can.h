@@ -1,0 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////
+//  (c) copyright 2023-by Persional Inc.  
+//  All Rights Reserved
+//
+//  Name:
+//      drv_can.c
+//
+//  Purpose:
+//      can driver for init, read, write
+//
+// Author:
+//      @zc
+//
+//  Assumptions:
+//
+//  Revision History:
+//
+/////////////////////////////////////////////////////////////////////////////
+#ifndef _DRV_CAN_H
+#define _DRV_CAN_H
+
+#include "interface.h"
+
+#endif

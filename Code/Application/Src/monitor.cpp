@@ -66,7 +66,7 @@ const std::function<void()> key_func_list[] = {
             tpad_get_no_push_val(),
             tpad_current_val()
         );
-        rtc_delay_alarm(0, 0, 0, 5);
+        rtc_alarm_register(0, 0, 0, 5);
     },    
     [](){
         PRINT_LOG(LOG_INFO_RECORD, "EXIO Push down!");
@@ -171,7 +171,7 @@ void BTN2_PRESS_Handler(void* btn)
         static float precent = 1;
         
         PRINT_LOG(LOG_INFO_RECORD, "Key2 Push down!");
-        set_convert_vol(precent);
+        dac_convert_voltage_write(precent);
         pwm_set_percent(precent);
         precent -= 0.1;
         if(precent < 0.5)
@@ -267,11 +267,11 @@ void monitor_manage::timer_loop_motion()
         }
     }
      
-    if(rtc_get_alarm_flag() == pdTRUE)
+    if(rtc_alarm_state_read() == pdTRUE)
     {
         PRINT_LOG(LOG_INFO_RECORD, "RTC Alarm");
 
-        rtc_set_alarm_flag(pdFALSE);
+        rtc_alarm_state_write(pdFALSE);
     }
 }
 
@@ -287,14 +287,14 @@ void monitor_manage::adc_monitor()
     {
         temp_loop = 0;
 
-        adc_temp = adc_get_avg(ADC_CHANNEL_TEMPSENSOR);
+        adc_temp = adc_avg_value_read(ADC_CHANNEL_TEMPSENSOR);
         temperate = (float)adc_temp*(3.3/4096);	
         temperate = (temperate-0.76)/0.0025 + 25; 
 
         lcd_driver_show_extra_num(10+11*8,140,(uint32_t)temperate, 2, 16, 0);		
         lcd_driver_show_extra_num(10+14*8,140,((uint32_t)(temperate*100))%100, 2, 16, 0);		
         
-        adc_vol = adc_get_avg(ADC_CHANNEL_6);
+        adc_vol = adc_avg_value_read(ADC_CHANNEL_6);
         voltage = (float)adc_vol*(3.3/4096);
         lcd_driver_show_extra_num(10+23*8,140,(uint32_t)voltage, 2, 16, 0);	
         lcd_driver_show_extra_num(10+26*8,140,((uint32_t)(voltage*100))%100, 2, 16, 0);

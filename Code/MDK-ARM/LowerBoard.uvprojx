@@ -649,6 +649,11 @@
               <FileType>1</FileType>
               <FilePath>..\Library\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_flash_ex.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f4xx_hal_can.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Library\STM32F4xx_HAL_Driver\Src\stm32f4xx_hal_can.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -733,11 +738,6 @@
               <FileName>drv_key.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\Drivers\Src\drv_key.c</FilePath>
-            </File>
-            <File>
-              <FileName>drv_sdcard.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Drivers\Src\drv_sdcard.c</FilePath>
             </File>
             <File>
               <FileName>drv_flash.c</FileName>
@@ -1488,6 +1488,21 @@
               <FileName>fatfs_logs.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\UsrParts\fatfs_log\fatfs_logs.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Driver/sdio</GroupName>
+          <Files>
+            <File>
+              <FileName>drv_sdio.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_sdio.c</FilePath>
+            </File>
+            <File>
+              <FileName>drv_sdio_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Drivers\Src\drv_sdio_dma.c</FilePath>
             </File>
           </Files>
         </Group>

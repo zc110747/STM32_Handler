@@ -37,8 +37,8 @@ extern "C" {
 #endif
 
 BaseType_t dac_driver_init(void);    
-void dac_set_voltage(uint16_t mv);
-void set_convert_vol(float percent);
+void dac_voltage_write(uint16_t mv);
+void dac_convert_voltage_write(float percent);
     
 #ifdef __cplusplus
 }

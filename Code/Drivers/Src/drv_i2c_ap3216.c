@@ -55,10 +55,10 @@ BaseType_t ap3216_driver_init(void)
     if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK)
         return pdFAIL;
 
-    res = ap3216_i2c_write_reg(AP3216C_SYSTEMCONG, 0x40);   //reset the ap3216
+    res = ap3216_reg_write(AP3216C_SYSTEMCONG, 0x40);   //reset the ap3216
     if(res != pdPASS)  return pdFAIL;
     delay_ms(20);
-    res = ap3216_i2c_write_reg(AP3216C_SYSTEMCONG, 0x03);   //config the ALS+PS+LR
+    res = ap3216_reg_write(AP3216C_SYSTEMCONG, 0x03);   //config the ALS+PS+LR
     if(res != pdPASS)  return pdFAIL;
     
     return pdPASS;  
@@ -111,10 +111,10 @@ BaseType_t ap3216_driver_init(void)
         return pdFAIL;
     }
     
-    res = ap3216_i2c_write_reg(AP3216C_SYSTEMCONG, 0x40);   //reset the ap3216
+    res = ap3216_reg_write(AP3216C_SYSTEMCONG, 0x40);   //reset the ap3216
     if(res != pdPASS)  return pdFAIL;
     delay_ms(20);
-    res = ap3216_i2c_write_reg(AP3216C_SYSTEMCONG, 0x03);   //config the ALS+PS+LR
+    res = ap3216_reg_write(AP3216C_SYSTEMCONG, 0x03);   //config the ALS+PS+LR
     if(res != pdPASS)  return pdFAIL;
     
     return pdPASS;  
@@ -149,12 +149,12 @@ BaseType_t ap3216_i2c_multi_read(uint8_t reg, uint8_t *rdata, uint8_t size)
 }
 #endif
 
-BaseType_t ap3216_i2c_read_reg(uint8_t reg, uint8_t data)
+BaseType_t ap3216_reg_read(uint8_t reg, uint8_t data)
 {
     return ap3216_i2c_multi_write(reg, &data, 1);
 }
 
-BaseType_t ap3216_i2c_write_reg(uint8_t reg, uint8_t data)
+BaseType_t ap3216_reg_write(uint8_t reg, uint8_t data)
 {
     return ap3216_i2c_multi_write(reg, &data, 1);
 }

@@ -31,8 +31,6 @@
 #endif
         
 BaseType_t led_driver_init(void);
-void led_set(led_device dev, led_status status);
-        
 #ifdef __cplusplus
 }
 #endif

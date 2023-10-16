@@ -26,6 +26,9 @@ static DMA_HandleTypeDef hdma_memtomem;
 
 static BaseType_t dma_memory_run(void);
 
+#define DMA_MEM_STREAM  DMA2_Stream1
+#define DMA_MEM_FLAG    DMA_FLAG_TCIF1_5
+
 BaseType_t dma_driver_init(void)
 {
     BaseType_t xReturn = pdFAIL;
@@ -34,7 +37,7 @@ BaseType_t dma_driver_init(void)
     __HAL_RCC_DMA2_CLK_ENABLE();
 
     /* Configure DMA request hdma_memtomem on DMA2_Stream0 */
-    hdma_memtomem.Instance = DMA2_Stream6;
+    hdma_memtomem.Instance = DMA_MEM_STREAM;
     hdma_memtomem.Init.Channel = DMA_CHANNEL_0;
     hdma_memtomem.Init.Direction = DMA_MEMORY_TO_MEMORY;
     hdma_memtomem.Init.PeriphInc = DMA_PINC_ENABLE;
@@ -69,14 +72,14 @@ BaseType_t dma_check_finish(uint32_t timeout_ms)
     
     if(timeout_ms == 0)
     {
-        if(__HAL_DMA_GET_FLAG(&hdma_memtomem, DMA_FLAG_TCIF2_6) == SET)
+        if(__HAL_DMA_GET_FLAG(&hdma_memtomem, DMA_MEM_FLAG) == SET)
         {
             xReturn = pdPASS;
         }
     }
     else
     {
-       while(__HAL_DMA_GET_FLAG(&hdma_memtomem, DMA_FLAG_TCIF2_6) == RESET)
+       while(__HAL_DMA_GET_FLAG(&hdma_memtomem, DMA_MEM_FLAG) == RESET)
        {
            index++;
            if(index >= timeout_ms)
@@ -101,7 +104,7 @@ static BaseType_t dma_memory_run(void)
   
     if(dma_check_finish(100) == pdPASS)
     {
-        __HAL_DMA_CLEAR_FLAG(&hdma_memtomem, DMA_FLAG_TCIF2_6);
+        __HAL_DMA_CLEAR_FLAG(&hdma_memtomem, DMA_MEM_FLAG);
         
         if(memcmp((char *)DMA_SRC_ADDRESS, dma_dst, DMA_DST_SIZE) == 0)
         {

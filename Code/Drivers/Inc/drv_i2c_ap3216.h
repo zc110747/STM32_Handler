@@ -41,9 +41,9 @@ extern "C" {
 #endif
 
 BaseType_t ap3216_driver_init(void);
-BaseType_t ap3216_i2c_read_reg(uint8_t reg, uint8_t data);
+BaseType_t ap3216_reg_read(uint8_t reg, uint8_t data);
 BaseType_t ap3216_i2c_multi_read(uint8_t reg, uint8_t *rdata, uint8_t size);    
-BaseType_t ap3216_i2c_write_reg(uint8_t reg, uint8_t data);
+BaseType_t ap3216_reg_write(uint8_t reg, uint8_t data);
 BaseType_t ap3216_i2c_multi_write(uint8_t reg, uint8_t *data, uint8_t size);    
 #ifdef __cplusplus
 }
