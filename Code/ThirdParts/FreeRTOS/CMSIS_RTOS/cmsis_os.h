@@ -175,8 +175,8 @@ typedef enum  {
   osPriorityBelowNormal   = -1,          ///< priority: below normal
   osPriorityNormal        =  0,          ///< priority: normal (default)
   osPriorityAboveNormal   = +1,          ///< priority: above normal
-  osPriorityHigh          = +2,          ///< priority: high
-  osPriorityRealtime      = +3,          ///< priority: realtime (highest)
+  osPriorityHigh          = +5,          ///< priority: high
+  osPriorityRealtime      = +10,          ///< priority: realtime (highest)
   osPriorityError         =  0x84        ///< system cannot determine priority or thread has illegal priority
 } osPriority;
 
@@ -438,7 +438,7 @@ const osThreadDef_t os_thread_def_##name = \
 /// \param[in]     argument      pointer that is passed to the thread function as start argument.
 /// \return thread ID for reference by other functions or NULL in case of error.
 /// \note MUST REMAIN UNCHANGED: \b osThreadCreate shall be consistent in every CMSIS-RTOS.
-//osThreadId osThreadCreate (const osThreadDef_t *thread_def, void *argument);
+osThreadId osThreadCreate (const osThreadDef_t *thread_def, void *argument);
 
 /// Return the thread ID of the current running thread.
 /// \return thread ID for reference by other functions or NULL in case of error.

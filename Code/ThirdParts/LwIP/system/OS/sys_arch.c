@@ -39,6 +39,8 @@
 
 #if !NO_SYS
 
+#include "cmsis_os.h"
+
 #if defined(LWIP_PROVIDE_ERRNO)
 int errno;
 #endif
@@ -47,9 +49,12 @@ int errno;
 //  Creates an empty mailbox.
 err_t sys_mbox_new(sys_mbox_t *mbox, int size)
 {
+#if (osCMSIS < 0x20000U)
   osMessageQDef(QUEUE, size, void *);
   *mbox = osMessageCreate(osMessageQ(QUEUE), NULL);
-
+#else
+  *mbox = osMessageQueueNew(size, sizeof(void *), NULL);
+#endif
 #if SYS_STATS
   ++lwip_stats.sys.mbox.used;
   if(lwip_stats.sys.mbox.max < lwip_stats.sys.mbox.used)
@@ -57,41 +62,65 @@ err_t sys_mbox_new(sys_mbox_t *mbox, int size)
     lwip_stats.sys.mbox.max = lwip_stats.sys.mbox.used;
   }
 #endif /* SYS_STATS */
-  
   if(*mbox == NULL)
     return ERR_MEM;
 
   return ERR_OK;
 }
 
+/*-----------------------------------------------------------------------------------*/
+/*
+  Deallocates a mailbox. If there are messages still present in the
+  mailbox when the mailbox is deallocated, it is an indication of a
+  programming error in lwIP and the developer should be notified.
+*/
 void sys_mbox_free(sys_mbox_t *mbox)
-{    
+{
+#if (osCMSIS < 0x20000U)
   if(osMessageWaiting(*mbox))
+#else
+  if(osMessageQueueGetCount(*mbox))
+#endif
   {
     /* Line for breakpoint.  Should never break here! */
     portNOP();
-      
 #if SYS_STATS
     lwip_stats.sys.mbox.err++;
 #endif /* SYS_STATS */
+
   }
-  
+#if (osCMSIS < 0x20000U)
   osMessageDelete(*mbox);
-  
+#else
+  osMessageQueueDelete(*mbox);
+#endif
 #if SYS_STATS
   --lwip_stats.sys.mbox.used;
 #endif /* SYS_STATS */
 }
 
+/*-----------------------------------------------------------------------------------*/
+//   Posts the "msg" to the mailbox.
 void sys_mbox_post(sys_mbox_t *mbox, void *data)
 {
+#if (osCMSIS < 0x20000U)
   while(osMessagePut(*mbox, (uint32_t)data, osWaitForever) != osOK);
+#else
+  while(osMessageQueuePut(*mbox, &data, 0, osWaitForever) != osOK);
+#endif
 }
 
+
+/*-----------------------------------------------------------------------------------*/
+//   Try to post the "msg" to the mailbox.
 err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
 {
   err_t result;
+#if (osCMSIS < 0x20000U)
   if(osMessagePut(*mbox, (uint32_t)msg, 0) == osOK)
+#else
+  if(osMessageQueuePut(*mbox, &msg, 0, 0) == osOK)
+#endif
   {
     result = ERR_OK;
   }
@@ -108,18 +137,42 @@ err_t sys_mbox_trypost(sys_mbox_t *mbox, void *msg)
   return result;
 }
 
+
+/*-----------------------------------------------------------------------------------*/
+//   Try to post the "msg" to the mailbox.
 err_t sys_mbox_trypost_fromisr(sys_mbox_t *mbox, void *msg)
 {
   return sys_mbox_trypost(mbox, msg);
 }
 
+/*-----------------------------------------------------------------------------------*/
+/*
+  Blocks the thread until a message arrives in the mailbox, but does
+  not block the thread longer than "timeout" milliseconds (similar to
+  the sys_arch_sem_wait() function). The "msg" argument is a result
+  parameter that is set by the function (i.e., by doing "*msg =
+  ptr"). The "msg" parameter maybe NULL to indicate that the message
+  should be dropped.
+
+  The return values are the same as for the sys_arch_sem_wait() function:
+  Number of milliseconds spent waiting or SYS_ARCH_TIMEOUT if there was a
+  timeout.
+
+  Note that a function with a similar name, sys_mbox_fetch(), is
+  implemented by lwIP.
+*/
 u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
 {
+#if (osCMSIS < 0x20000U)
   osEvent event;
   uint32_t starttime = osKernelSysTick();
-    
+#else
+  osStatus_t status;
+  uint32_t starttime = osKernelGetTickCount();
+#endif
   if(timeout != 0)
   {
+#if (osCMSIS < 0x20000U)
     event = osMessageGet (*mbox, timeout);
 
     if(event.status == osEventMessage)
@@ -127,6 +180,13 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
       *msg = (void *)event.value.v;
       return (osKernelSysTick() - starttime);
     }
+#else
+    status = osMessageQueueGet(*mbox, msg, 0, timeout);
+    if (status == osOK)
+    {
+      return (osKernelGetTickCount() - starttime);
+    }
+#endif
     else
     {
       return SYS_ARCH_TIMEOUT;
@@ -134,14 +194,25 @@ u32_t sys_arch_mbox_fetch(sys_mbox_t *mbox, void **msg, u32_t timeout)
   }
   else
   {
+#if (osCMSIS < 0x20000U)
     event = osMessageGet (*mbox, osWaitForever);
     *msg = (void *)event.value.v;
     return (osKernelSysTick() - starttime);
+#else
+    osMessageQueueGet(*mbox, msg, 0, osWaitForever );
+    return (osKernelGetTickCount() - starttime);
+#endif
   }
 }
 
+/*-----------------------------------------------------------------------------------*/
+/*
+  Similar to sys_arch_mbox_fetch, but if message is not ready immediately, we'll
+  return with SYS_MBOX_EMPTY.  On success, 0 is returned.
+*/
 u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
 {
+#if (osCMSIS < 0x20000U)
   osEvent event;
 
   event = osMessageGet (*mbox, 0);
@@ -149,6 +220,10 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
   if(event.status == osEventMessage)
   {
     *msg = (void *)event.value.v;
+#else
+  if (osMessageQueueGet(*mbox, msg, 0, 0) == osOK)
+  {
+#endif
     return ERR_OK;
   }
   else
@@ -156,7 +231,6 @@ u32_t sys_arch_mbox_tryfetch(sys_mbox_t *mbox, void **msg)
     return SYS_MBOX_EMPTY;
   }
 }
-
 /*----------------------------------------------------------------------------------*/
 int sys_mbox_valid(sys_mbox_t *mbox)
 {
@@ -171,11 +245,17 @@ void sys_mbox_set_invalid(sys_mbox_t *mbox)
   *mbox = SYS_MBOX_NULL;
 }
 
+/*-----------------------------------------------------------------------------------*/
+//  Creates a new semaphore. The "count" argument specifies
+//  the initial state of the semaphore.
 err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 {
+#if (osCMSIS < 0x20000U)
   osSemaphoreDef(SEM);
   *sem = osSemaphoreCreate (osSemaphore(SEM), 1);
-
+#else
+  *sem = osSemaphoreNew(UINT16_MAX, count, NULL);
+#endif
 
   if(*sem == NULL)
   {
@@ -187,7 +267,11 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
 
   if(count == 0)	// Means it can't be taken
   {
-     osSemaphoreWait(*sem, 0);
+#if (osCMSIS < 0x20000U)
+    osSemaphoreWait(*sem, 0);
+#else
+    osSemaphoreAcquire(*sem, 0);
+#endif
   }
 
 #if SYS_STATS
@@ -200,15 +284,40 @@ err_t sys_sem_new(sys_sem_t *sem, u8_t count)
   return ERR_OK;
 }
 
+/*-----------------------------------------------------------------------------------*/
+/*
+  Blocks the thread while waiting for the semaphore to be
+  signaled. If the "timeout" argument is non-zero, the thread should
+  only be blocked for the specified time (measured in
+  milliseconds).
+
+  If the timeout argument is non-zero, the return value is the number of
+  milliseconds spent waiting for the semaphore to be signaled. If the
+  semaphore wasn't signaled within the specified time, the return value is
+  SYS_ARCH_TIMEOUT. If the thread didn't have to wait for the semaphore
+  (i.e., it was already signaled), the function may return zero.
+
+  Notice that lwIP implements a function with a similar name,
+  sys_sem_wait(), that uses the sys_arch_sem_wait() function.
+*/
 u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
 {
+#if (osCMSIS < 0x20000U)
   uint32_t starttime = osKernelSysTick();
-
+#else
+  uint32_t starttime = osKernelGetTickCount();
+#endif
   if(timeout != 0)
   {
+#if (osCMSIS < 0x20000U)
     if(osSemaphoreWait (*sem, timeout) == osOK)
     {
       return (osKernelSysTick() - starttime);
+#else
+    if(osSemaphoreAcquire(*sem, timeout) == osOK)
+    {
+        return (osKernelGetTickCount() - starttime);
+#endif
     }
     else
     {
@@ -217,25 +326,33 @@ u32_t sys_arch_sem_wait(sys_sem_t *sem, u32_t timeout)
   }
   else
   {
+#if (osCMSIS < 0x20000U)
     while(osSemaphoreWait (*sem, osWaitForever) != osOK);
     return (osKernelSysTick() - starttime);
+#else
+    while(osSemaphoreAcquire(*sem, osWaitForever) != osOK);
+    return (osKernelGetTickCount() - starttime);
+#endif
   }
 }
 
+/*-----------------------------------------------------------------------------------*/
+// Signals a semaphore
 void sys_sem_signal(sys_sem_t *sem)
 {
-    osSemaphoreRelease(*sem);
+  osSemaphoreRelease(*sem);
 }
 
+/*-----------------------------------------------------------------------------------*/
+// Deallocates a semaphore
 void sys_sem_free(sys_sem_t *sem)
 {
 #if SYS_STATS
-    --lwip_stats.sys.sem.used;
+  --lwip_stats.sys.sem.used;
 #endif /* SYS_STATS */
 
-    osSemaphoreDelete(*sem);
+  osSemaphoreDelete(*sem);
 }
-
 /*-----------------------------------------------------------------------------------*/
 int sys_sem_valid(sys_sem_t *sem)
 {
@@ -251,14 +368,22 @@ void sys_sem_set_invalid(sys_sem_t *sem)
   *sem = SYS_SEM_NULL;
 }
 
+/*-----------------------------------------------------------------------------------*/
+#if (osCMSIS < 0x20000U)
 osMutexId lwip_sys_mutex;
 osMutexDef(lwip_sys_mutex);
-/*-----------------------------------------------------------------------------------*/
+#else
+osMutexId_t lwip_sys_mutex;
+#endif
+// Initialize sys arch
 void sys_init(void)
 {
+#if (osCMSIS < 0x20000U)
   lwip_sys_mutex = osMutexCreate(osMutex(lwip_sys_mutex));
+#else
+  lwip_sys_mutex = osMutexNew(NULL);
+#endif
 }
-
 /*-----------------------------------------------------------------------------------*/
                                       /* Mutexes*/
 /*-----------------------------------------------------------------------------------*/
@@ -266,8 +391,13 @@ void sys_init(void)
 #if LWIP_COMPAT_MUTEX == 0
 /* Create a new mutex*/
 err_t sys_mutex_new(sys_mutex_t *mutex) {
+
+#if (osCMSIS < 0x20000U)
   osMutexDef(MUTEX);
   *mutex = osMutexCreate(osMutex(MUTEX));
+#else
+  *mutex = osMutexNew(NULL);
+#endif
 
   if(*mutex == NULL)
   {
@@ -285,7 +415,6 @@ err_t sys_mutex_new(sys_mutex_t *mutex) {
 #endif /* SYS_STATS */
   return ERR_OK;
 }
-
 /*-----------------------------------------------------------------------------------*/
 /* Deallocate a mutex*/
 void sys_mutex_free(sys_mutex_t *mutex)
@@ -300,7 +429,11 @@ void sys_mutex_free(sys_mutex_t *mutex)
 /* Lock a mutex*/
 void sys_mutex_lock(sys_mutex_t *mutex)
 {
+#if (osCMSIS < 0x20000U)
   osMutexWait(*mutex, osWaitForever);
+#else
+  osMutexAcquire(*mutex, osWaitForever);
+#endif
 }
 
 /*-----------------------------------------------------------------------------------*/
@@ -321,7 +454,17 @@ void sys_mutex_unlock(sys_mutex_t *mutex)
 */
 sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread , void *arg, int stacksize, int prio)
 {
-    return osThreadCreate((os_pthread)thread, name, stacksize, arg, prio);
+#if (osCMSIS < 0x20000U)
+  const osThreadDef_t os_thread_def = { (char *)name, (os_pthread)thread, (osPriority)prio, 0, stacksize};
+  return osThreadCreate(&os_thread_def, arg);
+#else
+  const osThreadAttr_t attributes = {
+                        .name = name,
+                        .stack_size = stacksize,
+                        .priority = (osPriority_t)prio,
+                      };
+  return osThreadNew(thread, arg, &attributes);
+#endif
 }
 
 /*
@@ -342,9 +485,14 @@ sys_thread_t sys_thread_new(const char *name, lwip_thread_fn thread , void *arg,
 */
 sys_prot_t sys_arch_protect(void)
 {
-    osMutexWait(lwip_sys_mutex, osWaitForever);
-    return (sys_prot_t)1;
+#if (osCMSIS < 0x20000U)
+  osMutexWait(lwip_sys_mutex, osWaitForever);
+#else
+  osMutexAcquire(lwip_sys_mutex, osWaitForever);
+#endif
+  return (sys_prot_t)1;
 }
+
 
 /*
   This optional function does a "fast" set of critical region protection to the
@@ -361,24 +509,4 @@ void sys_arch_unprotect(sys_prot_t pval)
   osMutexRelease(lwip_sys_mutex);
 }
 
-
-osThreadId osThreadCreate(	os_pthread pxTaskCode,
-							const char * const pcName,		/*lint !e971 Unqualified char types are allowed for strings and single characters only. */
-							const configSTACK_DEPTH_TYPE usStackDepth,
-							void * const pvParameters,
-							UBaseType_t uxPriority)
-{
-  TaskHandle_t handle;
-  
-  if (xTaskCreate((TaskFunction_t)pxTaskCode, pcName,
-                  usStackDepth, 
-                  pvParameters,
-                  uxPriority,
-                  &handle) != pdPASS)  {
-    return NULL;
-  }   
-  
-  return handle;
-}  
-
-#endif
+#endif /* !NO_SYS */

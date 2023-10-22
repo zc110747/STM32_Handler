@@ -28,6 +28,7 @@
 #include "ethernetif.h"
 #include "lan8742.h"
 #include <string.h>
+#include "cmsis_os.h"
 #include "lwip/tcpip.h"
 
 /* Within 'USER CODE' section, code will be kept by default at each generation */
@@ -87,11 +88,11 @@ typedef enum
 typedef struct
 {
   struct pbuf_custom pbuf_custom;
-  uint8_t buff[(ETH_RX_BUF_SIZE + 31) & ~31] __ALIGNED(32);
+  uint8_t buff[(ETH_RX_BUF_SIZE + 31) & ~31] __attribute__((aligned(32)));
 } RxBuff_t;
 
 /* Memory Pool Declaration */
-#define ETH_RX_BUFFER_CNT             24U
+#define ETH_RX_BUFFER_CNT             12U
 LWIP_MEMPOOL_DECLARE(RX_POOL, ETH_RX_BUFFER_CNT, sizeof(RxBuff_t), "Zero-copy RX PBUF pool");
 
 /* Variable Definitions */
@@ -265,18 +266,12 @@ static void low_level_init(struct netif *netif)
 
   /* create the task that handles the ETH_MAC */
 /* USER CODE BEGIN OS_THREAD_DEF_CREATE_CMSIS_RTOS_V1 */
-  //osThreadDef(EthIf, ethernetif_input, osPriorityRealtime, 0, INTERFACE_THREAD_STACK_SIZE);
-  osThreadCreate(ethernetif_input,
-                "ethernetif_input",
-                INTERFACE_THREAD_STACK_SIZE,
-                netif,
-                LWIP_TASK_PROITY);
-                
+  osThreadDef(EthIf, ethernetif_input, osPriorityRealtime, 0, INTERFACE_THREAD_STACK_SIZE);
+  osThreadCreate (osThread(EthIf), netif);
 /* USER CODE END OS_THREAD_DEF_CREATE_CMSIS_RTOS_V1 */
 
 /* USER CODE BEGIN PHY_PRE_CONFIG */
-  
-    
+
 /* USER CODE END PHY_PRE_CONFIG */
   /* Set PHY IO functions */
   LAN8742_RegisterBusIO(&LAN8742, &LAN8742_IOCtx);
@@ -400,7 +395,8 @@ static err_t low_level_output(struct netif *netif, struct pbuf *p)
   pbuf_ref(p);
 
   HAL_ETH_Transmit_IT(&heth, &TxConfig);
-  while(osSemaphoreWait(TxPktSemaphore, TIME_WAITING_FOR_INPUT) !=osOK )
+  while(osSemaphoreWait(TxPktSemaphore, TIME_WAITING_FOR_INPUT)!=osOK)
+
   {
   }
 
@@ -571,7 +567,7 @@ void pbuf_free_custom(struct pbuf *p)
 */
 u32_t sys_now(void)
 {
-  return xTaskGetTickCount();
+  return HAL_GetTick();
 }
 
 /* USER CODE END 6 */
@@ -596,8 +592,7 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef* ethHandle)
     __HAL_RCC_GPIOC_CLK_ENABLE();
     __HAL_RCC_GPIOA_CLK_ENABLE();
     __HAL_RCC_GPIOB_CLK_ENABLE();
-    __HAL_RCC_GPIOG_CLK_ENABLE();			//开启GPIOG时钟
-    
+    __HAL_RCC_GPIOG_CLK_ENABLE();
     /**ETH GPIO Configuration
     PC1     ------> ETH_MDC
     PA1     ------> ETH_REF_CLK
@@ -606,8 +601,8 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef* ethHandle)
     PC4     ------> ETH_RXD0
     PC5     ------> ETH_RXD1
     PB11     ------> ETH_TX_EN
-    PB12     ------> ETH_TXD0
-    PB13     ------> ETH_TXD1
+    PG13     ------> ETH_TXD0
+    PG14     ------> ETH_TXD1
     */
     GPIO_InitStruct.Pin = GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_5;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -630,13 +625,13 @@ void HAL_ETH_MspInit(ETH_HandleTypeDef* ethHandle)
     GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-    GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14;   //PG13,14
+    GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    GPIO_InitStruct.Alternate = GPIO_AF11_ETH;    
-    HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);         //初始化
-    
+    GPIO_InitStruct.Alternate = GPIO_AF11_ETH;
+    HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
+
     /* Peripheral interrupt init */
     HAL_NVIC_SetPriority(ETH_IRQn, 5, 0);
     HAL_NVIC_EnableIRQ(ETH_IRQn);
@@ -664,14 +659,16 @@ void HAL_ETH_MspDeInit(ETH_HandleTypeDef* ethHandle)
     PC4     ------> ETH_RXD0
     PC5     ------> ETH_RXD1
     PB11     ------> ETH_TX_EN
-    PB12     ------> ETH_TXD0
-    PB13     ------> ETH_TXD1
+    PG13     ------> ETH_TXD0
+    PG14     ------> ETH_TXD1
     */
     HAL_GPIO_DeInit(GPIOC, GPIO_PIN_1|GPIO_PIN_4|GPIO_PIN_5);
 
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_7);
 
-    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_11);
+
+    HAL_GPIO_DeInit(GPIOG, GPIO_PIN_13|GPIO_PIN_14);
 
     /* Peripheral interrupt Deinit*/
     HAL_NVIC_DisableIRQ(ETH_IRQn);
@@ -825,6 +822,7 @@ void ethernet_link_thread(void const * argument)
 /* USER CODE BEGIN ETH link Thread core code for User BSP */
 
 /* USER CODE END ETH link Thread core code for User BSP */
+
     osDelay(100);
   }
 }

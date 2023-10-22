@@ -18,7 +18,6 @@
 #include "driver.h"
 #include "application.hpp"
 #include "cm_backtrace.h"
-#include "lwip.h"
 #include "dsp.h"
 
 ////local define
@@ -54,7 +53,7 @@ int main(void)
     
     //aplication init, must after driver init because call driver
     xReturned &= application_init();
-    
+      
     //start the rtos schedular.
     vTaskStartScheduler();
    

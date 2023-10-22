@@ -40,6 +40,14 @@ typedef int sys_prot_t;
 
 #define LWIP_PROVIDE_ERRNO
 
+#if defined (__GNUC__) & !defined (__CC_ARM)
+
+#define LWIP_TIMEVAL_PRIVATE 1
+
+//#include <sys/time.h>
+
+#endif
+
 /* define compiler specific symbols */
 #if defined (__ICCARM__)
 

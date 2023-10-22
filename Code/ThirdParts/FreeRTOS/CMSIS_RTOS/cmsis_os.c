@@ -199,38 +199,38 @@ uint32_t osKernelSysTick(void)
 * @retval thread ID for reference by other functions or NULL in case of error.
 * @note   MUST REMAIN UNCHANGED: \b osThreadCreate shall be consistent in every CMSIS-RTOS.
 */
-//osThreadId osThreadCreate (const osThreadDef_t *thread_def, void *argument)
-//{
-//  TaskHandle_t handle;
-//  
-//#if( configSUPPORT_STATIC_ALLOCATION == 1 ) &&  ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
-//  if((thread_def->buffer != NULL) && (thread_def->controlblock != NULL)) {
-//    handle = xTaskCreateStatic((TaskFunction_t)thread_def->pthread,(const portCHAR *)thread_def->name,
-//              thread_def->stacksize, argument, makeFreeRtosPriority(thread_def->tpriority),
-//              thread_def->buffer, thread_def->controlblock);
-//  }
-//  else {
-//    if (xTaskCreate((TaskFunction_t)thread_def->pthread,(const portCHAR *)thread_def->name,
-//              thread_def->stacksize, argument, makeFreeRtosPriority(thread_def->tpriority),
-//              &handle) != pdPASS)  {
-//      return NULL;
-//    } 
-//  }
-//#elif( configSUPPORT_STATIC_ALLOCATION == 1 )
+osThreadId osThreadCreate (const osThreadDef_t *thread_def, void *argument)
+{
+  TaskHandle_t handle;
+  
+#if( configSUPPORT_STATIC_ALLOCATION == 1 ) &&  ( configSUPPORT_DYNAMIC_ALLOCATION == 1 )
+  if((thread_def->buffer != NULL) && (thread_def->controlblock != NULL)) {
+    handle = xTaskCreateStatic((TaskFunction_t)thread_def->pthread,(const portCHAR *)thread_def->name,
+              thread_def->stacksize, argument, makeFreeRtosPriority(thread_def->tpriority),
+              thread_def->buffer, thread_def->controlblock);
+  }
+  else {
+    if (xTaskCreate((TaskFunction_t)thread_def->pthread,(const portCHAR *)thread_def->name,
+              thread_def->stacksize, argument, makeFreeRtosPriority(thread_def->tpriority),
+              &handle) != pdPASS)  {
+      return NULL;
+    } 
+  }
+#elif( configSUPPORT_STATIC_ALLOCATION == 1 )
 
-//    handle = xTaskCreateStatic((TaskFunction_t)thread_def->pthread,(const portCHAR *)thread_def->name,
-//              thread_def->stacksize, argument, makeFreeRtosPriority(thread_def->tpriority),
-//              thread_def->buffer, thread_def->controlblock);
-//#else
-//  if (xTaskCreate((TaskFunction_t)thread_def->pthread,(const portCHAR *)thread_def->name,
-//                   thread_def->stacksize, argument, makeFreeRtosPriority(thread_def->tpriority),
-//                   &handle) != pdPASS)  {
-//    return NULL;
-//  }     
-//#endif
-//  
-//  return handle;
-//}
+    handle = xTaskCreateStatic((TaskFunction_t)thread_def->pthread,(const portCHAR *)thread_def->name,
+              thread_def->stacksize, argument, makeFreeRtosPriority(thread_def->tpriority),
+              thread_def->buffer, thread_def->controlblock);
+#else
+  if (xTaskCreate((TaskFunction_t)thread_def->pthread,(const portCHAR *)thread_def->name,
+                   thread_def->stacksize, argument, makeFreeRtosPriority(thread_def->tpriority),
+                   &handle) != pdPASS)  {
+    return NULL;
+  }     
+#endif
+  
+  return handle;
+}
 
 /**
 * @brief  Return the thread ID of the current running thread.
@@ -507,12 +507,12 @@ int32_t osSignalSet (osThreadId thread_id, int32_t signal)
   
   if (inHandlerMode())
   {
-    if(xTaskGenericNotifyFromISR( thread_id , 0x0, (uint32_t)signal, eSetBits, &ulPreviousNotificationValue, &xHigherPriorityTaskWoken ) != pdPASS )
+    if(xTaskGenericNotifyFromISR( thread_id ,  tskDEFAULT_INDEX_TO_NOTIFY, (uint32_t)signal, eSetBits, &ulPreviousNotificationValue, &xHigherPriorityTaskWoken ) != pdPASS )
       return 0x80000000;
     
     portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
   }  
-  else if(xTaskGenericNotify( thread_id , 0x0, (uint32_t)signal, eSetBits, &ulPreviousNotificationValue) != pdPASS )
+  else if(xTaskGenericNotify( thread_id ,  tskDEFAULT_INDEX_TO_NOTIFY, (uint32_t)signal, eSetBits, &ulPreviousNotificationValue) != pdPASS )
     return 0x80000000;
   
   return ulPreviousNotificationValue;

@@ -18,6 +18,7 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "schedular.hpp"
 #include "driver.h"
+#include "lwip.h"
 
 bool schedular::init(void)
 {
@@ -58,6 +59,8 @@ void schedular::run(void* parameter)
     //tell driver os is start.
     set_os_on();
     
+    MX_LWIP_Init();
+      
     //PRINT_NOW("application init\r\n");
     PRINT_LOG(LOG_INFO, "application init success!");
     PRINT_LOG(LOG_INFO, "dbgmcu_id:0x%x", 
