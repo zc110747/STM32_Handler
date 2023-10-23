@@ -52,7 +52,7 @@ GlobalType_t logger_init(void)
  
     //uart driver init for logger
     xReturned = usart_driver_init();
-    if(xReturned != HAL_OK)
+    if(xReturned != pdPASS)
     {
         return GLOBAL_ERROR;
     }
