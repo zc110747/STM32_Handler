@@ -68,6 +68,7 @@ typedef enum
     WQ_OP_OK = 0,
     WQ_OP_DEVICE_ERR,
     WQ_OP_TIMEOUT_ERR,
+    WQ_OP_COM_ERR,
 }WQ_OP_STATUS;
 
 //wq interface

@@ -16,6 +16,7 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "logger_process.h"
 #include "cmd_process.h"
+#include "driver.h"
 
 typedef struct
 {
@@ -41,10 +42,21 @@ typedef struct
 }LOGGER_INFO;
 
 static LOGGER_INFO g_logger_info = {0};
-static uint8_t logger_dev_tx_buffer(uint8_t *ptr, uint8_t size);
+static GlobalType_t logger_dev_tx_buffer(uint8_t *ptr, uint8_t size);
+static GlobalType_t logger_protect(void);
+static GlobalType_t logger_unprotect(void);
 
-uint8_t logger_init(void)
+GlobalType_t logger_init(void)
 {
+    BaseType_t xReturned;
+ 
+    //uart driver init for logger
+    xReturned = usart_driver_init();
+    if(xReturned != HAL_OK)
+    {
+        return GLOBAL_ERROR;
+    }
+    
     CircularBufferInit(&g_logger_info.LoggerTxBufferInfo, LOGGER_BUFFER_SIZE, g_logger_info.LoggerTxBuffer);
     CircularBufferInit(&g_logger_info.LoggerRxBufferInfo, LOGGER_BUFFER_SIZE, g_logger_info.LoggerRxBuffer);
     
@@ -58,10 +70,10 @@ uint8_t logger_init(void)
 
 #if OS_TYPE == OS_TYPE_FREEROTPS 
     g_logger_info.protect = xSemaphoreCreateMutex();
-    if(g_logger_info.protect == NULL) return LOGGER_ERROR;
+    if(g_logger_info.protect == NULL) return GLOBAL_ERROR;
 #endif    
 
-    return LOGGER_OK;
+    return GLOBAL_OK;
 }
 
 void logger_process_run(void)
@@ -84,49 +96,14 @@ void logger_set_multi_thread_run(void)
     g_logger_info.is_multi_thread_run = 1;
 }
 
-static uint8_t logger_protect(void)
-{
-#if OS_TYPE == OS_TYPE_NONE
-    return LOGGER_OK;
-#elif OS_TYPE == OS_TYPE_FREEROTPS
-    if(g_logger_info.is_multi_thread_run == 0)
-    {
-       return LOGGER_OK;  
-    }
-    else
-    {
-        if(xSemaphoreTake(g_logger_info.protect, (TickType_t)10) == pdPASS)
-        {
-           return LOGGER_OK;   
-        }
-    }
-    return LOGGER_ERROR;
-#endif
-}
-
-static uint8_t logger_unprotect(void)
-{
-#if OS_TYPE == OS_TYPE_NONE
-    return LOGGER_OK;
-#elif OS_TYPE == OS_TYPE_FREEROTPS
-    if(g_logger_info.is_multi_thread_run == 0)
-    {
-       return LOGGER_OK;  
-    }
-        
-    xSemaphoreGive(g_logger_info.protect);
-    return LOGGER_ERROR;
-#endif   
-}
-
-uint8_t logger_put_rx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size)
+GlobalType_t logger_put_rx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size)
 {
     uint32_t rx_allow_size, index;
     
     //device not use as logger interface
     if(dev != g_logger_info.device
     || g_logger_info.is_init != 1 )
-        return LOGGER_ERROR;
+        return GLOBAL_ERROR;
     
     if(size == 1)
     {
@@ -138,7 +115,7 @@ uint8_t logger_put_rx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size)
         rx_allow_size = LOGGER_BUFFER_SIZE - CircularBufferSize(&g_logger_info.LoggerRxBufferInfo);
         if(size > rx_allow_size)
         {
-            return LOGGER_ERROR;
+            return GLOBAL_ERROR;
         }
         
         for(index=0; index<size; index++)
@@ -146,37 +123,37 @@ uint8_t logger_put_rx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size)
             CircularBufferPut(&g_logger_info.LoggerRxBufferInfo, ptr[index]);
         }
     }
-    return LOGGER_OK;
+    return GLOBAL_OK;
 }
 
-uint8_t logger_get_tx_byte(LOG_DEVICE dev, uint8_t *data)
+GlobalType_t logger_get_tx_byte(LOG_DEVICE dev, uint8_t *data)
 {
     uint8_t c;
     
     //device not use as logger interface
     if(dev != g_logger_info.device
     || g_logger_info.is_init != 1 )
-        return LOGGER_ERROR;
+        return GLOBAL_ERROR;
     
     if(!CircularBufferIsEmpty(&g_logger_info.LoggerTxBufferInfo))
     {
        CircularBufferGet(&g_logger_info.LoggerTxBufferInfo, c);
        *data = c;
-       return LOGGER_OK;
+       return GLOBAL_OK;
     }
-    return LOGGER_ERROR;
+    return GLOBAL_ERROR;
 }
 
 //only logger buffer is allow send 
 //can put, otherwise will discard the data
-uint8_t logger_put_tx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size)
+GlobalType_t logger_put_tx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size)
 {
     uint32_t tx_allow_size, index;
     
     //device not use as logger interface
     if(dev != g_logger_info.device
     || g_logger_info.is_init != 1 )
-        return LOGGER_ERROR;
+        return GLOBAL_ERROR;
 
     if(size == 1)
     {
@@ -188,7 +165,7 @@ uint8_t logger_put_tx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size)
         tx_allow_size = LOGGER_BUFFER_SIZE - CircularBufferSize(&g_logger_info.LoggerTxBufferInfo);
         if(size > tx_allow_size)
         {
-            return LOGGER_ERROR;
+            return GLOBAL_ERROR;
         }
         
         for(index=0; index<size; index++)
@@ -196,7 +173,7 @@ uint8_t logger_put_tx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size)
             CircularBufferPut(&g_logger_info.LoggerTxBufferInfo, ptr[index]);
         }
     }
-    return LOGGER_OK;   
+    return GLOBAL_OK;   
 }
 
 #if SUPPORT_FATFS_LOG == 1
@@ -217,7 +194,7 @@ int print_log(LOG_LEVEL level, const char* fmt, ...)
     if((level&(~LOG_RECORD)) < g_logger_info.level)
         return -2;
 
-    if(logger_protect() == LOGGER_OK)
+    if(logger_protect() == GLOBAL_OK)
     {
         va_list	valist;
         
@@ -269,9 +246,48 @@ int print_log(LOG_LEVEL level, const char* fmt, ...)
     return outlen;
 }
 
-static uint8_t logger_dev_tx_buffer(uint8_t *ptr, uint8_t size)
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+//local function
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+static GlobalType_t logger_protect(void)
 {
-    uint8_t res = LOGGER_ERROR;
+#if OS_TYPE == OS_TYPE_NONE
+    return GLOBAL_OK;
+#elif OS_TYPE == OS_TYPE_FREEROTPS
+    if(g_logger_info.is_multi_thread_run == 0)
+    {
+       return GLOBAL_OK;  
+    }
+    else
+    {
+        if(xSemaphoreTake(g_logger_info.protect, (TickType_t)10) == pdPASS)
+        {
+           return GLOBAL_OK;   
+        }
+    }
+    return GLOBAL_ERROR;
+#endif
+}
+
+static GlobalType_t logger_unprotect(void)
+{
+#if OS_TYPE == OS_TYPE_NONE
+    return GLOBAL_OK;
+#elif OS_TYPE == OS_TYPE_FREEROTPS
+    if(g_logger_info.is_multi_thread_run == 0)
+    {
+       return GLOBAL_OK;  
+    }
+        
+    xSemaphoreGive(g_logger_info.protect);
+    return GLOBAL_ERROR;
+#endif   
+}
+
+static GlobalType_t logger_dev_tx_buffer(uint8_t *ptr, uint8_t size)
+{
+    GlobalType_t res = GLOBAL_ERROR;
     
     switch(g_logger_info.device)
     {
@@ -293,22 +309,22 @@ static uint8_t logger_dev_tx_buffer(uint8_t *ptr, uint8_t size)
     return res;
 }
 
-__weak uint8_t i2c_logger_write(uint8_t *ptr, uint8_t size)
+__weak GlobalType_t i2c_logger_write(uint8_t *ptr, uint8_t size)
 {  
-    return LOGGER_OK;
+    return GLOBAL_OK;
 }
 
-__weak uint8_t uart_logger_write(uint8_t *ptr, uint8_t size)
+__weak GlobalType_t uart_logger_write(uint8_t *ptr, uint8_t size)
 { 
-    return LOGGER_OK;    
+    return GLOBAL_OK;    
 }
 
-__weak uint8_t spi_logger_write(uint8_t *ptr, uint8_t size)
+__weak GlobalType_t spi_logger_write(uint8_t *ptr, uint8_t size)
 { 
-    return LOGGER_OK;    
+    return GLOBAL_OK;    
 }
 
-__weak uint8_t eth_logger_write(uint8_t *ptr, uint8_t size)
+__weak GlobalType_t eth_logger_write(uint8_t *ptr, uint8_t size)
 { 
-    return LOGGER_OK;    
+    return GLOBAL_OK;    
 }

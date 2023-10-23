@@ -46,6 +46,11 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+typedef enum
+{
+    GLOBAL_OK = 0,
+    GLOBAL_ERROR = 1,
+}GlobalType_t;
 
 /* USER CODE END Includes */
 

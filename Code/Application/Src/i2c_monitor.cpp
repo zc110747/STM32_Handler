@@ -18,6 +18,7 @@
 /////////////////////////////////////////////////////////////////////////////
 #include "i2c_monitor.hpp"
 
+#if I2C_MONITOR_MODULE_STATE  == MODULE_ON
 BaseType_t i2c_monitor::init()
 {
     BaseType_t xReturn;
@@ -34,7 +35,6 @@ BaseType_t i2c_monitor::init()
     if(queue_ == nullptr || xReturn != pdPASS)
         return pdFAIL;
     
-    
     //read before device run to avoid spurious triggering.
     if(pcf8574_i2c_read(&pcf8574_read_data_.data) != pdPASS)
         return pdFAIL;
@@ -45,6 +45,7 @@ BaseType_t i2c_monitor::init()
 
 BaseType_t i2c_monitor::trigger(uint8_t event, uint8_t *pdata, uint8_t size)
 {
+    BaseType_t xReturn = pdPASS;
     i2c_event xdata;
     
     xdata.id = event;
@@ -52,13 +53,17 @@ BaseType_t i2c_monitor::trigger(uint8_t event, uint8_t *pdata, uint8_t size)
     {
         xdata.data = pdata[0];
     }
-    return xQueueSend(queue_, &xdata, (TickType_t)1);
+    
+    xReturn = xQueueSend(queue_, &xdata, (TickType_t)1);
+    return xReturn;
 }
 
 BaseType_t i2c_monitor::trigger_isr(uint8_t event, uint8_t *pdata, uint8_t size)
 {
+    BaseType_t xReturn = pdPASS;
+     
     i2c_event xdata;
-    BaseType_t xReturn;
+
     portBASE_TYPE xHigherPriorityTaskWoken;
 
 	xHigherPriorityTaskWoken = pdFALSE;
@@ -257,3 +262,15 @@ extern "C"
         i2c_monitor::get_instance()->pcf8574_write_io(pin, status);
     }
 }
+#else
+extern "C"
+{
+    void i2c_io_isr_trigger(void)
+    {
+    }
+    
+    void i2c_write_io(uint8_t pin, uint8_t status)
+    {
+    }
+}
+#endif

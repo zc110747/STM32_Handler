@@ -24,8 +24,8 @@ extern "C" {
 #include "main.h"
 #include "circular_buffer.h"
 
-#define LOGGER_OK               0
-#define LOGGER_ERROR            1
+//#define GLOBAL_OK               0
+//#define GLOBAL_ERROR            1
 
 #define OS_TYPE_NONE            0
 #define OS_TYPE_FREEROTPS       1
@@ -65,19 +65,19 @@ typedef enum
     LOG_DEVICE_ETH,
 }LOG_DEVICE;
 
-uint8_t logger_init(void);
+GlobalType_t logger_init(void);
 void logger_set_multi_thread_run(void); //call when multi thread run, then used mutex protect
 void logger_process_run(void);
-uint8_t logger_put_tx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size);
-uint8_t logger_get_tx_byte(LOG_DEVICE dev, uint8_t *data);
-uint8_t logger_put_rx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size);
+GlobalType_t logger_put_tx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size);
+GlobalType_t logger_get_tx_byte(LOG_DEVICE dev, uint8_t *data);
+GlobalType_t logger_put_rx_buffer(LOG_DEVICE dev, uint8_t *ptr, uint8_t size);
 int print_log(LOG_LEVEL level, const char* fmt, ...);
 
 //interface need support other device
-uint8_t i2c_logger_write(uint8_t *ptr, uint8_t size);
-uint8_t spi_logger_write(uint8_t *ptr, uint8_t size);
-uint8_t uart_logger_write(uint8_t *ptr, uint8_t size);
-uint8_t eth_logger_write(uint8_t *ptr, uint8_t size);
+GlobalType_t i2c_logger_write(uint8_t *ptr, uint8_t size);
+GlobalType_t spi_logger_write(uint8_t *ptr, uint8_t size);
+GlobalType_t uart_logger_write(uint8_t *ptr, uint8_t size);
+GlobalType_t eth_logger_write(uint8_t *ptr, uint8_t size);
     
 #if LOGGER_ON == 1
 #define PRINT_LOG(level, fmt, ...)       print_log((LOG_LEVEL)level, fmt, ##__VA_ARGS__);

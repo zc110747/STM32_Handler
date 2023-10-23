@@ -20,6 +20,7 @@
 #include "timer_manage.hpp"
 #include "driver.h"
 
+#if TIMER_MANAGE_MODULE_STATE == MODULE_ON
 //sys timer manage
 static void prvxSoftLoopTimerCallback(TimerHandle_t xTimer)
 {
@@ -109,10 +110,10 @@ void SysTimeManage::removeEventTrigger(uint16_t id)
 	}
 }
 
-uint32_t SysTimeManage::registerEventTrigger(uint16_t id, uint32_t time_cnt, TimeTriggerFunction<uint32_t>* func,
+GlobalType_t SysTimeManage::registerEventTrigger(uint16_t id, uint32_t time_cnt, TimeTriggerFunction<uint32_t>* func,
 											uint32_t *pv, uint16_t TriggerCount)
 {  
-    uint8_t result = 0;
+    GlobalType_t result = GLOBAL_ERROR;
     
     if(pdTRUE == xSemaphoreTake(SysTimeSemaphore_, portMAX_DELAY))
     {
@@ -130,7 +131,7 @@ uint32_t SysTimeManage::registerEventTrigger(uint16_t id, uint32_t time_cnt, Tim
             {
                 triggerList_[i].used_ = 1;
                 triggerList_[i].initalize(id, time_cnt, pv, TriggerCount, func);
-                result = 1;
+                result = GLOBAL_OK;
                 break;
             }
         }
@@ -139,3 +140,4 @@ uint32_t SysTimeManage::registerEventTrigger(uint16_t id, uint32_t time_cnt, Tim
     
     return result;
 }
+#endif

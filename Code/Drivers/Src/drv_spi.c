@@ -72,11 +72,16 @@ BaseType_t spi_driver_init(void)
     return pdPASS;  
 }
 
-uint8_t spi_rw_byte(uint8_t data)
+uint8_t spi_rw_byte(uint8_t data, HAL_StatusTypeDef *err)
 {
     uint8_t rx_data = 0xff;
+    HAL_StatusTypeDef status;
     
-    HAL_SPI_TransmitReceive(&hspi5, &data, &rx_data, 1, SPI_RW_TIMEOUT); 
+    status = HAL_SPI_TransmitReceive(&hspi5, &data, &rx_data, 1, SPI_RW_TIMEOUT); 
+    if(err != NULL)
+    {
+        *err = status;
+    }
     
     return rx_data;
 }
@@ -96,9 +101,9 @@ BaseType_t spi_driver_init(void)
     HAL_GPIO_WritePin(GPIOF, GPIO_PIN_6, GPIO_PIN_SET);
 
     GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF5_SPI5;
     HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
     
@@ -163,12 +168,16 @@ BaseType_t spi_driver_init(void)
     return pdPASS;  
 }
 
-uint8_t spi_rw_byte(uint8_t data)
+uint8_t spi_rw_byte(uint8_t data, HAL_StatusTypeDef *err)
 {
     uint8_t rx_data = 0xff;
+    HAL_StatusTypeDef status;
     
-    HAL_SPI_TransmitReceive(&hspi5, &data, &rx_data, 1, SPI_RW_TIMEOUT); 
-    
+    status = HAL_SPI_TransmitReceive(&hspi5, &data, &rx_data, 1, SPI_RW_TIMEOUT); 
+    if(err != NULL)
+    {
+        *err = status;
+    }
     return rx_data;
 }
 
@@ -253,12 +262,23 @@ BaseType_t spi_driver_init(void)
     return pdPASS;
 }
 
-uint8_t spi_rw_byte(uint8_t data)
+uint8_t spi_rw_byte(uint8_t data, HAL_StatusTypeDef *err)
 {
     uint8_t rdata = 0xff;
+    uint8_t spi_status;
     
-    spi_soft_rw_byte(SOFT_SPI5, &data, &rdata, 1);
-    
+    spi_status = spi_soft_rw_byte(SOFT_SPI5, &data, &rdata, 1);
+    if(err != NULL)
+    {
+        if(spi_status == SPI_OK)
+        {
+            *err = HAL_OK;
+        }
+        else
+        {
+            *err = HAL_ERROR;
+        }
+    }
     return rdata;
 }
 #endif

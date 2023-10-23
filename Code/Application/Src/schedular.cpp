@@ -19,6 +19,7 @@
 #include "schedular.hpp"
 #include "driver.h"
 #include "lwip.h"
+#include "i2c_monitor.hpp"
 
 bool schedular::init(void)
 {
@@ -54,10 +55,29 @@ void fault_test_by_unalign(void)
     printf("addr:0x%02X value:0x%08X\r\n", (int) p, value);
 }
 
+
+void ETH_Reset(void)
+{
+#if I2C_MONITOR_MODULE_STATE  == MODULE_ON
+    i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_ETH_RESET, IO_OFF);
+    vTaskDelay(200);
+    i2c_monitor::get_instance()->pcf8574_write_io(OUTPUT_ETH_RESET, IO_ON);
+    vTaskDelay(200);
+#else
+    pcf8574_i2c_write(0xFF);
+    vTaskDelay(100);
+    pcf8574_i2c_write(0x7F);
+    vTaskDelay(100);
+#endif
+}
+
 void schedular::run(void* parameter)
 {    
     //tell driver os is start.
     set_os_on();
+    
+    //reset the phy hardware
+    ETH_Reset();
     
     MX_LWIP_Init();
       

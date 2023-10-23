@@ -20,6 +20,7 @@
 #include "i2c_monitor.hpp"
 #include "multi_button.h"
 
+#if MONITOR_MODULE_STATE == MODULE_ON
 BaseType_t monitor_manage::init()
 {
     BaseType_t xReturn;
@@ -376,3 +377,4 @@ KEY_STATE monitor_manage::anti_shake(uint8_t *pTick, KEY_STATE nowIoStatus, KEY_
 
     return OutIoStatus;    
 }
+#endif

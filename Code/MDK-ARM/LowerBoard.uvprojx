@@ -694,6 +694,11 @@
               <FileType>8</FileType>
               <FilePath>..\Application\Src\timer_manage.cpp</FilePath>
             </File>
+            <File>
+              <FileName>product_config.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Core\Inc\product_config.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

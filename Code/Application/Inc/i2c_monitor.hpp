@@ -68,6 +68,7 @@ public:
 	void operator() (uint16_t timer_event);
 };
 
+#if I2C_MONITOR_MODULE_STATE  == MODULE_ON
 class i2c_monitor
 {
 public: 
@@ -180,3 +181,54 @@ private:
     /// - trigger func for i2c callback.     
     I2cTriggerFunc TriggerFunc;
 };
+#else
+class i2c_monitor
+{
+public: 
+    /// \brief constructor.    
+    i2c_monitor() {}
+        
+    /// \brief destructor.    
+    virtual ~i2c_monitor() {}
+    
+    /// \brief initalize
+    /// - This method is initialize the i2c_monitor task.        
+    BaseType_t init()   {
+        return pdPASS;
+    }
+
+    /// \brief get_instance
+    /// - This method is used to get the pattern of the class.
+    /// \return the singleton pattern point of the object.        
+    static i2c_monitor* get_instance()
+    {
+        static i2c_monitor instance_;
+        return &instance_;
+    }
+
+    /// \brief pcf8574_write_io
+    /// - This method is set io status for the i2c i/o extend chip.
+    /// \param id           - id of the trigger event.    
+    void pcf8574_write_io(uint8_t pin, uint8_t status){
+    }
+
+    /// \brief get_read_io
+    /// - get the point of read I/O data.
+    /// \return the point of the i2c read I/O data.      
+    PC8574_IO *get_read_io()        {return &pcf8574_read_data_;}   
+
+    /// \brief get_read_io
+    /// - get the point of ap3216 data.
+    /// \return the point of the i2c read I/O buffer       
+    AP3216C_INFO get_ap3216_val()   {return ap3216_info_;}
+    
+private:
+    /// \brief ap3216_info_
+    /// - ap3216 read data.     
+    AP3216C_INFO ap3216_info_;
+
+    /// \brief pcf8574_read_data_
+    /// - i/o extend chip write data.        
+    PC8574_IO pcf8574_read_data_{0xff};
+};
+#endif

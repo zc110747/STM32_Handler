@@ -58,20 +58,25 @@
 #define TRACE_HARDWARE_VERSION          "V1.0.0"
 #define TRACE_SOFTWARE_VERSION          "V0.1.0"
 
-
 //task define
-#define HTTPD_TASK_STACK            512
-#define HTTPD_TASK_PROITY           (tskIDLE_PRIORITY+8)
+#define HTTPD_TASK_STACK                512
+#define HTTPD_TASK_PROITY               (tskIDLE_PRIORITY+8)
 
-#define SCHEDULAR_TASK_STACK        2048
-#define MONITOR_TASK_STACK           512
-#define I2C_MONITOR_TASK_STACK       512
-#define FATFS_LOG_TASK_STACK         512
+#define SCHEDULAR_TASK_STACK            2048
+#define MONITOR_TASK_STACK              512
+#define I2C_MONITOR_TASK_STACK          512
+#define FATFS_LOG_TASK_STACK            512
 
-#define LWIP_TASK_PROITY            (tskIDLE_PRIORITY+8)
-#define SCHEDULAR_TASK_PROITY       (tskIDLE_PRIORITY+2)
-#define MONITOR_TASK_PROITY         (tskIDLE_PRIORITY+2)
-#define I2C_MONITOR_TASK_PROITY     (tskIDLE_PRIORITY+3)
-#define FATFS_LOG_TASK_PROITY       (tskIDLE_PRIORITY+2)
+#define LWIP_TASK_PROITY                (tskIDLE_PRIORITY+8)
+#define SCHEDULAR_TASK_PROITY           (tskIDLE_PRIORITY+2)
+#define MONITOR_TASK_PROITY             (tskIDLE_PRIORITY+2)
+#define I2C_MONITOR_TASK_PROITY         (tskIDLE_PRIORITY+3)
+#define FATFS_LOG_TASK_PROITY           (tskIDLE_PRIORITY+2)
 
+#define MODULE_OFF                      0
+#define MODULE_ON                       1
+
+#define I2C_MONITOR_MODULE_STATE        MODULE_OFF
+#define TIMER_MANAGE_MODULE_STATE       MODULE_OFF
+#define MONITOR_MODULE_STATE            MODULE_OFF
 #endif

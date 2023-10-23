@@ -26,11 +26,11 @@
 SRAM_HandleTypeDef hsram1;
 
 ///local function
-static BaseType_t SystemClock_Config(void);
+static GlobalType_t SystemClock_Config(void);
 
 int main(void)
 {
-    BaseType_t xReturned;
+    GlobalType_t xReturned;
       
     HAL_Init();
 
@@ -38,9 +38,6 @@ int main(void)
     
     //logger interface init, init before use PRINT_LOG.
     xReturned = logger_init();
-    
-    //uart driver init for logger
-    xReturned &= usart_driver_init();
     
     //logger interface must start, otherwise printf not work.
     //cm_backtrace_init("STM32 Handler", TRACE_HARDWARE_VERSION, TRACE_SOFTWARE_VERSION);  
@@ -72,7 +69,7 @@ void vApplicationIdleHook(void)
     logger_process_run();
 }
 
-static BaseType_t SystemClock_Config(void)
+static GlobalType_t SystemClock_Config(void)
 {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};

@@ -29,11 +29,11 @@
 #define SPI_USE_HARDWARE_DMA    1        
 #define SPI_USE_SOFTWARE        2
 
-#define SPI_RUN_MODE            SPI_USE_SOFTWARE   
+#define SPI_RUN_MODE            SPI_USE_HARDWARE_DMA   
 
 //spi interface
 BaseType_t spi_driver_init(void);
-uint8_t spi_rw_byte(uint8_t data);
+uint8_t spi_rw_byte(uint8_t data, HAL_StatusTypeDef *err);
         
 uint8_t spi_write_check_ok(void);
 uint8_t spi_write_dma(uint8_t *data, uint16_t size);

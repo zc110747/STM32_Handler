@@ -23,6 +23,7 @@
 
 #define KEY_NUM     2
 
+#if MONITOR_MODULE_STATE == MODULE_ON
 class monitor_manage
 {
 public: 
@@ -59,3 +60,29 @@ private:
     uint8_t tick[KEY_NUM];
     uint32_t per_second;
 };
+#else
+class monitor_manage
+{
+public:
+    /// \brief constructor.    
+    monitor_manage() {}
+        
+    /// \brief destructor.    
+    virtual ~monitor_manage() {}
+        
+    /// \brief initalize
+    /// - This method is initialize the i2c_monitor task.        
+    BaseType_t init() {
+        return pdPASS;
+    }
+
+    /// \brief get_instance
+    /// - This method is used to get the pattern of the class.
+    /// \return the singleton pattern point of the object.        
+    static monitor_manage* get_instance()
+    {
+        static monitor_manage instance_;
+        return &instance_;
+    }                         
+};
+#endif

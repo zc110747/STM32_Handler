@@ -172,15 +172,6 @@ void HAL_ETH_ErrorCallback(ETH_HandleTypeDef *handlerEth)
 /*******************************************************************************
                        LL Driver Interface ( LwIP stack --> ETH)
 *******************************************************************************/
-extern void i2c_write_io(uint8_t pin, uint8_t status);
-void ETH_Reset(void)
-{
-    i2c_write_io(OUTPUT_ETH_RESET, IO_OFF);
-    vTaskDelay(200);
-    i2c_write_io(OUTPUT_ETH_RESET, IO_ON);
-    vTaskDelay(200);
-}
-
 //eth interrupt
 void ETH_IRQHandler(void)
 {
@@ -201,8 +192,6 @@ static void low_level_init(struct netif *netif)
   int32_t PHYLinkState = 0;
   ETH_MACConfigTypeDef MACConf = {0};
   /* Start ETH HAL Init */
-
-  ETH_Reset();
 
   uint8_t MACAddr[6] ;
   heth.Instance = ETH;

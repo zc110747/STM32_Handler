@@ -83,19 +83,26 @@ BaseType_t wq25_driver_init(void)
 
 static WQ_OP_STATUS wq_enter_4byte_addr(void)
 {
+    HAL_StatusTypeDef status = HAL_OK;
+    
     //driver must match the manufacturer id
     if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
         return WQ_OP_DEVICE_ERR;
           
   	WQ25_CS_ON();
-    spi_rw_byte(W25X_Enable4ByteAddr);
+    spi_rw_byte(W25X_Enable4ByteAddr, &status);
   	WQ25_CS_OFF();  
 
+    if(status != HAL_OK)
+        return WQ_OP_COM_ERR;
+    
     return WQ_OP_OK;
 }
 
 WQ_OP_STATUS wq_sector_erase(uint32_t addr)
 {
+    HAL_StatusTypeDef status = HAL_OK;
+    
     //driver must match the manufacturer id
     if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
         return WQ_OP_DEVICE_ERR;
@@ -107,26 +114,34 @@ WQ_OP_STATUS wq_sector_erase(uint32_t addr)
   	WQ25_CS_ON();  
 
     //erase sector
-    spi_rw_byte(W25X_SectorErase); 
-    addr -= addr%W25X_SECTOR_SIZE;
-    if(w25q_chip_id == CHIP_ID_Q256)                
+    spi_rw_byte(W25X_SectorErase, &status); 
+    if(status == HAL_OK)
     {
-        spi_rw_byte((uint8_t)((addr)>>24)); 
+        addr -= addr%W25X_SECTOR_SIZE;
+        if(w25q_chip_id == CHIP_ID_Q256)                
+        {
+            spi_rw_byte((uint8_t)((addr)>>24), NULL); 
+        }
+        spi_rw_byte((uint8_t)((addr)>>16), NULL);  
+        spi_rw_byte((uint8_t)((addr)>>8), NULL);   
+        spi_rw_byte((uint8_t)addr, NULL); 
     }
-    spi_rw_byte((uint8_t)((addr)>>16));  
-    spi_rw_byte((uint8_t)((addr)>>8));   
-    spi_rw_byte((uint8_t)addr); 
-    
+   
     WQ25_CS_OFF();      
     
     if(wq_wait_busy(0) != WQ_OP_OK)
         return WQ_OP_TIMEOUT_ERR; 
+    
+    if(status != HAL_OK)
+       return WQ_OP_COM_ERR; 
     
     return WQ_OP_OK;
 }
 
 WQ_OP_STATUS wq_block_erase(uint32_t addr)
 {
+    HAL_StatusTypeDef status = HAL_OK;
+    
      //driver must match the manufacturer id
     if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
         return WQ_OP_DEVICE_ERR;
@@ -138,26 +153,34 @@ WQ_OP_STATUS wq_block_erase(uint32_t addr)
   	WQ25_CS_ON();  
 
     //erase sector
-    spi_rw_byte(W25X_BlockErase); 
-    addr -= addr%W25X_BLOCK_SIZE;
-    if(w25q_chip_id == CHIP_ID_Q256)                
+    spi_rw_byte(W25X_BlockErase, &status); 
+    if(status == HAL_OK)
     {
-        spi_rw_byte((uint8_t)((addr)>>24)); 
+        addr -= addr%W25X_BLOCK_SIZE;
+        if(w25q_chip_id == CHIP_ID_Q256)                
+        {
+            spi_rw_byte((uint8_t)((addr)>>24), NULL); 
+        }
+        spi_rw_byte((uint8_t)((addr)>>16), NULL);  
+        spi_rw_byte((uint8_t)((addr)>>8), NULL);   
+        spi_rw_byte((uint8_t)addr, NULL); 
     }
-    spi_rw_byte((uint8_t)((addr)>>16));  
-    spi_rw_byte((uint8_t)((addr)>>8));   
-    spi_rw_byte((uint8_t)addr); 
     
     WQ25_CS_OFF();      
     
     if(wq_wait_busy(1) != WQ_OP_OK)
         return WQ_OP_TIMEOUT_ERR; 
-    
+
+    if(status != HAL_OK)
+       return WQ_OP_COM_ERR; 
+      
     return WQ_OP_OK;   
 }
 
 WQ_OP_STATUS wq_chip_erase(void)
 {
+    HAL_StatusTypeDef status = HAL_OK;
+    
     //driver must match the manufacturer id
     if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
         return WQ_OP_DEVICE_ERR;
@@ -167,10 +190,13 @@ WQ_OP_STATUS wq_chip_erase(void)
         return WQ_OP_TIMEOUT_ERR; 
     
     WQ25_CS_ON();
-    spi_rw_byte(W25X_ChipErase);
+    spi_rw_byte(W25X_ChipErase, &status);
     WQ25_CS_OFF();     
     if(wq_wait_busy(1) != WQ_OP_OK)
         return WQ_OP_TIMEOUT_ERR; 
+    
+    if(status != HAL_OK)
+       return WQ_OP_COM_ERR; 
     
     return WQ_OP_OK;      
 }
@@ -178,6 +204,7 @@ WQ_OP_STATUS wq_chip_erase(void)
 WQ_OP_STATUS wq_memory_read(uint32_t addr, uint8_t *pbuffer, uint16_t num)
 {
     uint16_t i;
+    HAL_StatusTypeDef status = HAL_OK;
     
     //driver must match the manufacturer id
     if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
@@ -185,27 +212,33 @@ WQ_OP_STATUS wq_memory_read(uint32_t addr, uint8_t *pbuffer, uint16_t num)
     
     WQ25_CS_ON();  
     
-    spi_rw_byte(W25X_INSTRU_READ);
-    if(w25q_chip_id == CHIP_ID_Q256)
+    spi_rw_byte(W25X_INSTRU_READ, &status);
+    if(status == HAL_OK)
     {
-        spi_rw_byte((uint8_t)(addr>>24));
-    }
-    spi_rw_byte((uint8_t)(addr>>16));
-    spi_rw_byte((uint8_t)(addr>>8));
-    spi_rw_byte((uint8_t)(addr));
-    for(i = 0; i<num; i++)
-    {
-       pbuffer[i] = spi_rw_byte(0xff);
+        if(w25q_chip_id == CHIP_ID_Q256)
+        {
+            spi_rw_byte((uint8_t)(addr>>24), NULL);
+        }
+        spi_rw_byte((uint8_t)(addr>>16), NULL);
+        spi_rw_byte((uint8_t)(addr>>8), NULL);
+        spi_rw_byte((uint8_t)(addr), NULL);
+        for(i = 0; i<num; i++)
+        {
+           pbuffer[i] = spi_rw_byte(0xff, NULL);
+        }
     }
     
     WQ25_CS_OFF();
-
+    if(status != HAL_OK)
+       return WQ_OP_COM_ERR; 
+    
     return WQ_OP_OK;    
 }
 
 WQ_OP_STATUS wq_memory_write(uint32_t addr, uint8_t *pbuffer, uint16_t num)
 {
     uint16_t i;
+    HAL_StatusTypeDef status = HAL_OK;
     
     //driver must match the manufacturer id
     if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
@@ -217,24 +250,31 @@ WQ_OP_STATUS wq_memory_write(uint32_t addr, uint8_t *pbuffer, uint16_t num)
     wq_write_enable();
     
     WQ25_CS_ON();
-    spi_rw_byte(W25X_PageProgram); 
+    spi_rw_byte(W25X_PageProgram, &status); 
     
-    if(w25q_chip_id == CHIP_ID_Q256)          
+    if(status == HAL_OK)
     {
-        spi_rw_byte((uint8_t)((addr)>>24)); 
+        if(w25q_chip_id == CHIP_ID_Q256)          
+        {
+            spi_rw_byte((uint8_t)((addr)>>24), NULL); 
+        }
+        spi_rw_byte((uint8_t)((addr)>>16), NULL); 
+        spi_rw_byte((uint8_t)((addr)>>8), NULL);   
+        spi_rw_byte((uint8_t)addr, NULL);   
+        for(i=0; i<num; i++)
+        {
+            spi_rw_byte(pbuffer[i], NULL);
+        }
     }
-    spi_rw_byte((uint8_t)((addr)>>16)); 
-    spi_rw_byte((uint8_t)((addr)>>8));   
-    spi_rw_byte((uint8_t)addr);   
-    for(i=0; i<num; i++)
-    {
-        spi_rw_byte(pbuffer[i]);
-    }
+    
     WQ25_CS_OFF();
     
     if(wq_wait_busy(0) != WQ_OP_OK)
         return WQ_OP_TIMEOUT_ERR; 
     
+    if(status != HAL_OK)
+       return WQ_OP_COM_ERR; 
+        
     return WQ_OP_OK;
 }
 
@@ -243,6 +283,7 @@ WQ_OP_STATUS wq_memory_read_dma(uint32_t addr, uint8_t *pbuffer, uint16_t num)
 {
     uint16_t i;
     uint16_t error_count = 0;
+    HAL_StatusTypeDef status = HAL_OK;
     
     //driver must match the manufacturer id
     if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
@@ -250,34 +291,42 @@ WQ_OP_STATUS wq_memory_read_dma(uint32_t addr, uint8_t *pbuffer, uint16_t num)
     
     WQ25_CS_ON();  
     
-    spi_rw_byte(W25X_INSTRU_READ);
-    if(w25q_chip_id == CHIP_ID_Q256)
+    spi_rw_byte(W25X_INSTRU_READ, &status);
+    
+    if(status == HAL_OK)
     {
-        spi_rw_byte((uint8_t)(addr>>24));
-    }
-    spi_rw_byte((uint8_t)(addr>>16));
-    spi_rw_byte((uint8_t)(addr>>8));
-    spi_rw_byte((uint8_t)(addr));
-  
-    spi_read_dma(pbuffer, num);
-    do
-    {
-        if(spi_read_check_ok() == HAL_OK)
+        if(w25q_chip_id == CHIP_ID_Q256)
         {
-            break;
+            spi_rw_byte((uint8_t)(addr>>24), NULL);
         }
-        else
+        spi_rw_byte((uint8_t)(addr>>16), NULL);
+        spi_rw_byte((uint8_t)(addr>>8), NULL);
+        spi_rw_byte((uint8_t)(addr), NULL);
+      
+        spi_read_dma(pbuffer, num);
+        do
         {
-            error_count++;
-            if(error_count > W25X_WATI_TIMEOUT) //wait spi send finished
+            if(spi_read_check_ok() == HAL_OK)
             {
-                return WQ_OP_TIMEOUT_ERR;
-            }    
-            delay_ms(1);  //when os run, will release the protocol
-        }
-    }while(1);
+                break;
+            }
+            else
+            {
+                error_count++;
+                if(error_count > W25X_WATI_TIMEOUT) //wait spi send finished
+                {
+                    return WQ_OP_TIMEOUT_ERR;
+                }    
+                delay_ms(1);  //when os run, will release the protocol
+            }
+        }while(1);
+    }
     
     WQ25_CS_OFF();
+    
+    if(status != HAL_OK)
+        return WQ_OP_COM_ERR;
+    
     return WQ_OP_OK;    
 }
 
@@ -285,6 +334,7 @@ WQ_OP_STATUS wq_memory_write_dma(uint32_t addr, uint8_t *pbuffer, uint16_t num)
 {
     uint16_t i;
     uint16_t error_count = 0;
+    HAL_StatusTypeDef status = HAL_OK;
     
     //driver must match the manufacturer id
     if(WQ25_GetManufacturerID(w25q_chip_id) != WQ25_ManufacturerID)
@@ -296,37 +346,44 @@ WQ_OP_STATUS wq_memory_write_dma(uint32_t addr, uint8_t *pbuffer, uint16_t num)
     wq_write_enable();
     
     WQ25_CS_ON();
-    spi_rw_byte(W25X_PageProgram); 
+    spi_rw_byte(W25X_PageProgram, &status); 
     
-    if(w25q_chip_id == CHIP_ID_Q256)          
+    if(status == HAL_OK)
     {
-        spi_rw_byte((uint8_t)((addr)>>24)); 
-    }
-    spi_rw_byte((uint8_t)((addr)>>16)); 
-    spi_rw_byte((uint8_t)((addr)>>8));   
-    spi_rw_byte((uint8_t)addr);   
-    
-    spi_write_dma(pbuffer, num);
-    do
-    {
-        if(spi_write_check_ok() == HAL_OK)
+        if(w25q_chip_id == CHIP_ID_Q256)          
         {
-            break;
+            spi_rw_byte((uint8_t)((addr)>>24), NULL); 
         }
-        else
+        spi_rw_byte((uint8_t)((addr)>>16), NULL); 
+        spi_rw_byte((uint8_t)((addr)>>8), NULL);   
+        spi_rw_byte((uint8_t)addr, NULL);   
+        
+        spi_write_dma(pbuffer, num);
+        do
         {
-            error_count++;
-            if(error_count > W25X_WATI_TIMEOUT) //wait spi send finished
+            if(spi_write_check_ok() == HAL_OK)
             {
-                return WQ_OP_TIMEOUT_ERR;
-            }    
-            delay_ms(1);  //when os run, will release the protocol
-        }
-    }while(1);    
-    
+                break;
+            }
+            else
+            {
+                error_count++;
+                if(error_count > W25X_WATI_TIMEOUT) //wait spi send finished
+                {
+                    return WQ_OP_TIMEOUT_ERR;
+                }    
+                delay_ms(1);  //when os run, will release the protocol
+            }
+        }while(1);    
+    }
     WQ25_CS_OFF();
     
-    wq_wait_busy(0);    
+    if(wq_wait_busy(0) != WQ_OP_OK)
+        return WQ_OP_TIMEOUT_ERR; 
+    
+    if(status != HAL_OK)
+       return WQ_OP_COM_ERR; 
+    
     return WQ_OP_OK;
 }
 #endif
@@ -346,8 +403,8 @@ static WQ_OP_STATUS wq_wait_busy(uint8_t mode)
     {
         //read status regs, the last byte is busy
         WQ25_CS_ON();
-        spi_rw_byte(W25X_INSTRU_RDSR_1);
-        reg_status = spi_rw_byte(0xFF);
+        spi_rw_byte(W25X_INSTRU_RDSR_1, NULL);
+        reg_status = spi_rw_byte(0xff, NULL);
         WQ25_CS_OFF();
         
         if((reg_status&0x1) == 0)
@@ -373,14 +430,14 @@ static WQ_OP_STATUS wq_wait_busy(uint8_t mode)
 static void wq_write_enable(void)
 {
     WQ25_CS_ON();
-    spi_rw_byte(W25X_INSTRU_WREN);
+    spi_rw_byte(W25X_INSTRU_WREN, NULL);
     WQ25_CS_OFF(); 
 }
 
 static void wq_write_disable(void)
 {
     WQ25_CS_ON();
-    spi_rw_byte(W25X_INSTRU_WRDI);
+    spi_rw_byte(W25X_INSTRU_WRDI, NULL);
     WQ25_CS_OFF();    
 }
 
@@ -389,12 +446,12 @@ static uint16_t wq_read_chipid(void)
     uint16_t id = 0;
     
     WQ25_CS_ON();
-    spi_rw_byte(0x90);
-    spi_rw_byte(0x00);
-    spi_rw_byte(0x00);
-    spi_rw_byte(0x00);
-    id = spi_rw_byte(0xff)<<8;
-    id |= spi_rw_byte(0xff);
+    spi_rw_byte(0x90, NULL);
+    spi_rw_byte(0x00, NULL);
+    spi_rw_byte(0x00, NULL);
+    spi_rw_byte(0x00, NULL);
+    id = spi_rw_byte(0xff, NULL)<<8;
+    id |= spi_rw_byte(0xff, NULL);
     WQ25_CS_OFF(); 
     
     return id;  

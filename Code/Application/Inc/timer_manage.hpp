@@ -140,6 +140,7 @@ public:
 	}
 };
 
+#if TIMER_MANAGE_MODULE_STATE == MODULE_ON
 class SysTimeManage
 {
 private:
@@ -204,12 +205,58 @@ public:
     /// \param func         - function for callback action.  
     /// \param pv           - value translate to action, not local variable.
     /// \param TriggerCount - trigger can run times.
-    /// \return register success(1) or not(0) 
-    uint32_t registerEventTrigger(uint16_t id, 
+    /// \return register GlobalType_t
+    GlobalType_t registerEventTrigger(uint16_t id, 
                                 uint32_t time_cnt, 
                                 TimeTriggerFunction<uint32_t>* func,
     							uint32_t *pv,
                                 uint16_t TriggerCount=1);
 };
+#else
+class SysTimeManage
+{
+public:
+    /// \brief constructor.    
+    SysTimeManage() {}
+        
+    /// \brief destructor.    
+    virtual ~SysTimeManage() {}
+        
+    /// \brief initalize
+    /// - This method is initialize the i2c_monitor task.        
+    BaseType_t init() {
+        return pdPASS;
+    }
 
+    /// \brief get_instance
+    /// - This method is used to get the pattern of the class.
+    /// \return the singleton pattern point of the object.        
+    static SysTimeManage* get_instance()
+    {
+        static SysTimeManage instance_;
+        return &instance_;
+    }
+
+    /// \brief removeEventTrigger
+    /// - remove the trigger accord the event id.
+    void removeEventTrigger(uint16_t id){
+    }
+
+    /// \brief initalize
+    /// - This method is register a new trigger in array.
+    /// \param id           - id of the trigger event.
+    /// \param time_cnt     - time compare count due to period.
+    /// \param func         - function for callback action.  
+    /// \param pv           - value translate to action, not local variable.
+    /// \param TriggerCount - trigger can run times.
+    /// \return register success(1) or not(0) 
+    GlobalType_t registerEventTrigger(uint16_t id, 
+                                uint32_t time_cnt, 
+                                TimeTriggerFunction<uint32_t>* func,
+    							uint32_t *pv,
+                                uint16_t TriggerCount=1){
+        return GLOBAL_OK;
+    }                                    
+};
+#endif
 #endif

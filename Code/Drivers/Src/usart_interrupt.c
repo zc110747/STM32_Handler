@@ -81,15 +81,15 @@ BaseType_t usart_driver_init(void)
     return pdPASS; 
 }
 
-uint8_t uart_logger_write(uint8_t *ptr, uint8_t size)
+GlobalType_t uart_logger_write(uint8_t *ptr, uint8_t size)
 {
-    uint8_t res;
+    GlobalType_t res;
 
     __disable_irq();
     res = logger_put_tx_buffer(LOG_DEVICE_USART, ptr, size);  
     __enable_irq();
 
-    if(res == LOGGER_OK)
+    if(res == GLOBAL_OK)
     {
       __HAL_UART_ENABLE_IT(&huart1, UART_IT_TXE);
     }
@@ -109,7 +109,7 @@ void USART1_IRQHandler(void)
     if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET
     && __HAL_UART_GET_IT_SOURCE(&huart1, UART_IT_TXE))
     {
-        if(logger_get_tx_byte(LOG_DEVICE_USART, &data) == LOGGER_ERROR)
+        if(logger_get_tx_byte(LOG_DEVICE_USART, &data) == GLOBAL_ERROR)
         {
             __HAL_UART_DISABLE_IT(&huart1, UART_IT_TXE);
         }
